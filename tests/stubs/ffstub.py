@@ -111,7 +111,8 @@ def ffmpeg(args):
                 write_fake(output, {"frames": total // frame_bytes, "partial": "yes"})
                 return 1
         fps = float(arg_after(args, "-r", "30"))
-        write_fake(output, {"frames": total // frame_bytes, "duration": f"{total // frame_bytes / fps:.6f}",
+        dropped = int(os.environ.get("FFSTUB_DROP", "0"))
+        write_fake(output, {"frames": total // frame_bytes - dropped, "duration": f"{total // frame_bytes / fps:.6f}",
                             "bytes": total})
         return 0
     if "volumedetect" in af:

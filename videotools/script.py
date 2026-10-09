@@ -350,3 +350,17 @@ def mistake(cue):
         return None
     wrong, right = cue["mistake"].split(" / ", 1)
     return wrong.strip(), right.strip()
+
+
+def select(data, keys):
+    """The scenes named in a comma-separated list of keys, in that order; all when keys is
+    empty or None. An unknown key is a usage error naming the scenes there are."""
+    if not keys:
+        return list(data["scenes"])
+    by_key = {s["key"]: s for s in data["scenes"]}
+    wanted = [k.strip() for k in keys.split(",") if k.strip()]
+    for k in wanted:
+        if k not in by_key:
+            from videotools import cli
+            raise cli.Failure(f"no scene '{k}' in the script (scenes: {', '.join(by_key)})", cli.USAGE)
+    return [by_key[k] for k in wanted]

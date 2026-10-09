@@ -562,3 +562,63 @@ with the four commands added since its first draft.
 **State.** Green: 180 tests. Six of eight commands built. Next: the scene-code interface
 (Squirrel), then chrome, `stills` and `render`; then a coverage pass (`draw.py`, `ffmpeg.py`)
 and lint.
+
+### 9 October 2026 — The frame: chrome, scene modules, stored images
+
+**Goal.** Item 4: `videotools.scenes` (the loader and the `Frame` object, the interface of
+"Settled" 13), `videotools.chrome` (the rules: layout, tracker, title steps, current step,
+checklist progress) and `videotools.frame` (`Video`, loading everything once, and `draw_frame`
+with every chrome element), plus the example video's seven scene modules.
+
+**Test.** `tests/tier1/test_scenes.py` (eight), `tests/tier1/test_chrome_rules.py` (eight),
+`tests/tier2/test_frame.py` (seventeen: nine by pixels, eight against stored images at 192×108
+with a mean difference below 6/255; `tests/tier2/frames/README.md`).
+
+**Red.** `8 failed` (scenes), `8 failed` (chrome rules), `1 failed, 16 errors` (frame):
+`NotImplementedError` throughout.
+
+**Green.** Scenes: first run. Chrome rules: `tracker_place` could not know an unlettered
+scene's position from the places alone, so it and `tracker_done_now` take the script data (the
+tests changed to match before the green). Frame: two faults, then `9 passed` with only the
+stored images missing: the example's scene modules named their function `draw` and so shadowed
+the `videotools.draw` module they had imported (they import it as `d` now; the scenes README says
+why), and `Video` loaded only the insets scenes name where the table has more. The eight frames
+were drawn at full size, looked at (header, roundel, tracker with the shared "Corners" place, the
+inset and key points, the steps panel with 2 current and 1 done, the custom panel, the ticking
+checklist, the mistake panels with their tags, the title card with the tilted page, the end card
+with both credits), one example label moved clear of the hand, and stored reduced. Then
+`33 passed` for the three files.
+
+**Decision / surprise.** The loader puts the scene-code folder on `sys.path` only while a
+module is imported, so scene modules can share a helper (`_sheet.py` in the example) without the
+folder staying importable. Captions: the band is drawn for any scene with cues, the text only once
+the first cue has started (so a scene opens on an empty band, as the prototype did). The stored
+images are characterisation references, made by the code and inspected, not drawn by hand.
+
+**State.** Green: 33 new tests. Next: `stills` and `render`.
+
+### 9 October 2026 — `stills` and `render`
+
+**Goal.** Items 5 and 6: frames at given times on a labelled sheet, estimates with a warning,
+every refusal; scenes piped frame by frame to ffmpeg with the script's settings, `--frames`,
+`--dry-run`, refusal without timings or over a segment, ffmpeg's failures (exit, death, a wrong
+frame count) reported with the partial file named.
+
+**Test.** `tests/tier2/test_stills.py` (seven), `tests/tier2/test_render.py` (twelve); the stub
+gained `FFSTUB_DROP` (reports one frame fewer, as a bad encode would) beside `FFSTUB_DIE`.
+
+**Red.** `18 failed, 1 passed`: `NotImplementedError`. "Never modified" proved after the green
+(render appending to the script: `1 failed`).
+
+**Green.** Five faults on the first run: four in the tests (a pixel probed under the sheet's own
+label; argparse wrapping the usage line; two argument indexes) and one real: `communicate()`
+after closing ffmpeg's stdin raised `write to closed file`; render reads stderr and waits
+instead. `19 passed`; the whole suite below.
+
+**Decision / surprise.** `script.select(data, keys)` is the one place `--scenes` is parsed
+(`narrate` still has its own copy: to fold in at the lint pass). Dry run reports each scene's
+length, frame count and segment path and the totals. The sheet labels each frame with its
+scene, time and cue in the brand's display font.
+
+**State.** All eight commands built. Next: Tier 3 of the whole chain on the scratch copy, then
+coverage, README and lint.
