@@ -116,14 +116,14 @@ stills.to_image(surface).resize({size!r}, Image.LANCZOS).save({out!r})
 def test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it(prepared, tmp_path):
     from PIL import ImageChops
 
-    from videotools import stills
+    from videotools import sheet as sheet_
 
     narrated(prepared)
     sheet = tmp_path / "sheet.png"
     code, out, err = run("stills", prepared, "A:1.5", "--out", sheet)
     assert (code, err) == (0, "")
     im = Image.open(sheet).convert("RGB")
-    w, h = stills.frame_size((960, 540))
+    w, h = sheet_.frame_size((960, 540))
     assert (w, h) == (896, 504)                                          # 16:9 in the cell above the strip
     # The same frame drawn alone and scaled as the cell scales it: in a fresh process, as the command
     # draws it, because fontconfig (Linux) fixes its font list at a process's first text call and an

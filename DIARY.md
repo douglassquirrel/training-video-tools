@@ -2,8 +2,8 @@
 
 ## Where things stand
 
-9 October 2026, 20:55 (from the clock). **Requests 1 to 7 are built in full, and the bed video
-is accepted.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
+9 October 2026, 21:16 (from the clock). **Requests 1 to 8 are built in full, and the bed video
+is accepted and rebuilt on the frame methods.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
 `c1720ae` and matches the 7 October original to the frame and the millisecond (request 4).
@@ -14,10 +14,11 @@ video's scene code"), and `code` optional for title and end scenes, so `_kit.py`
 and `end_card.py` can go. The script format's wording for the optional `code` is in PLAN.md
 item 4. Request 7: `check-script` checks the scene code without running it (a step scene with no
 `code`, a missing or unparsable module, a missing top-level `def` the scene needs), so what
-`stills` and `render` would refuse is found first. Request 4's item 2 (the "+ Pillows" roundel
-and icon) was not asked for and is not done.
+`stills` and `render` would refuse is found first. Request 8: `check-video --sheet` labels each
+frame in a strip under it, as `stills` does (`videotools.sheet`, shared). Request 4's item 2
+(the "+ Pillows" roundel and icon) was not asked for and is not done.
 
-Green: 279 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 280 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -27,8 +28,10 @@ and with `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_e
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
 video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); since then the
 real brand kit read (counts only), a sheet looked at, the wrappers run under
-`VIDEO_TOOLS_PYTHON`, and `crop-insets` under the Mac's Python 3.9 without Pillow (the one-line
-message, exit 4). Linux was tried by the training-video project (PLAN.md "Things checked" 5),
+`VIDEO_TOOLS_PYTHON`, `crop-insets` under the Mac's Python 3.9 without Pillow (the one-line
+message, exit 4), and the whole chain again at request 8 (same SHA-256 as the first time;
+`check-video --sheet` looked at). Note: `~/.video-tools.conf` on this Mac has no
+`SPEECH_MODEL_DIR`; Tier 3 used a scratch config through `VIDEO_TOOLS_CONF`. Linux was tried by the training-video project (PLAN.md "Things checked" 5),
 not from here. Not yet tried: a real `assemble --replace` with the real ffmpeg on this Mac
 (the stub now mirrors ffmpeg's refusal, and the Linux report found the fault), and a real
 `assemble` with clips at a rate other than 24 kHz here (the Linux report covers 22,050 Hz).
@@ -1103,3 +1106,43 @@ test (appending `del mistake` to a module) removed.
 import or assignment is reported missing. The README says so; the bed's modules define theirs.
 The loader's own runtime refusals are unchanged, so a module that parses but fails on import is
 still caught by `stills`/`render`, with the error named.
+
+### 9 October 2026 — Request 8: `check-video`'s sheet labels in a strip
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-8.md` (20:44–20:59): the
+bed video rebuilt on the frame methods with no glue module, all 7,873 frames hash-identical
+before and after, the whole chain with every `--replace` against real ffmpeg, `check-video`
+clean; request 7 verified; one ask, `check-video --sheet`'s label still over the frame's corner.
+Reported 21:03; Squirrel (21:07): "go ahead". PLAN.md "Settled" 19; item moved to `inbox/done/`.
+
+**Goal.** `check-video --sheet` lays out each cell as `stills` does: the frame scaled to fit
+above a 36 px strip holding the label in the brand's display font; no frame pixel covered.
+
+**Test.** `tests/tier2/test_check_video.py::the_sheets_label_sits_in_a_strip_under_each_frame_and_covers_no_pixel_of_it`:
+the stub's square frame fills 324×324 of a 640×360 cell, white beside it, the strip's fill and
+white text under it.
+
+**Red.** `assert (200, 40, 40) == (255, 255, 255)`: the frame still filled the whole cell.
+
+**Green.** `videotools.sheet` (the strip, `frame_size`, `paste`) shared by `stills` and
+`check-video`; `check-video` reads the brand kit for the label's font when `--sheet` is given
+(a bad kit refused, exit 3, like the two drawing commands). The older sheet test's probes were
+unaffected (they sat inside the smaller frame). `24 passed` for the two files; suite
+`280 passed`, 98%, lint clean.
+
+**Tier 3.** The whole chain again on the scratch copy of the example, on this Mac (a scratch
+config naming `~/models/kokoro`, since `~/.video-tools.conf` here has no `SPEECH_MODEL_DIR`):
+```
+Wrote 11 clips and …/work/narration/timing.json
+Rendered end: 171 frames in 0.7 s (234.4 frames/s) -> …/work/segments/end_00000.mp4
+length 60.067 s (1802 frames), size 2546758 bytes
+sha256 dcee4bb1adbd11215f8e7fb288572524b234764c30c593959396274539b0211b
+narration in every cue's window: OK
+sheet of 7 frames written to …/cv-sheet.png
+No problems found.
+```
+The same length and SHA-256 as the first Tier 3 (9 October, "the whole chain"). The sheet
+looked at: seven frames in a 3×3 grid, every header and roundel visible, each label in its
+strip in the display font.
+
+**State.** Request 8 done. Next: nothing waiting.

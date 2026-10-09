@@ -333,8 +333,10 @@ one. A cue's window is its clip's span as `assemble` lays it (the cue's start pl
 the clip's length); a silence overlapping a window by more than 0.1 s (the slack the detector's
 boundaries are trusted to) is a problem, and one covering a window to within that slack means
 the cue was not heard, a second problem. With `--sheet`, one frame from the middle of each
-scene (`ffmpeg -ss T -frames:v 1`, into a temporary folder) pasted on a 1920×1080 sheet, up to
-four a row, labelled; refuses an existing file. Lists every problem; exit 1 if any, 0 if none,
+scene (`ffmpeg -ss T -frames:v 1`, into a temporary folder) pasted on a 1920×1080 sheet in a
+near-square grid, each labelled in a strip under the frame (`videotools.sheet`, shared with
+`stills`; request 8; Squirrel, 9 October 2026, 21:07), in the brand's display font (so the kit is
+read, and refused like a script, exit 3); refuses an existing file. Lists every problem; exit 1 if any, 0 if none,
 4 if ffprobe or ffmpeg fail. The real
 output formats of `ffprobe` and the two filters are recorded in DIARY.md before the parsers are
 written ("Things checked" 6).
@@ -466,6 +468,9 @@ remote ("Settled" 7).
    frame methods and the optional `code` for cards (item 4), so a video needs no glue module.
    Request 7 (their verification of 5 and 6, all passed on Linux): `check-script` checks scene
    code statically (item 1), closing for scene code the gap request 2 closed for brand kits.
+   Request 8: the bed video rebuilt on the frame methods, every frame hash-identical, the whole
+   chain with `--replace` against real ffmpeg, `check-video` clean (request 3 and 6 confirmed end
+   to end); request 7 verified; `check-video --sheet` labels in a strip, as `stills` (item 8).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -551,3 +556,5 @@ None.
     neutral default colours are Claude's choice, recorded in the README.
 18. The seventh request (`inbox/done/request-from-training-video-2026-10-09-7.md`): `check-script`
     checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").
+19. The eighth request (`inbox/done/request-from-training-video-2026-10-09-8.md`): `check-video`'s
+    sheet labels in a strip under each frame (Squirrel, 9 October 2026, 21:07: "go ahead").

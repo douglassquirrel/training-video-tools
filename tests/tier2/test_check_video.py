@@ -155,3 +155,18 @@ def test_the_video_is_never_modified(ready, ffstub, tmp_path):
     before = open(path, "rb").read()
     run("check-video", ready, "--sheet", tmp_path / "s.png", env=ffstub)
     assert open(path, "rb").read() == before
+
+
+def test_the_sheets_label_sits_in_a_strip_under_each_frame_and_covers_no_pixel_of_it(ready, ffstub, tmp_path):
+    sheet = tmp_path / "sheet.png"
+    code, out, err = run("check-video", ready, "--sheet", sheet, env=ffstub)
+    assert (code, err) == (0, "")
+    im = Image.open(sheet).convert("RGB")
+    # A 640 x 360 cell holds a 36 px strip, so the stub's square frame is scaled to 324 x 324 at the
+    # cell's top left; beside it the sheet's white, under it the strip.
+    assert im.getpixel((0, 0)) == (200, 40, 40) and im.getpixel((323, 323)) == (200, 40, 40)
+    assert im.getpixel((330, 100)) == (255, 255, 255)
+    assert im.getpixel((4, 328)) == (0x55, 0x55, 0x55)                        # the strip's fill
+    strip = im.crop((0, 324, 324, 360))
+    assert any(c == (255, 255, 255) for _, c in strip.getcolors(10000))       # its white text
+    assert all(im.getpixel((x, y)) == (200, 40, 40) for x in range(0, 324, 27) for y in range(0, 324, 27))

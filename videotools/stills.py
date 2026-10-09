@@ -11,17 +11,9 @@ import argparse
 import sys
 
 from videotools import brand, cli, script
+from videotools.sheet import SHEET
 
 PROG = "stills"
-SHEET = (1920, 1080)
-STRIP = 36            # the label's strip under each frame, in pixels; never over the frame
-
-
-def frame_size(cell, size=(1920, 1080)):
-    """The largest frame of the video's proportions that fits the cell above its label strip."""
-    cw, ch = cell[0], cell[1] - STRIP
-    w = min(cw, ch * size[0] // size[1])
-    return w, w * size[1] // size[0]
 
 
 def parser():
@@ -94,25 +86,21 @@ def _run(args):
         if t > tl.total or t < 0:
             raise cli.Failure(f"{spec} is past the end of scene {key} ({tl.total:.3f} s)", cli.USAGE)
         jobs.append((scene, tl, t))
-    sheet = Image.new("RGB", SHEET, "white")
-    draw = ImageDraw.Draw(sheet)
+    from videotools import sheet as sheet_
+    out = Image.new("RGB", SHEET, "white")
+    draw = ImageDraw.Draw(out)
     cell = (SHEET[0] // columns, SHEET[1] // rows)
-    font = ImageFont.truetype(video.brand["font_files"]["display"], 22)
+    font = ImageFont.truetype(video.brand["font_files"]["display"], sheet_.LABEL_SIZE)
     lay = video.layout
-    size = frame_size(cell, (lay.width, lay.height))
     for i, (scene, tl, t) in enumerate(jobs):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, lay.width, lay.height)
         frame.draw_frame(cairo.Context(surface), video, scene, tl, t)
         surface.flush()
-        img = to_image(surface).resize(size, Image.LANCZOS)
         x, y = (i % columns) * cell[0], (i // columns) * cell[1]
-        sheet.paste(img, (x, y))
         cue = tl.cue(t)
         label = f"{scene['key']} @ {t:.2f} s" + (f"  cue {cue}" if cue else "")
-        # The label in a strip under the frame: no pixel of the frame is covered.
-        draw.rectangle([x, y + size[1], x + size[0] - 1, y + size[1] + STRIP - 1], fill=(0x55, 0x55, 0x55))
-        draw.text((x + 8, y + size[1] + 4), label, font=font, fill=(255, 255, 255))
+        sheet_.paste(out, draw, to_image(surface), x, y, cell, label, font)   # the label under the frame
         print(f"{scene['key']} at {t:.3f} s (of {tl.total:.3f} s, {f'cue {cue}' if cue else 'no cue'})")
-    sheet.save(args.out)
+    out.save(args.out)
     print(f"Wrote {args.out}: {len(jobs)} frames, {columns}x{rows}")
     return cli.OK

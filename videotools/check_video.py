@@ -14,7 +14,7 @@ import math
 import os
 import tempfile
 
-from videotools import cli, ffmpeg, script, timeline
+from videotools import brand, cli, ffmpeg, script, timeline
 
 PROG = "check-video"
 NOISE_DB, MIN_SILENCE = -40, 2.0
@@ -36,7 +36,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         return _run(args)
-    except (cli.Failure, script.ScriptError) as f:
+    except (cli.Failure, script.ScriptError, brand.BrandError) as f:
         return cli.report(PROG, cli.Failure(str(f), getattr(f, "code", cli.REFUSED)))
 
 
@@ -67,27 +67,27 @@ def describe_silence(a, b, cues, scenes):
     return "between cues", None
 
 
-def sheet(path, scenes, video_file):
-    """One frame from the middle of each scene, pasted in a grid on a 1920x1080 sheet."""
-    from PIL import Image, ImageDraw
+def sheet(path, scenes, video_file, font_file):
+    """One frame from the middle of each scene, pasted in a grid on a 1920x1080 sheet, each
+    labelled in a strip under it (videotools.sheet), never over it."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    from videotools import sheet as sheet_
     n = len(scenes)
     columns = max(1, math.ceil(math.sqrt(n)))       # near-square: cells keep the frame's shape
     rows = math.ceil(n / columns)
     cell = (SHEET_SIZE[0] // columns, SHEET_SIZE[1] // rows)
     im = Image.new("RGB", SHEET_SIZE, "white")
     draw = ImageDraw.Draw(im)
+    font = ImageFont.truetype(font_file, sheet_.LABEL_SIZE)
     with tempfile.TemporaryDirectory() as tmp:
         for i, (key, start, end, _) in enumerate(scenes):
             t = (start + end) / 2
             frame = os.path.join(tmp, f"{i}.png")
             ffmpeg.run("ffmpeg", ffmpeg.QUIET + ["-ss", f"{t:.3f}", "-i", video_file, "-frames:v", "1", frame],
                        f"taking a frame at {t:.3f} s", partial=frame)
-            img = Image.open(frame).convert("RGB")
-            scale = min(cell[0] / img.width, cell[1] / img.height)
-            img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))))
             x, y = (i % columns) * cell[0], (i // columns) * cell[1]
-            im.paste(img, (x, y))
-            draw.text((x + 8, y + 6), f"{key} @ {t:.1f} s", fill=(0, 0, 0))
+            sheet_.paste(im, draw, Image.open(frame).convert("RGB"), x, y, cell, f"{key} @ {t:.1f} s", font)
     im.save(path)
 
 
@@ -96,9 +96,12 @@ def _run(args):
     settings = script.settings(data)
     video = script.folder(args.SCRIPT)
     video_file = args.VIDEO or os.path.join(video, settings["output"])
+    font_file = None
     if args.sheet:
         cli.refuse_existing(args.sheet)
         cli.need("PIL")                     # before any check runs, so nothing is half done
+        kit = brand.read(brand.folder_for(args.SCRIPT, settings["brand"]))   # the label's font
+        font_file = kit["font_files"]["display"]
     if not os.path.isfile(video_file):
         raise cli.Failure(f"no such file: {video_file}")
     timing_path = os.path.join(video, "work", "narration", "timing.json")
@@ -143,7 +146,7 @@ def _run(args):
     else:
         print("narration in every cue's window: OK")
     if args.sheet:
-        sheet(args.sheet, scenes, video_file)
+        sheet(args.sheet, scenes, video_file, font_file)
         print(f"sheet of {len(scenes)} frames written to {args.sheet}")
     if problems:
         print(f"{len(problems)} problem{'' if len(problems) == 1 else 's'}:")

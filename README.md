@@ -331,7 +331,8 @@ Ends by printing the length, size and SHA-256 of the output, for the diary.
 The same checks on every finished video (default: the script's `output`), against the script
 and `timing.json`: length within one frame of the scenes' total; peak below 0 dBFS; silences
 of 2 s or more (−40 dB) only outside the cues' windows, and narration heard in every cue; with
-`--sheet`, one frame from the middle of each scene on a 1920×1080 sheet (refuses an existing
+`--sheet`, one frame from the middle of each scene on a 1920×1080 sheet, each labelled in a
+strip under the frame as `stills` does, in the brand's display font (refuses an existing
 file). Prints a report line per check, then `No problems found.` (exit 0) or the problems
 (exit 1).
 
@@ -388,7 +389,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(279 tests, lint clean).
+(280 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -439,7 +440,8 @@ with ffmpeg 4.4.
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module
   for fonts, sizes, rule 3 and label checks. `check-script` now checks the scene code too
-  (missing `code`, module, or function), without running it.
+  (missing `code`, module, or function), without running it. `check-video --sheet` labels each
+  frame in a strip under it, as `stills` does, in the brand's display font.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text
