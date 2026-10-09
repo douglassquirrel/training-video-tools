@@ -92,6 +92,7 @@ def _settings(rows, problems):
 def read(folder):
     """The brand kit in `folder`: {"folder", "identity", "colours", "fonts", "font_files",
     "mark", "illustration", "settings"}, or BrandError with every problem."""
+    folder = os.path.abspath(folder)
     path = os.path.join(folder, "BRAND.md")
     if not os.path.isfile(path):
         raise BrandError(folder, ["no BRAND.md in %s" % folder])

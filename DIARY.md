@@ -388,3 +388,27 @@ and `out/` are gitignored so a Tier 3 run never lands in a commit.
 the scene-code interface (PLAN.md open question 2); meanwhile the parts that do not depend on it
 (fonts, drawing primitives, camera, `crop-insets`, `font-weights`, `assemble`, `check-video`) can
 go first: a reordering of PLAN.md's build order, to be confirmed by him.
+
+### 9 October 2026 — The font loader and the camera
+
+**Goal.** `fonts.load(kit, work_folder)`: CoreText registration for the process on macOS, a
+private `fonts.conf` and `FONTCONFIG_FILE` elsewhere, each file once; `camera.Camera` and the
+plane helpers, as numbers.
+
+**Test.** `tests/tier1/test_fonts.py` (three; the first in a fresh interpreter so the fonts are
+loaded before cairo's first text) and `tests/tier1/test_camera.py` (five).
+
+**Red.** Camera: an `ImportError` for `front`, `top`, `end` first (wrong reason; stubs added),
+then `NotImplementedError` ×7 and the probe subprocess failing: `8 failed`.
+
+**Green.** `1 failed` after implementing: the fontconfig file held
+`tests/tier1/../../examples/brands/paperboat/fonts`, because `brand.read` kept the folder as
+given. The reader now absolutises it. `121 passed`, coverage 99%.
+
+**Decision / surprise.** The fontconfig branch (`platform="linux"`) is tested on the Mac only
+as far as the file it writes and the variable it sets; whether cairo there honours a
+`FONTCONFIG_FILE` set in-process before the first text is still "Things checked" 5, for the
+device shell. New code is written with f-strings; the lint pass will convert the earlier
+`%`-formatting (ruff's UP031 flags 98 of them) rather than mixing styles by hand now.
+
+**State.** Green: 121 tests. Next: the drawing primitives.
