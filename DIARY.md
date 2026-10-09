@@ -197,3 +197,27 @@ section or scene key and the row's key) so that a check can say `line N:`; PLAN.
 "where there is one". A missing setting has no line, so its message starts `Settings:`.
 
 **State.** Green: 20 tests. Next: Colours, Insets and scene-property checks.
+
+### 9 October 2026 — Script check: Colours, Insets, scenes, cues and side panels
+
+**Goal.** The rest of the format's rules: `#RRGGBB`, four-number insets, unique scene keys,
+known properties, `kind`, a lettered step's `source`, insets that exist, numeric `extra` and
+`min`, the side-panel kinds with their list and their cue, cues or `extra`, cue numbering,
+known sub-bullets, `mistake` with ` / ` and at most one per scene, `step` with a steps panel
+and an item that exists, `added:` not empty in cues and lists.
+
+**Test.** `tests/tier1/test_script_check_scenes.py`, nineteen tests.
+
+**Red.** `19 failed`: every one an assertion mismatch against `[]`.
+
+**Green.** After implementing: `5 failed, 34 passed`, all five my line numbers once more (I had
+forgotten the `### Pictures` lines before the end scene: it starts at 67, not 65; the inset row
+is 39, not 40). Printed the fixture with its numbers, corrected the five, `39 passed in 0.07s`.
+
+**Decision / surprise.** A side-panel problem names the `side-panel` row's line when the
+property is written, and the scene heading's line when the default applies. Three fixture
+miscounts in three increments: from now on every expected line number is read off a numbered
+print of the fixture before the test is run, not counted by eye.
+
+**State.** Green: 39 tests. Next: `script.read` (refusal as an exception), typed settings with
+defaults, then the `check-script` command.
