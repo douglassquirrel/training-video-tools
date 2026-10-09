@@ -110,3 +110,25 @@ CLAUDE.md from the previous session goes in the same commit.
    Linux route is still to be checked in the device shell.
 
 **State.** Step 1's checks done. Next: `examples/`.
+
+### 9 October 2026 — Step 1, the example video and brand
+
+**Goal.** `examples/` for every test, `--dry-run` and Tier 3 check: invented, nothing real.
+
+**Decision / surprise.** `examples/brands/paperboat/` (Paperboat Press: colours, three fonts,
+mark, illustration, settings) and `examples/videos/paper-boat/` (*Folding a Paper Boat*: seven
+scenes, eleven cues, every setting and every scene feature the format has, including a `## Notes`
+section with a table between scenes and an `x-` key). The source figure, the end-card drawing
+and the mark reference were drawn with Pillow (scratch script, not kept). The fonts are static
+instances of EB Garamond (OFL) at 400, 600 and italic 400, subset to Latin, renamed `PBS …` as
+the OFL requires for a modified font; `fonts/OFL.txt` beside them. 150 KB each. Checked with the
+reference reader, read-only from its folder:
+```
+Folding a Paper Boat: 7 scenes, 11 cues, 125 words (about 48 s of speech at 2.6 words a second)
+Tracker: A B C
+…
+No problems found.
+exit 0
+```
+
+**State.** Step 1 done. Next: step 2, `videotools.script`, test-first.
