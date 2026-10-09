@@ -195,3 +195,27 @@ def test_the_brand_a_script_names_is_found_above_the_script(kit, tmp_path):
     video = tmp_path / "videos" / "demo-video"
     video.mkdir(parents=True)
     assert brand.folder_for(str(video / "script.md"), "demo") == str(kit)
+
+
+CONTRAST = """
+**Contrast**, as WCAG ratios, for people:
+
+| Pair | Ratio | Verdict |
+|---|---|---|
+| ink on background | 11.2 | Any size. |
+| accent on background | 3.6 | Large text only. |
+"""
+
+
+def test_a_table_under_a_read_heading_without_a_key_value_header_is_for_people_and_skipped(kit):
+    plain = brand.read(write(kit, KIT))
+    with_contrast = brand.read(write(kit, KIT.replace("## Fonts", CONTRAST + "\n## Fonts")))
+    assert with_contrast["colours"] == plain["colours"]
+    assert with_contrast == plain
+
+
+def test_a_key_value_table_with_a_bad_colour_is_still_refused_beside_a_skipped_one(kit):
+    text = KIT.replace("| accent | #FF8000 | |", "| accent | orange | |").replace("## Fonts", CONTRAST + "\n## Fonts")
+    with pytest.raises(brand.BrandError) as e:
+        brand.read(write(kit, text))
+    assert e.value.problems == ["Colours: 'accent' is not #RRGGBB: orange"]

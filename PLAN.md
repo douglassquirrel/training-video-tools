@@ -2,7 +2,8 @@
 
 Written 9 October 2026 by Claude at Squirrel's request; rewritten the same day (17:30) from the
 first request, `inbox/done/request-from-training-video-2026-10-09.md`, after Squirrel's OK
-(9 October 2026, 17:15: "go ahead"). CLAUDE.md says how the work is done; this file says what
+(9 October 2026, 17:15: "go ahead"); amended the same day (19:01) from the second request,
+`inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14). CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -41,7 +42,8 @@ stderr in plain words, results and progress to stdout. Exit codes are shared:
 | 4 | An external program (ffmpeg, ffprobe, the speech model, a Python package the command needs) is missing or failed. What was written before the failure is named, nothing is deleted. |
 
 Every command reads the script first (and the brand kit if it draws), and refuses with every
-problem listed (exit 3) before doing anything else.
+problem listed (exit 3) before doing anything else; a malformed brand kit is reported in words
+like a malformed script, never as a traceback (request 2, item 2).
 
 ```
 check-script SCRIPT.md [--json OUT.json]
@@ -98,7 +100,10 @@ outside a scene. Defaults the format gives: `lead 0.7`, `cue-gap 0.55`, `tail 1.
 
 **`brand.read(folder)`** reads BRAND.md's Identity, Colours, Fonts, Mark, Illustration and
 Settings tables (key, value; for Fonts also the third column, the file), paths relative to the
-kit's folder. It resolves: a colour role to an `(r, g, b)` triple in 0–1, including a role used
+kit's folder. Under a read heading, only a table whose header row begins `| Key | Value |` is
+read; any other table there (the real kit's contrast table, `| Pair | Ratio | Verdict |`) is for
+people and skipped, as the script reader skips tables under unknown headings (request 2, item 1;
+Squirrel, 9 October 2026, 19:01). It resolves: a colour role to an `(r, g, b)` triple in 0–1, including a role used
 as a value (`fill | accent`); a font role to its file, which must exist (refused by role and
 path otherwise); settings `font-size-scale` (float), `background-grid` (`dots SPACING SIZE
 OPACITY` or `none`), `caption-band` (a colour role), `caption-rule` and `title-rule` (`ROLE
@@ -116,7 +121,10 @@ missing key is reported by the command that needs it.
 **`check-script SCRIPT.md [--json OUT.json]`** does what `script-check.py` does: prints the
 summary (scenes, cues, words and the estimate at 2.6 words a second; the tracker letters; every
 mistake; every `added:` line with where it comes from), then the problems if any, exit 1 if there
-are problems, 0 otherwise, 2 on usage. `--json` writes the parsed script as JSON and refuses an
+are problems, 0 otherwise, 2 on usage. It also reads the brand kit the script names with
+`brand.read` (standard library, so still Python 3.9) and lists the kit's problems after the
+script's, each prefixed with the BRAND.md path, so a kit `render` would refuse is found here first
+(request 2, item 3). `--json` writes the parsed script as JSON and refuses an
 existing file (exit 3).
 
 ## 2. `narrate`: the voice
@@ -209,8 +217,11 @@ never defaults from a palette: text with tracking, wrapping and anchors; polygon
 rounded rectangles, circles, Bézier curves, polylines cut to a fraction; arrows that draw on;
 pills (tags), callouts with leader lines, dimension lines, ✓/✗ badges, mitten hands; `shade`,
 `mix`, `rgb`. `videotools.camera` holds the oblique projection `Camera(scale, focus, centre,
-direction, kx, ky)` with `point(x, y, z)`, interpolation between two cameras, and points on a
-plane (`front`, `top`, `end`), generalised from the prototype's box.
+direction, kx, ky)` with `point(x, y, z)`, interpolation between two cameras, points on a
+plane (`front`, `top`, `end`), generalised from the prototype's box, and the prototype's two
+fabric helpers: `ripple(x0, x1, z, amp, n, phase)` (a wavy edge as `(x, z)` points) and
+`clip(pts, f)` (a polygon cut to the side where `f(point) >= 0`), which any cloth or paper
+subject needs (request 2, item 7; Squirrel, 9 October 2026, 19:01).
 
 ### The scene-code interface ("Settled" 13)
 
@@ -240,7 +251,8 @@ Scene code never imports `cairo` for text: it draws through `videotools.draw`.
 Frames at the given times (a negative time counts back from the scene's end; a time past the
 end is refused, exit 2), pasted on one sheet (`--grid` default `2x2`; the sheet is 1920×1080
 whatever the grid, frames scaled to fit; more frames than cells is refused), each labelled with
-its scene and time in its corner. Works on estimated timings with the warning of item 3.
+its scene, time and cue in a strip under the frame, never over it: no pixel of a frame is covered,
+since the header is one of the things a sheet is for checking (request 2, item 4). Works on estimated timings with the warning of item 3.
 Refuses an existing `--out` (exit 3). Needs cairo and Pillow.
 
 ## 6. `render`: scene by scene
@@ -328,8 +340,11 @@ errors; `from core import *`; colour names (`gold`, `navy`) that no longer descr
 `~/.video-tools.conf` (`video-tools.conf.example` committed): `SPEECH_MODEL_DIR`, `VOICE`, `SPEED`.
 Read, never run: `KEY=value`, `#` comments, optional quotes, `~` for home. The video's script
 overrides `VOICE` and `SPEED`; flags override both. `VIDEO_TOOLS_CONF` in the environment names
-another config file (the tests use it). Everything particular to a video or a brand lives in the
-script and the brand kit.
+another config file (the tests use it). `VIDEO_TOOLS_PYTHON` names a Python to run the commands
+under: each wrapper restarts itself under it before importing anything, instead of the
+repository's `.venv` (for the Linux device shell, where that venv is the Mac's; request 2, item 6;
+Squirrel, 9 October 2026, 19:01). Unset, the wrappers behave as before. Everything particular to
+a video or a brand lives in the script and the brand kit.
 
 ## Dependencies
 
@@ -356,8 +371,15 @@ Kokoro-82M model and voices in `~/models/kokoro/` (`model.onnx`, `voices.npz`).
    `CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, …)` through `ctypes` makes
    `select_font_face("EBG SemiBold")` find it (distinct widths for SemiBold, Regular, Italic),
    with nothing installed.
-5. *To check in the device shell (Linux):* that setting `FONTCONFIG_FILE` in-process before the
-   first text call is enough for cairo's fontconfig backend to find the brand's fonts.
+5. **Linux**, as reported by the training-video project (request 2, item 5; the device shell,
+   9 October 2026, 18:45–18:50: Linux aarch64, Python 3.10.12, cairo 1.16.0, pycairo 1.29.1,
+   ffmpeg 4.4.2, fontconfig 2.13.1), not run from here: setting `FONTCONFIG_FILE` in-process is
+   enough, the brand's fonts drew correctly in every role; the suite passed but for the one
+   CoreText-only test (now skipped off macOS); the example's chain ran with the real ffmpeg
+   (`render` about 47 frames a second), `assemble` placed every cue to the millisecond with
+   clips at 22,050 and 24,000 Hz, `check-video` clean, and the refusals held. The repository's
+   `.venv` is the Mac's, so there the commands run under a venv outside the repository named by
+   `VIDEO_TOOLS_PYTHON` (Configuration).
 6. **ffmpeg's output formats**, recorded 9 October 2026 on a 3 s invented file (blue frames, a
    1 s tone from 1.0 s): `ffprobe -v error -show_entries format=duration,size:stream=index,codec_type,
    nb_frames,r_frame_rate,width,height,sample_rate,channels -of json` gives strings
@@ -388,6 +410,12 @@ remote ("Settled" 7).
 6. Item 9 (`crop-insets`, `font-weights`).
 7. README, then lint as its own pass.
 8. The training-video project re-makes the bed video and reports back through `inbox/`.
+9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
+   order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
+   with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
+   CoreText test skipped off macOS, `VIDEO_TOOLS_PYTHON` and a README section for the device
+   shell); 7 (`ripple` and `clip` in the camera; the diary's time corrected). Then "Where things
+   stand" says 1–4 are in, and the training-video project starts the re-make when Squirrel says.
 
 ## Testing
 
@@ -445,3 +473,9 @@ None.
     cues numbered from 01; `assemble --replace` covers its intermediates only, never the finished
     video; items 7, 8 and 9 built before 4 and 5 (Squirrel, 9 October 2026, 19:45: "assumptions
     all ok, please continue").
+14. The second request (`inbox/done/request-from-training-video-2026-10-09-2.md`), all seven
+    items, with three choices: the brand reader reads only `Key | Value` tables rather than the
+    kit moving its contrast table; a `VIDEO_TOOLS_PYTHON` setting the wrappers honour, with a
+    README section, rather than the section alone; the ripple and polygon-clipping helpers added
+    to the package rather than left to scene code (Squirrel, 9 October 2026, 19:01: "1. agreed
+    6. agreed 7. agreed. Go ahead and make the update per the request").

@@ -90,3 +90,22 @@ def test_the_script_is_never_modified(example):
     before = open(example, "rb").read()
     run("check-script", example, "--json", example + ".json")
     assert open(example, "rb").read() == before
+
+
+def test_a_malformed_brand_kit_is_listed_with_the_scripts_problems_naming_the_brand_file(example):
+    kit = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(example))), "brands", "paperboat", "BRAND.md")
+    text = open(kit, encoding="utf-8").read().replace("| accent | #", "| accent | orange #", 1)
+    open(kit, "w", encoding="utf-8").write(text)
+    code, out, err = run("check-script", example)
+    assert (code, err) == (1, "")
+    assert out.startswith(SUMMARY)
+    assert out.endswith(f"\n1 problem:\n  - {kit}: Colours: 'accent' is not #RRGGBB: orange #1F6F8B\n")
+
+
+def test_a_missing_brand_kit_is_one_problem_not_two(example):
+    text = open(example, encoding="utf-8").read().replace("| brand | paperboat |", "| brand | nokit |")
+    open(example, "w", encoding="utf-8").write(text)
+    code, out, err = run("check-script", example)
+    assert (code, err) == (1, "")
+    assert "\n1 problem:\n" in out
+    assert out.splitlines()[-1].startswith("  - line 17: Settings: brand 'nokit' has no brands/nokit/BRAND.md under ")

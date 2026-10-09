@@ -164,7 +164,9 @@ Reads a video's `script.md` (the format is the training-video project's
 `videos/SCRIPT-FORMAT.md`), checks it, and prints a summary: scenes, cues, words and an estimate
 of the speech, the tracker's letters, every mistake, and every line marked `added:` (what goes
 beyond the source, for approval). Then either `No problems found.` or the problems, one per line,
-each naming its line in the script where there is one. `--json OUT` also writes the parsed
+each naming its line in the script where there is one. It also reads the brand kit the script
+names and lists the kit's problems, each prefixed with the `BRAND.md` path, so a kit `stills` or
+`render` would refuse is found here first. `--json OUT` also writes the parsed
 script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
 
@@ -360,6 +362,10 @@ tried there.
   prototype, nothing writes over an existing file, ffmpeg's failures are reported, and clips of
   any sample rate are placed correctly. The whole-page image for the title card is
   `work/insets/title-page.png`; the italic at weight 400 is named `PREFIX Italic`.
+- 9 October 2026 (evening): a brand kit's `BRAND.md` may hold other tables under the read
+  headings (a contrast table under Colours, say): only a table whose header row begins
+  `| Key | Value |` is read. `check-script` now checks the brand kit too. A malformed kit is
+  reported in words with exit 3 by every command.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

@@ -83,3 +83,14 @@ def test_missing_insets_are_a_useful_error(example, tmp_path):
     code, out, err = run("stills", example, "A:1.5", "--out", tmp_path / "s.png")
     assert (code, out) == (3, "")
     assert err == f"stills: no {os.path.join(os.path.dirname(example), 'work', 'insets', 'A.png')} (inset 'A'); run crop-insets first\n"
+
+
+def test_a_malformed_brand_kit_is_refused_in_words_with_exit_3_not_a_traceback(prepared, tmp_path):
+    kit = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(prepared))), "brands", "paperboat", "BRAND.md")
+    text = open(kit, encoding="utf-8").read().replace("| website |", "| x-website |", 1)
+    open(kit, "w", encoding="utf-8").write(text)
+    code, out, err = run("stills", prepared, "A:1.5", "--out", tmp_path / "s.png")
+    assert (code, out) == (3, "")
+    assert "Traceback" not in err
+    assert err == f"stills: {os.path.dirname(kit)}: Identity: 'website' is missing\n"
+    assert not os.path.exists(tmp_path / "s.png")

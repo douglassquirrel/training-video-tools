@@ -141,3 +141,15 @@ def test_the_script_and_narration_are_never_modified(prepared, ffstub):
     before = [open(p, "rb").read() for p in paths]
     run("render", prepared, "--scenes", "end", env=ffstub)
     assert [open(p, "rb").read() for p in paths] == before
+
+
+def test_a_malformed_brand_kit_is_refused_in_words_with_exit_3_not_a_traceback(prepared, ffstub):
+    kit = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(prepared))), "brands", "paperboat", "BRAND.md")
+    text = open(kit, encoding="utf-8").read().replace("| accent | #", "| accent | not-a-colour #", 1)
+    assert text.count("not-a-colour") == 1
+    open(kit, "w", encoding="utf-8").write(text)
+    code, out, err = run("render", prepared, "--scenes", "A")
+    assert (code, out) == (3, "")
+    assert "Traceback" not in err
+    assert err.startswith("render: " + os.path.dirname(kit) + ": Colours: 'accent' is not #RRGGBB: not-a-colour #")
+    assert not os.path.exists(segments(prepared))

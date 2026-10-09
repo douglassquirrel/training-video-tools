@@ -40,19 +40,26 @@ def rgb(hex_colour):
 
 
 def _tables(text):
-    """{heading: [(key, value, third)]} for every '## Heading' with a table under it."""
-    tables, heading = {}, None
+    """{heading: [(key, value, third)]} for every '## Heading' with a `| Key | Value |` table under
+    it. A table with any other header (the contrast table) is for people and skipped."""
+    tables, heading, reading = {}, None, False
     for line in text.splitlines():
         m = re.match(r"^##\s+(.+?)\s*$", line)
         if m:
-            heading = m.group(1).lower()
+            heading, reading = m.group(1).lower(), False
             continue
-        if heading and line.startswith("|"):
-            rows = tables.setdefault(heading, [])     # a header alone still makes the table
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) < 2 or cells[0].lower() == "key" or set(cells[0]) <= set("-: "):
-                continue
-            rows.append((cells[0], cells[1], cells[2] if len(cells) > 2 else ""))
+        if not line.startswith("|"):
+            reading = False                           # a table ends at its first non-table line
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not reading:                               # the first line of a table is its header
+            reading = heading is not None and len(cells) >= 2 and [c.lower() for c in cells[:2]] == ["key", "value"]
+            if reading:
+                tables.setdefault(heading, [])        # a header alone still makes the table
+            continue
+        if len(cells) < 2 or set(cells[0]) <= set("-: "):
+            continue
+        tables[heading].append((cells[0], cells[1], cells[2] if len(cells) > 2 else ""))
     return tables
 
 

@@ -660,3 +660,86 @@ coverage 98%. Found by lint, not by testing: nothing in behaviour; two unused im
 unused variable were the only non-style finds.
 
 **State.** Lint clean, 238 tests, 98%. README complete for all eight commands.
+
+### 9 October 2026 — The second request arrives and is OK'd
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-2.md` (18:44–18:55, from
+Claude on the training-video side, after trying the tools on the bed script and kit in the Linux
+device shell): the tools fit, but seven things, one blocking. Reported to Squirrel at 18:57 with
+each claim checked against the code: (1) `brand._tables` reads every row under a read heading,
+so the real kit's contrast table is refused; (2) `stills` and `render` let `BrandError` escape as
+a traceback with exit 1; (3) `check-script` never reads the kit; (4) the sheet's label covers the
+frame's header (seen on their `s1.png`); (5) one fonts test is CoreText-only; (6) the wrappers
+find no usable venv on Linux; (7) the prototype's `ripple` and `clip_half` are missing, and the
+diary's "21:30" was wrong (the clock said 18:57, the last commit 18:30). Squirrel (19:01): "1.
+agreed 6. agreed 7. agreed. Go ahead and make the update per the request": read only `Key |
+Value` tables; a `VIDEO_TOOLS_PYTHON` setting plus a README section; the two helpers added to
+the package. Recorded in PLAN.md ("Settled" 14, build step 9, items 1, 4, 5, Configuration,
+"Things checked" 5); the item moved to `inbox/done/`.
+
+**State.** Next: item 1, the brand reader's tables, test-first.
+
+### 9 October 2026 — Request 2, item 1: only `Key | Value` tables are read
+
+**Goal.** A table under a read heading whose header is not `| Key | Value |` is for people and
+skipped; a `Key | Value` table beside it is still checked.
+
+**Test.** `tests/tier1/test_brand.py`:
+`a_table_under_a_read_heading_without_a_key_value_header_is_for_people_and_skipped` (the demo
+kit with a contrast table under Colours reads identically to the kit without it) and
+`a_key_value_table_with_a_bad_colour_is_still_refused_beside_a_skipped_one`.
+
+**Red.** `2 failed, 11 passed`:
+```
+E   videotools.brand.BrandError: …/brands/demo: Colours: 'Pair' is not #RRGGBB: Ratio
+E   Colours: 'ink on background' is not #RRGGBB: 11.2
+```
+The request's failure exactly: the contrast rows read as colours.
+
+**Green.** `_tables` now treats the first line of each table as its header and reads the rows
+only when its first two cells are `Key` and `Value`; a table ends at its first non-table line.
+`13 passed`; the suite `240 passed`, 98%. Read-only check on the real kit
+(`training-video/brands/douglassquirrel`): reads, 12 colours, 7 fonts (with fallbacks),
+7 settings.
+
+**State.** Item 1 done. Next: item 2, `BrandError` in words with exit 3.
+
+### 9 October 2026 — Request 2, item 2: a refused brand kit is reported in words, exit 3
+
+**Goal.** `stills` and `render` (the two commands that load the kit; `assemble`, `check-video`,
+`crop-insets` and `narrate` never do) print the kit's problems on stderr and exit 3, never a
+traceback or exit 1.
+
+**Test.** `test_a_malformed_brand_kit_is_refused_in_words_with_exit_3_not_a_traceback` in
+`tests/tier2/test_render.py` (a bad colour) and `tests/tier2/test_stills.py` (a missing
+`website`); both check no segment or sheet is written.
+
+**Red.** `2 failed`: `assert (1, '') == (3, '')` for each: the uncaught `BrandError`'s exit 1.
+
+**Green.** `brand.BrandError` caught beside `ScriptError` in both commands' `main`.
+`21 passed` for the two files.
+
+**State.** Items 1 and 2 done. Next: item 3, `check-script` reads the brand kit.
+
+### 9 October 2026 — Request 2, item 3: `check-script` reads the brand kit
+
+**Goal.** A kit `render` would refuse is found by `check-script`: its problems listed after the
+script's, each prefixed with the BRAND.md path; a kit the script check already found missing is
+one problem, not two.
+
+**Test.** `tests/tier2/test_check_script.py`:
+`a_malformed_brand_kit_is_listed_with_the_scripts_problems_naming_the_brand_file` and
+`a_missing_brand_kit_is_one_problem_not_two`.
+
+**Red.** `2 failed`: the first `assert (0, '') == (1, '')` (the kit's bad colour passed), the
+right failure. The second failed on my own wrong prediction of the existing message (it has a
+`line 17:` prefix and says "has no brands/nokit/BRAND.md under"); the test's string was
+corrected to the real message, and the behaviour (one problem) was already right, so that test
+is a characterisation of the guard, not a red-green cycle.
+
+**Green.** `check_script.brand_problems` reads the kit through `brand.folder_for` and
+`brand.read` and skips it when the script's problems already name the brand. `11 passed`; the
+suite `244 passed`, 98%. Still Python 3.9: `videotools.check_script.main` run under
+`/usr/bin/python3` (3.9.6) on the example prints "No problems found."
+
+**State.** Items 1–3 done. Next: README for the three, commit; then item 4.

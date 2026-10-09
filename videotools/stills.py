@@ -11,7 +11,7 @@ import sys
 
 import cairo
 
-from videotools import cli, frame, script
+from videotools import brand, cli, frame, script
 
 PROG = "stills"
 SHEET = (1920, 1080)
@@ -45,7 +45,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         return _run(args)
-    except (cli.Failure, script.ScriptError) as f:
+    except (cli.Failure, script.ScriptError, brand.BrandError) as f:
         return cli.report(PROG, cli.Failure(str(f), getattr(f, "code", cli.REFUSED)))
 
 
