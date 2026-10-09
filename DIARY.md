@@ -290,3 +290,28 @@ nanosecond of floating-point slack (`0.7 + 1.55` is not exactly `2.25` in binary
 test at 157.5 frames.
 
 **State.** Green: 69 tests. Next: the brand-kit and config readers (the rest of item 1).
+
+### 9 October 2026 — The brand-kit and config readers
+
+**Goal.** `brand.read(folder)`: Identity, Colours (as 0–1 triples), Fonts (role → name and
+file, files checked, fallbacks for the four optional roles), Mark, Illustration (files checked),
+Settings typed with defaults; `colour()` resolving a role or a hex value; `text_colour()` with
+the small-text rule; `folder_for()`; every problem listed in `BrandError`. `config.read()`:
+`KEY=value`, comments, quotes, `~`, unknown keys refused, `VIDEO_TOOLS_CONF`.
+
+**Test.** `tests/tier1/test_brand.py` (eleven) and `tests/tier1/test_config.py` (four).
+
+**Red.** `NotImplementedError` ×12, `no attribute 'folder_for'`, `'ConfigError'`, `'path'`:
+`15 failed`.
+
+**Green.** After implementing: `1 failed, 83 passed`: the problems came out in the wrong order
+(missing tables reported before everything else). Two changes to the code, not the test: a
+missing table is reported in its place, and a table whose header is there but whose rows are
+gone counts as present, so its missing key is named (`Illustration: 'end-card' is missing`
+rather than `no 'Illustration' table`). Then `84 passed`, coverage 99%.
+
+**Decision / surprise.** The brand reader resolves font fallbacks (`body-medium` → `body`, …)
+so the chrome never has to; `font_files` holds only the roles the kit names, for the font
+loader. `config.read` expands `~` only in `_DIR` keys.
+
+**State.** Green: 84 tests. Item 1 and item 3 done: build step 2 complete. Next: step 3, `narrate`.
