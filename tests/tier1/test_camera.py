@@ -2,7 +2,7 @@
 
 import pytest
 
-from videotools.camera import Camera, between, end, front, top
+from videotools.camera import Camera, between, clip, end, front, ripple, top
 
 
 def test_the_focus_point_lands_on_the_centre():
@@ -35,3 +35,19 @@ def test_points_on_the_three_planes():
     assert front(cam, [(1, 2)], y=3) == [cam.point(1, 3, 2)]
     assert top(cam, [(1, 2)], z=6) == [cam.point(1, 2, 6)]
     assert end(cam, [(2, 3)], x=5) == [cam.point(5, 2, 3)]
+
+
+def test_ripple_runs_from_x0_to_x1_in_n_steps_about_z_within_the_amplitude():
+    pts = ripple(10.0, 20.0, 5.0, 0.5, n=4)
+    assert len(pts) == 5
+    assert [x for x, _ in pts] == [10.0, 12.5, 15.0, 17.5, 20.0]
+    assert all(abs(z - 5.0) <= 0.5 for _, z in pts)
+    assert pts != ripple(10.0, 20.0, 5.0, 0.5, n=4, phase=1.0)       # the phase moves the waves
+    assert ripple(10.0, 20.0, 5.0, 0.0, n=4) == [(x, 5.0) for x in (10.0, 12.5, 15.0, 17.5, 20.0)]
+
+
+def test_clip_keeps_the_side_of_a_polygon_where_f_is_not_negative_cutting_edges_where_it_crosses():
+    square = [(0, 0), (4, 0), (4, 4), (0, 4)]
+    assert clip(square, lambda p: p[0] - 1) == [(1.0, 0.0), (4, 0), (4, 4), (1.0, 4.0)]   # x >= 1
+    assert clip(square, lambda p: 1) == square                                            # all kept
+    assert clip(square, lambda p: -1) == []                                               # all cut

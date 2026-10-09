@@ -44,3 +44,29 @@ def test_without_a_venv_the_wrapper_runs_as_it_is(tmp_path):
     shutil.rmtree(folder / ".venv")
     p = subprocess.run([sys.executable, str(folder / "check-script"), "--help"], capture_output=True, text=True)
     assert p.returncode == 0 and p.stdout.startswith("usage: check-script")
+
+
+def fake_python(tmp_path, name="other-python"):
+    """A Python somewhere else that records that it was used, then runs the real one."""
+    fake = tmp_path / name
+    fake.write_text("#!/bin/sh\necho used-{} >> '{}'\nexec '{}' \"$@\"\n".format(name, tmp_path / "venv.log", sys.executable))
+    fake.chmod(0o755)
+    return fake
+
+
+def test_video_tools_python_names_the_python_the_wrapper_runs_under_even_beside_a_venv(tmp_path):
+    folder = copy_with_fake_venv(tmp_path)
+    other = fake_python(tmp_path)
+    env = dict(os.environ, VIDEO_TOOLS_PYTHON=str(other))
+    p = subprocess.run([sys.executable, str(folder / "check-script"), "--help"], capture_output=True, text=True, env=env)
+    assert p.returncode == 0 and p.stdout.startswith("usage: check-script")
+    assert (folder / "venv.log").read_text() == "used-other-python\n"      # once: no loop, and not the .venv
+
+
+def test_video_tools_python_that_does_not_exist_is_a_useful_error_exit_3(tmp_path):
+    folder = copy_with_fake_venv(tmp_path)
+    env = dict(os.environ, VIDEO_TOOLS_PYTHON=str(tmp_path / "nowhere" / "python"))
+    p = subprocess.run([sys.executable, str(folder / "narrate"), "--help"], capture_output=True, text=True, env=env)
+    assert (p.returncode, p.stdout) == (3, "")
+    assert p.stderr == f"narrate: VIDEO_TOOLS_PYTHON names no such file: {tmp_path / 'nowhere' / 'python'}\n"
+    assert not (folder / "venv.log").exists()

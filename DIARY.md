@@ -2,27 +2,33 @@
 
 ## Where things stand
 
-9 October 2026, 21:30. **The first request is built in full.** All eight commands work
-(`check-script`, `narrate`, `crop-insets`, `stills`, `render`, `assemble`, `check-video`,
-`font-weights`) on the package `videotools/` (readers for the script, brand kit and config; the
-timeline; the drawing primitives; the camera; the font loader; the chrome and the frame; the
-scene-module loader). Build steps 1–7 of PLAN.md are done; step 8 is the training-video
-project's: re-make the bed video with these tools and report back through `inbox/`.
+9 October 2026, 19:13 (from the clock). **The first request is built in full and the second
+request's seven items are in.** All eight commands work (`check-script`, `narrate`,
+`crop-insets`, `stills`, `render`, `assemble`, `check-video`, `font-weights`) on the package
+`videotools/`. Build steps 1–7 and 9 of PLAN.md are done; step 8 is the training-video
+project's: re-make the bed video with these tools and report back through `inbox/`. **For the
+training-video project: request 2's items 1–4 are in** (the real `BRAND.md` reads, with its
+contrast table; a malformed kit is words and exit 3; `check-script` checks the kit; the sheet's
+label is under the frame), and so are 5–7 (`VIDEO_TOOLS_PYTHON` for the device shell, README
+"Running from the Linux device shell"; `camera.ripple` and `camera.clip`).
 
-Green: 238 tests, coverage 98%, `ruff check .` clean. The suite needs pycairo, numpy, soundfile,
-Pillow and fontTools from the venv (libraries, not programs) and no external program, model or
-network: ffmpeg, ffprobe and the speech model are stubs in `tests/stubs/`.
+Green: 249 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
+no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
+`tests/stubs/`. One test is skipped off macOS (CoreText).
 
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
-video, which `check-video` passes clean (the entry "Tier 3: the whole chain"). Not yet tried: the
-Linux device shell (fontconfig fonts: PLAN.md "Things checked" 5), and a real `assemble` with
-clips at a rate other than 24 kHz.
+video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); after request 2,
+the real brand kit read (counts only), a sheet looked at, and the wrappers run under
+`VIDEO_TOOLS_PYTHON`. Linux was tried by the training-video project (PLAN.md "Things checked"
+5), not from here. Not yet tried: a real `assemble` with clips at a rate other than 24 kHz on
+this Mac (the Linux report covers 22,050 Hz).
 
-Waiting on Squirrel: nothing in PLAN.md. There is no GitHub remote yet ("Settled" 7), so nothing
-is pushed; `git log` has every increment. The bed video's acceptance (PLAN.md step 8) is the
-training-video project's work; anything it finds comes back through `inbox/`.
+Waiting on Squirrel: nothing. The inbox is empty. The bed video's re-make starts when Squirrel
+tells the training-video project to.
 
-Known-wrong in a past entry: the `check-video` entry says `180 passed`; the run was `179 passed`.
+Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
+passed`. The previous version of this section was dated "21:30"; the session ended at 18:30.
 
 How the tests work: `tests/tier1/` pure functions (pycairo for `test_draw*.py` and
 `test_fonts.py`); `tests/tier2/` runs each command as a subprocess through `conftest.run()`
@@ -775,3 +781,40 @@ test process, `1 skipped … registers fonts with CoreText, which only macOS has
 `3 passed`. The Linux Tier 3 results are in PLAN.md "Things checked" 5, marked as reported.
 
 **State.** Items 1–5 done. Next: item 6, `VIDEO_TOOLS_PYTHON`.
+
+### 9 October 2026 — Request 2, item 6: `VIDEO_TOOLS_PYTHON`
+
+**Goal.** A wrapper runs under the Python `VIDEO_TOOLS_PYTHON` names, even beside a `.venv`,
+once (no loop); a path that does not exist is a useful error, exit 3; unset, as before.
+
+**Test.** `tests/tier2/test_wrappers.py`:
+`video_tools_python_names_the_python_the_wrapper_runs_under_even_beside_a_venv` (a shim logs
+that it was used; the log has exactly one line) and
+`video_tools_python_that_does_not_exist_is_a_useful_error_exit_3`.
+
+**Red.** `2 failed`: `assert 'used-the-venv\n' == 'used-other-python\n'` and
+`assert (0, 'usage: n…') == (3, '')`: the setting was ignored.
+
+**Green.** The same block in all eight wrappers: `PYTHON` is the setting, else `.venv`'s Python
+if it exists; re-run under it unless already there (the `VIDEO_TOOLS_VENV` marker the exec
+sets, or `sys.prefix` for the venv). `5 passed`. README: "Running from the Linux device shell".
+
+### 9 October 2026 — Request 2, item 7: `ripple` and `clip`; the diary's time
+
+**Goal.** The prototype's two fabric helpers in `videotools.camera`, generic: `ripple(x0, x1,
+z, amp, n, phase)` and `clip(pts, f)`.
+
+**Test.** `tests/tier1/test_camera.py`:
+`ripple_runs_from_x0_to_x1_in_n_steps_about_z_within_the_amplitude` and
+`clip_keeps_the_side_of_a_polygon_where_f_is_not_negative_cutting_edges_where_it_crosses`.
+
+**Red.** First an `ImportError` (wrong reason); with stubs, `NotImplementedError` ×2. Before
+that run I corrected my own hand-derived expectation for `clip`: walking the prototype's
+algorithm, the cut square starts at the first crossing, `[(1.0, 0.0), (4, 0), (4, 4), (1.0,
+4.0)]`, not where I had first written it.
+
+**Green.** Both ported as they were (the prototype's `clip_half` renamed `clip`). `7 passed`.
+
+**Decision / surprise.** The "21:30" in the previous "Where things stand" was never a clock
+reading; the session that wrote it ended at 18:30. Corrected in the rewrite below, from the
+clock, and a reminder to take every time from `TZ=Europe/London date +%H:%M`.

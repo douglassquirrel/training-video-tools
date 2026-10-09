@@ -37,6 +37,24 @@ cd video-tools
 The commands (`./check-script`, `./narrate`, …) find that `.venv` themselves, whichever
 `python3` your shell has; nothing is installed outside the folder. Then the speech model:
 
+### Running from the Linux device shell
+
+Where the checkout is shared with a Linux machine (Claude's device shell sees this folder over a
+mount), the repository's `.venv` is the Mac's and cannot run there. Make a venv *outside* the
+repository, once, and name its Python in `VIDEO_TOOLS_PYTHON`; every command restarts itself
+under it:
+
+```bash
+python3 -m venv --system-site-packages /tmp/work-$(id -u)/venv
+/tmp/work-$(id -u)/venv/bin/pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools
+export VIDEO_TOOLS_PYTHON=/tmp/work-$(id -u)/venv/bin/python
+./check-script videos/make-bed/script.md
+```
+
+Never build that venv inside the repository from Linux (it would shadow the Mac's). With
+`VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a path that does not exist is
+refused with exit 3.
+
 ### One-time set-up of the speech model
 
 These are the only steps that use the network. Run once per machine.
@@ -264,7 +282,8 @@ script), `colours` (the script's Colours as red-green-blue triples in 0–1), `b
 `colours`, `fonts`, `settings`), `area` (its rectangle) and `label(text)`, which returns the
 text after checking it is in the scene's "On screen" list and stops the run with a message if
 it is not. Draw with `videotools.draw` (text, pills, callouts, arrows, dimension lines, badges,
-hands, shapes) and `videotools.camera` for an oblique 3D view; import the primitives as `d`
+hands, shapes) and `videotools.camera` for an oblique 3D view, with `ripple` (a wavy edge) and
+`clip` (a polygon cut to one side) for cloth and paper; import the primitives as `d`
 (`from videotools import draw as d`), since the module's own function is called `draw`.
 
 ### `assemble SCRIPT.md [--out FILE] [--replace]`
@@ -334,20 +353,22 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(238 tests, lint clean).
+(249 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
 refuse) and `font-weights` on a real variable font into a scratch folder. Done and recorded in
-`DIARY.md` on 9 October 2026, on macOS; the Linux device shell (fontconfig fonts) is still to be
-tried there.
+`DIARY.md` on 9 October 2026, on macOS. On Linux (the device shell, 9 October 2026, reported by
+the training-video project, recorded in PLAN.md "Things checked" 5): the suite passes with the
+one CoreText test skipped, the fonts draw through fontconfig, and the example's chain runs
+with ffmpeg 4.4.
 
 ## Known limitations and non-goals
 
 - Only one frame size, 1920×1080 (every region is named in one place, `chrome.Layout`, so a
   second size can come later), and only the Kokoro model through kokoro-onnx.
-- Fonts are found through CoreText on macOS and fontconfig elsewhere; the fontconfig route has
-  not yet been run on Linux.
+- Fonts are found through CoreText on macOS and fontconfig elsewhere (run on Linux once, by
+  the training-video project, not from here).
 - No network use at run time: no cloud speech, no fetching of models or brand assets.
 - No timeline editing and no graphical interface; no slide decks.
 - Anything particular to one video (its drawing, narration, sources) belongs in that video's
@@ -367,7 +388,9 @@ tried there.
   headings (a contrast table under Colours, say): only a table whose header row begins
   `| Key | Value |` is read. `check-script` now checks the brand kit too. A malformed kit is
   reported in words with exit 3 by every command. `stills` puts each label in a strip under
-  its frame instead of over its corner.
+  its frame instead of over its corner. `VIDEO_TOOLS_PYTHON` names the Python the commands run
+  under (for the Linux device shell, above). `videotools.camera` gains the prototype's `ripple`
+  (a wavy edge) and `clip` (a polygon cut to one side of a line) for cloth and paper.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text
