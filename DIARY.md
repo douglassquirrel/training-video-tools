@@ -2,8 +2,11 @@
 
 ## Where things stand
 
-9 October 2026, 21:11 (from the clock). **Requests 1 to 8 are built in full, and the bed video
-is accepted and rebuilt on the frame methods.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
+9 October 2026, 21:20 (from the clock), at the end of the session that built requests 2 to 8.
+**Requests 1 to 8 are built in full, and the bed video is accepted and rebuilt on the frame
+methods.** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
+(empty at 21:20; anything at its top level other than README.md is new and is reported to
+Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
 `c1720ae` and matches the 7 October original to the frame and the millisecond (request 4).
@@ -30,8 +33,10 @@ video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); s
 real brand kit read (counts only), a sheet looked at, the wrappers run under
 `VIDEO_TOOLS_PYTHON`, `crop-insets` under the Mac's Python 3.9 without Pillow (the one-line
 message, exit 4), and the whole chain again at request 8 (same SHA-256 as the first time;
-`check-video --sheet` looked at). Note: `~/.video-tools.conf` on this Mac has no
-`SPEECH_MODEL_DIR`; Tier 3 used a scratch config through `VIDEO_TOOLS_CONF`. Linux was tried by the training-video project (PLAN.md "Things checked" 5),
+`check-video --sheet` looked at). `~/.video-tools.conf` on this Mac now names
+`SPEECH_MODEL_DIR=~/models/kokoro` (Squirrel set it at 21:17; `narrate --dry-run` on the
+example finds the model). Scratch copies of the example live only in the session's scratchpad,
+never in the repository. Linux was tried by the training-video project (PLAN.md "Things checked" 5),
 not from here. Not yet tried: a real `assemble --replace` with the real ffmpeg on this Mac
 (the stub now mirrors ffmpeg's refusal, and the Linux report found the fault), and a real
 `assemble` with clips at a rate other than 24 kHz here (the Linux report covers 22,050 Hz).
@@ -39,8 +44,13 @@ not from here. Not yet tried: a real `assemble --replace` with the real ffmpeg o
 Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
 fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
 
-Waiting on Squirrel: nothing. The inbox is empty. The bed video's re-make starts when Squirrel
-tells the training-video project to.
+Waiting on Squirrel: nothing. The inbox is empty. The bed video is re-made and accepted
+(request 4), rebuilt on the frame methods (request 8); what comes next is the training-video
+project's (a second video, and any request it sends here). Known limits, all deliberate and
+recorded: request 4's item 2 (the prototype's "+ Pillows" roundel and icon) is not done; the
+checklist rows are 60 px apart where the prototype's were 66 (request 5, not asked for);
+`check-script` sees only a module's own top-level `def`s; the stored-image frame tests pin
+layout, not fonts (the fresh-process font test pins fonts).
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
 passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30.
@@ -1146,3 +1156,16 @@ looked at: seven frames in a 3×3 grid, every header and roundel visible, each l
 strip in the display font.
 
 **State.** Request 8 done. Next: nothing waiting.
+
+### 9 October 2026 — Session end and handover
+
+**Decision / surprise.** Squirrel set `SPEECH_MODEL_DIR=~/models/kokoro` in
+`~/.video-tools.conf` (21:17), checked with `narrate --dry-run` on the example (11 cues, the
+model found, nothing written). The session's record, for whoever picks this up: nine commits
+today after `a30428a`, one or more per request, every one green on the full suite with lint
+clean, each pushed to `origin/main`; every behaviour through a test seen red first, with the
+exceptions named in their entries (two Linux-only faults that cannot go red on this Mac, and
+one `skipif` marker). "Where things stand" above is the handover.
+
+**State.** Green: 280 tests, 98%, lint clean, pushed at `92006d9` plus this entry. Inbox
+empty. Nothing waiting on Squirrel.
