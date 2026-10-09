@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-9 October 2026, 21:22 (from the clock), at the end of the session that built requests 2 to 8.
+9 October 2026, 21:38 (from the clock), after the Tier 3 check of `assemble --replace`.
 **Requests 1 to 8 are built in full, and the bed video is accepted and rebuilt on the frame
 methods.** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
 (empty at 21:22; anything at its top level other than README.md is new and is reported to
@@ -37,9 +37,12 @@ message, exit 4), and the whole chain again at request 8 (same SHA-256 as the fi
 `SPEECH_MODEL_DIR=~/models/kokoro` (Squirrel set it at 21:17; `narrate --dry-run` on the
 example finds the model). Scratch copies of the example live only in the session's scratchpad,
 never in the repository. Linux was tried by the training-video project (PLAN.md "Things checked" 5),
-not from here. Not yet tried: a real `assemble --replace` with the real ffmpeg on this Mac
-(the stub now mirrors ffmpeg's refusal, and the Linux report found the fault), and a real
-`assemble` with clips at a rate other than 24 kHz here (the Linux report covers 22,050 Hz).
+not from here. A real `assemble --replace` against the real ffmpeg on this Mac was tried on
+9 October at 21:34 (the entry "Tier 3: `assemble --replace` against real ffmpeg"): the three
+intermediates rewritten, the finished video untouched, the new output the same SHA-256. Clips at
+a rate other than 24 kHz are not worth a check here: `narrate` always writes Kokoro's 24 kHz, so
+another rate arises only from another model or a hand-made clip, and the Linux report covered
+22,050 Hz (Squirrel, 9 October 2026, 21:30).
 
 Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
 fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
@@ -1169,3 +1172,31 @@ one `skipif` marker). "Where things stand" above is the handover.
 
 **State.** Green: 280 tests, 98%, lint clean, pushed at `92006d9` plus this entry. Inbox
 empty. Nothing waiting on Squirrel.
+
+### 9 October 2026 — Tier 3: `assemble --replace` against real ffmpeg
+
+**Goal.** The one thing the handover listed as untried on this Mac: `assemble --replace` with
+the real ffmpeg 9.0.2 (the stub was made to mirror ffmpeg's refusal at request 3, but the real
+program had only been seen by the training-video project on Linux).
+
+**Check.** A fresh scratch copy of the example in the session's scratchpad; the chain
+`check-script`, `crop-insets`, `narrate`, `render`, `assemble`: the same output as every earlier
+Tier 3, `length 60.067 s (1802 frames), size 2546758 bytes`, sha256 `dcee4bb1…`. Then, with the
+SHA-256 of the three intermediates and the output taken first:
+
+1. `assemble` again, plain: `… /out/Folding a Paper Boat.mp4 already exists; give a new name`,
+   exit 3; nothing changed.
+2. `assemble --replace`, no `--out`: the same refusal, exit 3 ("Settled" 13: `--replace` never
+   covers the finished video).
+3. `assemble --replace --out new.mp4` with stdin closed: printed the three intermediates under
+   "Replacing:", rewrote all three (new mtimes 21:34:21, same bytes and SHA-256 as before), did
+   not stop to ask, wrote `new.mp4` with the same SHA-256 `dcee4bb1…`, exit 0. The finished video
+   in `out/` kept its mtime and SHA-256.
+
+**Decision / surprise.** No fault. One observation, not acted on: the refusal in case 2 says
+"give a new name" and does not say that `--replace` leaves the finished video alone, so a user
+who typed `--replace` to get past it may try it twice. A sentence in that message would cost
+nothing; raised with Squirrel, not changed.
+
+**State.** Green and clean as at the handover (280 tests, 98%; the suite not re-run this
+session, no code changed). Nothing waiting.
