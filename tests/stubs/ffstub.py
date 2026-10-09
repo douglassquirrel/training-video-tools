@@ -9,7 +9,9 @@ render stop reading stdin part-way. Nothing here is real ffmpeg output beyond it
 
 import json
 import os
+import struct
 import sys
+import zlib
 
 
 def read_fake(path):
@@ -29,6 +31,15 @@ def write_fake(path, fields):
     with open(path, "w", encoding="utf-8") as f:
         for k, v in fields.items():
             f.write(f"{k}={v}\n")
+
+
+def tiny_png(width=4, height=4, colour=(200, 40, 40)):
+    """A real, minimal PNG of one colour, so the sheet can be pasted from stub frames."""
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+    raw = b"".join(b"\x00" + bytes(colour) * width for _ in range(height))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
 
 
 def log(entry):
@@ -122,7 +133,7 @@ def ffmpeg(args):
     if "-frames:v" in args:
         fail_if("frame", output)
         with open(output, "wb") as f:
-            f.write(b"\x89PNG stub frame at " + arg_after(args, "-ss", "0").encode())
+            f.write(tiny_png())
         return 0
     if "-c:v" in args and arg_after(args, "-c:v") == "copy":
         fail_if("mux", output)

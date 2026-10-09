@@ -278,10 +278,15 @@ the length, size and SHA-256 of the output for the diary.
 `check-video SCRIPT.md [VIDEO] [--sheet OUT.png]`
 
 Compares the file (default the script's `output`) with the script: length within one frame of
-the scenes' total (`ffprobe`); peak below 0 dBFS (`volumedetect`); narration present in every
-cue's window and silence of 2 s or more (`silencedetect=n=-40dB:d=2.0`) only where the script has
-no cue; with `--sheet`, one frame from the middle of each scene on a sheet (refuses an existing
-file). Lists every problem; exit 1 if any, 0 if none, 4 if ffprobe or ffmpeg fail. The real
+the scenes' total (`ffprobe`); peak below 0 dBFS (`volumedetect`); silences of 2 s or more
+(`silencedetect=n=-40dB:d=2.0`) only outside every cue's window, and narration heard in every
+one. A cue's window is its clip's span as `assemble` lays it (the cue's start plus 50 ms, for
+the clip's length); a silence overlapping a window by more than 0.1 s (the slack the detector's
+boundaries are trusted to) is a problem, and one covering a window to within that slack means
+the cue was not heard, a second problem. With `--sheet`, one frame from the middle of each
+scene (`ffmpeg -ss T -frames:v 1`, into a temporary folder) pasted on a 1920×1080 sheet, up to
+four a row, labelled; refuses an existing file. Lists every problem; exit 1 if any, 0 if none,
+4 if ffprobe or ffmpeg fail. The real
 output formats of `ffprobe` and the two filters are recorded in DIARY.md before the parsers are
 written ("Things checked" 6).
 

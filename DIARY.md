@@ -515,3 +515,30 @@ frames must equal the timeline's; both are checked with ffprobe before anything 
 `videotools/ffmpeg.py` holds the running and parsing of ffmpeg and ffprobe for every command.
 
 **State.** Green: 165 tests. Next: `check-video`.
+
+### 9 October 2026 — `check-video`
+
+**Goal.** Length within a frame, peak below 0 dBFS, silences only outside cue windows and every
+cue heard, a sheet of one frame per scene; every problem listed, exit 1.
+
+**Test.** `tests/tier2/test_check_video.py`, fourteen tests; the stub's fake media carry
+`max_volume`, `mean_volume` and `silences`, and its frame extraction writes a real 4×4 PNG so
+the sheet can be pasted.
+
+**Red.** `12 failed, 1 passed`: `NotImplementedError`. "Never modified" proved after the green
+(check-video appending to the video: `1 failed`).
+
+**Green.** `1 failed, 12 passed` after implementing: my test said a silence beginning 0.3 s into
+a 1 s cue meant the cue was not heard, and the code said only that it overlapped. The rule was
+not pinned down, so it is now (PLAN.md item 8): a cue's window is its clip's span as `assemble`
+lays it (start + 50 ms), overlaps under 0.1 s are the detector's slack, a silence overlapping a
+window by more than that is a problem, and one covering the window to within the slack means the
+cue was not heard. Three tests pin the three cases. `14 passed`; the suite `180 passed`, 94%.
+
+**Decision / surprise.** The sheet is four frames a row; frames are extracted into a temporary
+folder, the one place a command writes outside the video's `work/`. README brought up to date
+with the four commands added since its first draft.
+
+**State.** Green: 180 tests. Six of eight commands built. Next: the scene-code interface
+(Squirrel), then chrome, `stills` and `render`; then a coverage pass (`draw.py`, `ffmpeg.py`)
+and lint.
