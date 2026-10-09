@@ -857,3 +857,29 @@ tests gained `-nostdin` (predicted). Full suite below.
 program failed: a reminder that a stub is only as good as its record of the real thing
 ("Things checked" 3 said nothing about an existing output). The `narration.wav` and
 `segments.txt` intermediates are written by Python, so `--replace` already covered them.
+
+### 9 October 2026 — Request 3, item 2: a missing package is one line, exit 4
+
+**Goal.** Every package import a command needs (numpy, soundfile, cairo, Pillow, fontTools,
+kokoro-onnx) fails as one line naming the package and its install, with the device-shell
+setting mentioned only when `VIDEO_TOOLS_PYTHON` is unset (Squirrel, 19:31), exit 4, before
+anything is written or printed.
+
+**Test.** `tests/tier2/test_missing_packages.py`: nine cases, one per command and package, each
+with the package shadowed by a module on `PYTHONPATH` that raises `ImportError`; and
+`with_video_tools_python_set_the_device_shell_hint_is_left_out`. `conftest.run()` now unsets a
+variable given as `None`.
+
+**Red.** `10 failed`: `render` and `stills` with cairo hidden gave a traceback and exit 1 (the
+module-level import); Pillow and fontTools cases gave the old wording; `assemble` and `narrate`
+tracebacks. Three cases first failed in my set-up (no segments, no `--replace`, no video) and
+were fixed before the real red.
+
+**Green.** `cli.need(module)` does the import or raises the one-line Failure; used at each point
+of use; `render` and `stills` no longer import cairo (or `frame`) at module level. `check-video`
+checks for Pillow before running its checks when `--sheet` is given, so nothing is half done.
+The narrate test's expected wording changed to the new one (predicted). Suite `259 passed`,
+98%, lint clean. Tier 3: `crop-insets` under `/usr/bin/python3` (no Pillow) prints the line and
+exits 4.
+
+**State.** Items 1 and 2 done. Next: item 3, the label test's reference in a subprocess.

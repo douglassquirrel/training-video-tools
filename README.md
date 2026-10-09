@@ -340,7 +340,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 | 1 | `check-script` / `check-video`: problems found, listed on stdout. | Fix the script, or the video. |
 | 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900. | See `--help`. |
 | 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
-| 4 | A package (the speech packages, Pillow, fontTools) is not installed in the venv; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
+| 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
 
@@ -395,7 +395,9 @@ with ffmpeg 4.4.
   (a wavy edge) and `clip` (a polygon cut to one side of a line) for cloth and paper.
 - 9 October 2026 (later): `assemble --replace` and `render --replace` now work with the real
   ffmpeg (it was asked to write over the listed files without `-y`, and gave up); every ffmpeg
-  call carries `-nostdin`, so it can never stop to ask.
+  call carries `-nostdin`, so it can never stop to ask. A package the command needs but its
+  Python lacks is one line naming the package and the install (it was a traceback for numpy,
+  soundfile and pycairo).
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

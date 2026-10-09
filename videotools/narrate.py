@@ -62,12 +62,7 @@ def _model_dir(conf):
 
 
 def _load_model(model, voices):
-    try:
-        from kokoro_onnx import Kokoro
-    except ImportError as e:
-        raise cli.Failure(f"the speech packages are not installed in this Python ({e}); install them "
-                          "into the venv as the README says", cli.EXTERNAL) from e
-    return Kokoro(model, voices)
+    return cli.need("kokoro_onnx").Kokoro(model, voices)
 
 
 def main(argv=None):
@@ -105,6 +100,8 @@ def _run(args):
     if existing and not args.replace:
         raise cli.Failure("these would be written over; delete them, or run with --replace:\n"
                           + "\n".join("  " + p for p in existing))
+    cli.need("numpy")
+    cli.need("soundfile")
     speech = _load_model(model, voices)
     available = sorted(speech.get_voices())
     if voice not in available:

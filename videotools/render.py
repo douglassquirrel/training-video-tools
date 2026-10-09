@@ -13,9 +13,7 @@ import os
 import subprocess
 import time
 
-import cairo
-
-from videotools import brand, cli, ffmpeg, frame, script
+from videotools import brand, cli, ffmpeg, script
 
 PROG = "render"
 
@@ -46,6 +44,9 @@ def segment_name(scene, first):
 
 def encode(video, scene, tl, first, last, path, replace=False):
     """Draw frames first..last-1 of the scene into ffmpeg; returns (frames, seconds taken)."""
+    import cairo
+
+    from videotools import frame
     st, lay = video.settings, video.layout
     args = [ffmpeg.require("ffmpeg")] + ffmpeg.QUIET + (["-y"] if replace else []) + [
         "-f", "rawvideo", "-pix_fmt", "bgra", "-s", f"{lay.width}x{lay.height}", "-r", str(st["fps"]), "-i", "-",
@@ -78,6 +79,8 @@ def encode(video, scene, tl, first, last, path, replace=False):
 
 
 def _run(args):
+    cli.need("cairo")
+    from videotools import frame
     video = frame.Video(args.SCRIPT)
     scenes = script.select(video.data, args.scenes)
     folder = os.path.join(video.folder, "work", "segments")

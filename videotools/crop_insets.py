@@ -66,11 +66,8 @@ def _run(args):
     source = script.settings(data)["source-image"]
     if not source:
         raise cli.Failure("the script's Settings have no 'source-image'; crop-insets needs one")
-    try:
-        from PIL import Image
-    except ImportError as e:
-        raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL) from e
+    cli.need("PIL")
+    from PIL import Image
     folder = script.folder(args.SCRIPT)
     image = Image.open(os.path.join(folder, source))
     jobs = plan(data, image.size)

@@ -10,9 +10,7 @@ pycairo and Pillow.
 import argparse
 import sys
 
-import cairo
-
-from videotools import brand, cli, frame, script
+from videotools import brand, cli, script
 
 PROG = "stills"
 SHEET = (1920, 1080)
@@ -73,11 +71,11 @@ def _run(args):
     if len(wanted) > columns * rows:
         raise cli.Failure(f"{len(wanted)} frames do not fit a {columns}x{rows} grid; give a bigger --grid", cli.USAGE)
     cli.refuse_existing(args.out)
-    try:
-        from PIL import Image, ImageDraw, ImageFont
-    except ImportError as e:
-        raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL) from e
+    cairo = cli.need("cairo")
+    cli.need("PIL")
+    from PIL import Image, ImageDraw, ImageFont
+
+    from videotools import frame
     video = frame.Video(args.SCRIPT)
     timelines, warned, jobs = {}, set(), []
     for key, t, spec in wanted:

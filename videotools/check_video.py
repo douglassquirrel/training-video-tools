@@ -69,11 +69,7 @@ def describe_silence(a, b, cues, scenes):
 
 def sheet(path, scenes, video_file):
     """One frame from the middle of each scene, pasted in a grid on a 1920x1080 sheet."""
-    try:
-        from PIL import Image, ImageDraw
-    except ImportError as e:
-        raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL) from e
+    from PIL import Image, ImageDraw
     n = len(scenes)
     columns = max(1, math.ceil(math.sqrt(n)))       # near-square: cells keep the frame's shape
     rows = math.ceil(n / columns)
@@ -102,6 +98,7 @@ def _run(args):
     video_file = args.VIDEO or os.path.join(video, settings["output"])
     if args.sheet:
         cli.refuse_existing(args.sheet)
+        cli.need("PIL")                     # before any check runs, so nothing is half done
     if not os.path.isfile(video_file):
         raise cli.Failure(f"no such file: {video_file}")
     timing_path = os.path.join(video, "work", "narration", "timing.json")

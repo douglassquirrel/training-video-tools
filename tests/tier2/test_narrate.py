@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 
 import pytest
 
@@ -159,8 +160,8 @@ def test_a_missing_speech_package_is_a_useful_error_exit_4(example, speech, tmp_
     (broken / "kokoro_onnx.py").write_text("raise ImportError(\"No module named 'kokoro_onnx'\")\n")
     code, out, err = run("narrate", example, env=dict(speech, PYTHONPATH=str(broken)))
     assert (code, out) == (4, "")
-    assert err == ("narrate: the speech packages are not installed in this Python (No module named "
-                   "'kokoro_onnx'); install them into the venv as the README says\n")
+    assert err.startswith(f"narrate: the Python package 'kokoro-onnx' is not installed in this Python ({sys.executable}); "
+                          'install it with .venv/bin/pip install "kokoro-onnx==0.6.1"')
 
 
 def test_a_model_failure_names_the_cue_and_leaves_what_was_written(example, speech):

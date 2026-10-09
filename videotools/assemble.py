@@ -89,8 +89,7 @@ def check_frames(plan):
 
 def narration(plan, out_path):
     """The mix of every clip at its time, 48 kHz mono, peak-normalised; written to out_path."""
-    import numpy as np
-    import soundfile
+    np, soundfile = cli.need("numpy"), cli.need("soundfile")
     total = sum(tl.total for _, tl, _, _ in plan)
     mix = np.zeros(round(total * MIX_RATE), dtype=np.float32)
     offset = 0.0
@@ -133,6 +132,8 @@ def _run(args):
                           + "\n".join("  " + p for p in existing))
     ffmpeg.require("ffprobe")
     ffmpeg.require("ffmpeg")
+    cli.need("numpy")
+    cli.need("soundfile")
     check_frames(plan)
     if existing:
         print("Replacing:\n" + "\n".join("  " + p for p in existing))

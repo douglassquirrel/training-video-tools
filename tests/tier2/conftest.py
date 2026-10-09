@@ -19,6 +19,7 @@ def run(command, *args, cwd=None, env=None):
     # Let coverage.py measure the subprocess too (pyproject.toml: parallel = true).
     full_env.setdefault("COVERAGE_PROCESS_START", os.path.join(REPO, "pyproject.toml"))
     full_env.update(env or {})
+    full_env = {k: v for k, v in full_env.items() if v is not None}   # None in `env` unsets a variable
     p = subprocess.run([sys.executable, os.path.join(REPO, command)] + [str(a) for a in args],
                        capture_output=True, text=True, cwd=cwd or REPO, env=full_env)
     return p.returncode, p.stdout, p.stderr
