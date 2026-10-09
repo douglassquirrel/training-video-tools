@@ -315,3 +315,35 @@ so the chrome never has to; `font_files` holds only the roles the kit names, for
 loader. `config.read` expands `~` only in `_DIR` keys.
 
 **State.** Green: 84 tests. Item 1 and item 3 done: build step 2 complete. Next: step 3, `narrate`.
+
+### 9 October 2026 — `narrate`
+
+**Goal.** One clip per cue from the speech model, trimmed; `timing.json`; voice and speed from
+flags over script over config; `--scenes`; refusal to overwrite and `--replace`; `--dry-run`;
+the model folder and the voice checked; the packages' absence and the model's failure as
+useful errors; no networking module anywhere in the package.
+
+**Test.** `tests/tier1/test_narrate_trim.py` (five, on numpy arrays), `tests/tier1/test_no_network.py`
+(two: a scan of the package's imports, and every module imported in a fresh interpreter),
+`tests/tier2/test_narrate.py` (nineteen) against `tests/stubs/kokoro_onnx/`, a fake package the
+conftest puts on `PYTHONPATH`, which logs its calls and returns a waveform whose length depends
+on the word count, with silence at both ends for the trimming to remove.
+
+**Red.** `23 failed, 3 passed`: `NotImplementedError` and exit 1 tracebacks against every
+expectation. The three that passed (the two no-network invariants and "the script and the
+config are never modified") were then proved by breaking the code: narrate appending to the
+script `1 failed`; `import socket` added to a module `2 failed`; both restored.
+
+**Green.** First run after implementing: `1 failed, 23 passed`, the test's own word counts for
+scene B (10 and 14 words, counted with the reader; I had written 8 and 12). Then `19 passed`;
+the whole suite `110 passed`, coverage 99%.
+
+**Decision / surprise.** Flags over script over config: the format requires `voice` and `speed`
+in the script, so the config's `VOICE` and `SPEED` only ever apply to a script that leaves them
+blank, which the reader refuses; they stay as documented defaults. `timing.json` is rewritten
+whole after every scene, and `--replace --scenes` keeps the other scenes' entries. A missing
+package is detected by a stub `kokoro_onnx.py` that raises `ImportError` first on `PYTHONPATH`,
+since the real package is installed in the venv.
+
+**State.** Green: 110 tests. Next: Tier 3 (a real run on a scratch copy), the README's set-up
+steps, then step 4 once Squirrel settles the scene-code interface.
