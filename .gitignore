@@ -9,3 +9,6 @@ htmlcov/
 # Inbox items can be private or real data: keep everything but the README out of git
 inbox/*
 !inbox/README.md
+# Rebuildable products of the example video stay out of git
+examples/videos/*/work/
+examples/videos/*/out/

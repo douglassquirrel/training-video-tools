@@ -347,3 +347,44 @@ since the real package is installed in the venv.
 
 **State.** Green: 110 tests. Next: Tier 3 (a real run on a scratch copy), the README's set-up
 steps, then step 4 once Squirrel settles the scene-code interface.
+
+### 9 October 2026 — The wrappers run under the venv; Tier 3 for `narrate`
+
+**Goal.** A command typed in Terminal runs under the repository's `.venv` whatever `python3` the
+shell finds.
+
+**Test.** `tests/tier2/test_wrappers.py`: three tests on a copy of the wrappers beside a fake
+`.venv/bin/python` shim that logs its use.
+
+**Red.** The Tier 3 real run first: `./narrate COPY/script.md` under the shell's `python3`
+(`/opt/homebrew/bin/python3`, 3.14) failed with `the speech packages are not installed in this
+Python`: the wrapper's `#!/usr/bin/env python3` ran the Homebrew default, not the venv (the
+suite had passed because `run()` uses the venv's interpreter). Then the test:
+`FileNotFoundError: … venv.log` (the shim never ran).
+
+**Green.** First fix (an environment marker alone) re-ran even when already under the shim
+(`'used-the-venv\nused-the-venv\n' == 'used-the-venv\n'`); the wrapper now knows it is under the
+venv by `sys.prefix` (a real venv) or the marker (the test's shim sets it). `113 passed`. Then
+Tier 3 on a scratch copy with `VIDEO_TOOLS_CONF` naming a scratch config (Squirrel's own
+`~/.video-tools.conf` is his to write, README step 3):
+```
+title_01.wav  2.314 s
+title_02.wav  3.094 s
+A_01.wav  3.283 s
+…
+R_02.wav  4.714 s
+Wrote 11 clips and …/work/narration/timing.json
+33.44s user 0.27s system 339% cpu 9.934 total
+```
+A second run on scene A refused with the three files listed, exit 3. `check-script`'s code under
+`/usr/bin/python3` (3.9): `No problems found.`
+
+**Decision / surprise.** The wrapper re-executes itself with `os.execv` under `.venv/bin/python`
+when that file exists beside it; with no `.venv` (the device shell, `pip install --user`) it runs
+as it is. README written (install, set-up, the two commands, exit codes); the example's `work/`
+and `out/` are gitignored so a Tier 3 run never lands in a commit.
+
+**State.** Green: 113 tests, 99%. Steps 1–3 done. Step 4 (chrome) waits on Squirrel's decision on
+the scene-code interface (PLAN.md open question 2); meanwhile the parts that do not depend on it
+(fonts, drawing primitives, camera, `crop-insets`, `font-weights`, `assemble`, `check-video`) can
+go first: a reordering of PLAN.md's build order, to be confirmed by him.
