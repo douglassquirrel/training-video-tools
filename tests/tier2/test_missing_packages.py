@@ -38,6 +38,7 @@ def prepared(example, ffstub):
     ("assemble", ["--out", "new.mp4"], "numpy", "numpy"),
     ("narrate", ["--scenes", "A", "--replace"], "soundfile", "soundfile"),
     ("render", ["--scenes", "A"], "cairo", "pycairo"),
+    ("frame-hashes", ["--scenes", "A", "--out", "h.json"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("crop-insets", [], "PIL", "Pillow"),

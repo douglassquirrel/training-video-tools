@@ -2,9 +2,11 @@
 
 ## Where things stand
 
-9 October 2026, 21:34 (from the clock), after the Tier 3 check of `assemble --replace`.
-**Requests 1 to 8 are built in full, and the bed video is accepted and rebuilt on the frame
-methods.** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
+9 October 2026, 21:53 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
+full, the bed video is accepted and rebuilt on the frame methods, and request 9 (four checking
+commands, PLAN.md item 11, "Settled" 20) is one command in: `frame-hashes` is built, green and
+in the README; `compare-video`, `compare-frames` and `brand-preview` are next, in that order
+(build step 10).** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
 (empty at 21:22; anything at its top level other than README.md is new and is reported to
 Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
@@ -21,7 +23,7 @@ item 4. Request 7: `check-script` checks the scene code without running it (a st
 frame in a strip under it, as `stills` does (`videotools.sheet`, shared). Request 4's item 2
 (the "+ Pillows" roundel and icon) was not asked for and is not done.
 
-Green: 280 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 296 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -47,9 +49,9 @@ another rate arises only from another model or a hand-made clip, and the Linux r
 Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
 fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
 
-Waiting on Squirrel: nothing. The inbox is empty. The bed video is re-made and accepted
-(request 4), rebuilt on the frame methods (request 8); what comes next is the training-video
-project's (a second video, and any request it sends here). Known limits, all deliberate and
+Waiting on Squirrel: nothing. The inbox is empty (request 9 is in `inbox/done/`). The bed video
+is re-made and accepted (request 4), rebuilt on the frame methods (request 8); the work in hand is
+request 9's remaining three commands. Known limits, all deliberate and
 recorded: request 4's item 2 (the prototype's "+ Pillows" roundel and icon) is not done; the
 checklist rows are 60 px apart where the prototype's were 66 (request 5, not asked for);
 `check-script` sees only a module's own top-level `def`s; the stored-image frame tests pin
@@ -1216,3 +1218,46 @@ and three questions. Squirrel (21:44): `frame-hashes --compare` exits 1 when fra
 commands list, the exit-code table, build step 10, "Settled" 20; the item moved to `inbox/done/`.
 
 **State.** Next: `frame-hashes`, test-first.
+
+### 9 October 2026 — Request 9, `frame-hashes`
+
+**Goal.** Item 11's first command: every N-th frame of each scene drawn as `render` draws it,
+its pixels' MD5 by scene and frame number; `--out` (refusing an existing file unless `--merge`,
+which keeps the file's other scenes), `--compare` (per scene, the differing frames and those not
+in the record; exit 1 if any differ), `--scenes`, `--step`, complete timings required, a missing
+pycairo as one line, exit 4.
+
+**Test.** `tests/tier1/test_frame_hashes_compare.py` (two: `compare` and `describe` on
+hand-written dictionaries) and `tests/tier2/test_frame_hashes.py` (thirteen, on the example with
+`--scenes` and `--step` to keep each under a second of drawing), plus one case in
+`test_missing_packages.py`. The difference test changes the example copy's `water` colour, which
+only scene R draws.
+
+**Red.** With the wrapper and a module of `NotImplementedError` stubs: `16 failed, 10 deselected`,
+every one `NotImplementedError` or `assert (1, '') == (4, '')` against it.
+
+**Green.** `1 failed, 15 passed` after implementing: my expectation, not the code. I had written
+that three of scene R's five hashed frames differ (`50, 100, 150`); frame 200 (6.7 s of 8.1 s) is
+before the fade-out and shows the water too, so four differ. Frame 0 is the full fade and never
+differs, as predicted. Corrected to `4 differ (frames 50, 100, 150, 200)`. Full suite:
+```
+TOTAL                         2222     23    756     28    98%
+296 passed in 83.64s (0:01:23)
+All checks passed!
+```
+
+**Tier 3.** On the scratch copy of the example (narrated, insets cut): the whole video hashed,
+`Wrote …/hashes.json: 1802 frames, 7 scenes` (76,788 bytes); `--compare` unchanged, `All frames
+match.`, exit 0; `water` changed in the scratch copy's script, `--compare --step 10`: every scene
+`all match` but `R  27 frames: 26 differ (frames 10, 20, … 120, …)`, `26 frames differ.`, exit 1.
+The README's section shows this run.
+
+**Decision / surprise.** A frame the record does not have counts as differing (their script did
+the same: `ref.get(n) != h`), and is counted separately in the line, so `--step` mismatches are
+visible. Hashing runs at about 80–90 frames a second here against `render`'s 200: the MD5 of
+eight megabytes a frame and a copy of the surface's bytes; not worth tuning for a check that
+takes twenty seconds on a minute of video. The output format follows their script's (`key:8`,
+`frames:5`, seconds to one decimal) so their comparison with the bed video can be by eye.
+
+**State.** Green: 296 tests, 98%, lint clean. Next: `compare-video` (the stub ffmpeg gains raw
+audio and raw frames).

@@ -11,7 +11,9 @@ uploaded, and no command ever writes over an existing file.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
-`narrate`, `stills` (to look), `render`, `assemble`, `check-video`.
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. A ninth, `frame-hashes`, is
+the first of four checking commands being added (the others, `compare-video`, `compare-frames`
+and `brand-preview`, are in PLAN.md item 11 and not built yet).
 
 ## Requirements
 
@@ -346,6 +348,34 @@ narration in every cue's window: OK
 No problems found.
 ```
 
+### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N]`
+
+Proof that a change (to scene code, a brand kit, or video-tools itself) changes no pixel of a
+video, or exactly which frames it changes, without rendering: every N-th frame of each scene
+(default every one) is drawn as `render` draws it and the MD5 of its pixels recorded by scene
+and frame number. `--out` writes the record (`{"<scene>": {"<frame>": "<md5>"}}`) and refuses an
+existing file unless `--merge`, which keeps the file's other scenes and replaces the ones hashed
+now. `--compare` draws the same frames again and reports, per scene, `all match` or how many
+differ with the first twelve frame numbers, and how many are not in the record at all (they
+count as differing); then `All frames match.` (exit 0) or `N frames differ.` (exit 1). Needs
+complete timings, as `render` does, and pycairo; no ffmpeg. Hash the example (or a video) before
+a change and compare after it.
+
+```
+$ ./frame-hashes COPY/script.md --out before.json
+title      250 frames in   3.2 s
+…
+end        171 frames in   1.8 s
+Wrote before.json: 1802 frames, 7 scenes
+
+$ ./frame-hashes COPY/script.md --compare before.json --step 10      # after changing one colour
+title       25 frames in   0.3 s: all match
+…
+R           27 frames in   0.3 s: 26 differ (frames 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, …)
+end         18 frames in   0.2 s: all match
+26 frames differ.
+```
+
 ### Configuration: `~/.video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
@@ -363,7 +393,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 | Code | Meaning | What to do |
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
-| 1 | `check-script` / `check-video`: problems found, listed on stdout. | Fix the script, or the video. |
+| 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
 | 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900. | See `--help`. |
 | 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
@@ -389,7 +419,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(280 tests, lint clean).
+(296 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -436,6 +466,9 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 9 October 2026 (late): `frame-hashes` added, the first of four checking commands requested by
+  the training-video project; it replaces that project's `tools/frame-hashes.py` with the same
+  record format and output, and exits 1 when frames differ.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module
