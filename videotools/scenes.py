@@ -8,6 +8,7 @@ Standard library only.
 
 import importlib.util
 import os
+import sys
 
 from videotools import cli, script
 
@@ -43,10 +44,13 @@ def load(folder, scene):
     if path not in _loaded:
         spec = importlib.util.spec_from_file_location(f"videotools_scene_{code}", path)
         module = importlib.util.module_from_spec(spec)
+        sys.path.insert(0, folder)          # so scene modules can share helpers in their folder
         try:
             spec.loader.exec_module(module)
         except Exception as e:  # the video's own code: any error is reported, none classified
             raise cli.Failure(f"scene {scene['key']}: {path} could not be loaded: {type(e).__name__}: {e}")
+        finally:
+            sys.path.remove(folder)
         _loaded[path] = module
     module = _loaded[path]
     needed = [("draw", "(frame)", "")]
