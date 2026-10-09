@@ -11,9 +11,10 @@ uploaded, and no command ever writes over an existing file.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
-`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Three of four checking
-commands are added, `frame-hashes`, `compare-video` and `compare-frames` (`brand-preview` is in
-PLAN.md item 11 and not built yet).
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Four checking commands sit
+beside them: `brand-preview` (a picture of a brand kit, for approving it), `frame-hashes` (proof
+that a change changed no pixel), `compare-frames` (the frame drawn now beside an earlier video's)
+and `compare-video` (two finished videos compared).
 
 ## Requirements
 
@@ -426,6 +427,35 @@ R           7.97 s  old   53.37 s  mean difference  19.4
 Wrote compare.png: 3 pairs
 ```
 
+### `brand-preview BRAND_DIR --out PREVIEW.png`
+
+A one-page picture of a brand kit, for approving it when it is made or changed, and for catching
+a missing font or a colour too close to another. The kit is read with the same reader every
+other command uses, so a kit the preview accepts is one the tools accept, and a bad kit is
+refused in the same words (exit 3). On a 1920×1080 sheet in the kit's own fonts: the mark and
+wordmark as the chrome draws them; every colour as a swatch with its role and hex; a specimen
+line for every font role the kit names (an extra role such as `mono` included); the MISTAKE,
+RIGHT WAY and label pills; accent text at a size above and below `small-text-accent`, so rule 3
+is visible; the settings; the end-card illustration and its credit; the caption band with its
+rule; and the WCAG contrast ratio (relative luminance, 1 to 21; 4.5 for text, 3 for large text)
+of each text-on-fill pair the chrome uses, which it prints too. Refuses an existing output.
+Needs pycairo.
+
+```
+$ ./brand-preview examples/brands/paperboat --out preview.png
+Paperboat Press (paperboat.example): 12 colours, 3 fonts (display: PBS SemiBold, body: PBS Regular, italic: PBS Italic)
+small-text-accent: text under 24 px that would be accent uses accent-dark; shown at 32 px (accent) and 18 px (accent-dark)
+contrast (WCAG ratio; 4.5 for text, 3 for large text):
+  ink on background: 12.79  OK for text
+  muted on background: 5.19  OK for text
+  …
+  on-accent on ink (caption band): 14.16  OK for text
+Wrote preview.png
+```
+
+A ratio under 4.5 is marked `large text only (3-4.5)` (fine for text of about 24 px and up) and
+one under 3 `fails (under 3)`.
+
 ### Configuration: `~/.video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
@@ -469,7 +499,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(330 tests, lint clean).
+(342 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -516,11 +546,12 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 9 October 2026 (late): `frame-hashes`, `compare-video` and `compare-frames` added, three of
-  four checking commands requested by the training-video project. `frame-hashes` and
-  `compare-frames` replace that project's `tools/frame-hashes.py` and `tools/compare-frames.py`
-  with the same output; `frame-hashes --compare` exits 1 when frames differ; `compare-video`
-  keeps the comparison that was run by hand for the bed video's acceptance.
+- 9 October 2026 (late): four checking commands added at the training-video project's request:
+  `brand-preview`, `frame-hashes` and `compare-frames` replace that project's
+  `tools/brand-preview.py`, `frame-hashes.py` and `compare-frames.py` (`frame-hashes` with the
+  same record format and output, exiting 1 when frames differ; `brand-preview` reading the kit
+  with the tools' own reader and listing WCAG contrast ratios); `compare-video` keeps the
+  comparison that was run by hand for the bed video's acceptance.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module

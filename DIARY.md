@@ -2,63 +2,47 @@
 
 ## Where things stand
 
-9 October 2026, 22:10 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
-full, the bed video is accepted and rebuilt on the frame methods, and request 9 (four checking
-commands, PLAN.md item 11, "Settled" 20) is three commands in: `frame-hashes`, `compare-video`
-and `compare-frames` are built, green and in the README; `brand-preview` is next (build step
-10).** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
-(empty at 21:22; anything at its top level other than README.md is new and is reported to
-Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
-`render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
-step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
-`c1720ae` and matches the 7 October original to the frame and the millisecond (request 4).
-**For the training-video project:** request 5's two test faults are fixed (the tests hand every
-command and child a clean environment), and request 6 is in: the frame object's brand-aware
-methods (`colour`, `text`, `tag`, `callout`, `dimension`, `badge`, `hand`: README, "Writing a
-video's scene code"), and `code` optional for title and end scenes, so `_kit.py`, `title_card.py`
-and `end_card.py` can go. The script format's wording for the optional `code` is in PLAN.md
-item 4. Request 7: `check-script` checks the scene code without running it (a step scene with no
-`code`, a missing or unparsable module, a missing top-level `def` the scene needs), so what
-`stills` and `render` would refuse is found first. Request 8: `check-video --sheet` labels each
-frame in a strip under it, as `stills` does (`videotools.sheet`, shared). Request 4's item 2
-(the "+ Pillows" roundel and icon) was not asked for and is not done.
+9 October 2026, 22:20 (from the clock), at the end of request 9. **Requests 1 to 9 are built in
+full: the eight commands of the first request, and the four checking commands of the ninth
+(`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
+20), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
+and this section, then `inbox/` (empty at 22:20; anything at its top level other than README.md
+is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
+(request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
+roundel and icon) was not asked for and is not done.
 
-Green: 330 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 342 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
-`tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
-One test is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1,
-and with `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_env()`).
+`tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
+and serves raw audio (`tone` spans) and raw frames (`colours` by time) from fake media. One test
+is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1, and with
+`VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_env()`).
 
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
-video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); since then the
-real brand kit read (counts only), a sheet looked at, the wrappers run under
-`VIDEO_TOOLS_PYTHON`, `crop-insets` under the Mac's Python 3.9 without Pillow (the one-line
-message, exit 4), and the whole chain again at request 8 (same SHA-256 as the first time;
-`check-video --sheet` looked at). `~/.video-tools.conf` on this Mac now names
-`SPEECH_MODEL_DIR=~/models/kokoro` (Squirrel set it at 21:17; `narrate --dry-run` on the
-example finds the model). Scratch copies of the example live only in the session's scratchpad,
-never in the repository. Linux was tried by the training-video project (PLAN.md "Things checked" 5),
-not from here. A real `assemble --replace` against the real ffmpeg on this Mac was tried on
-9 October at 21:34 (the entry "Tier 3: `assemble --replace` against real ffmpeg"): the three
-intermediates rewritten, the finished video untouched, the new output the same SHA-256. Clips at
-a rate other than 24 kHz are not worth a check here: `narrate` always writes Kokoro's 24 kHz, so
-another rate arises only from another model or a hand-made clip, and the Linux report covered
-22,050 Hz (Squirrel, 9 October 2026, between 21:25 and 21:34).
+video, `check-video` clean (the same SHA-256 on every run since the first); `assemble --replace`
+against real ffmpeg (the entry of 21:34); the four checking commands on that video, on a
+re-render with one colour changed, and `brand-preview` on the real kit read-only (the entries
+after 21:46). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
+copies live only in the session's scratchpad, never in the repository. Linux was tried by the
+training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
+other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
 
-Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
-fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
+Known limits worth knowing: the stored-image frame tests pin layout, not fonts (the fresh-process
+font test pins fonts); `brand-preview`'s layout is checked by eye, not by a test; `check-script`
+sees only a module's own top-level `def`s; the checklist rows are 60 px apart where the
+prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal when the
+finished video exists says "give a new name" and not that `--replace` never covers it (raised at
+21:34, not changed).
 
-Waiting on Squirrel: nothing. The inbox is empty (request 9 is in `inbox/done/`). The bed video
-is re-made and accepted (request 4), rebuilt on the frame methods (request 8); the work in hand is
-request 9's remaining three commands. Known limits, all deliberate and
-recorded: request 4's item 2 (the prototype's "+ Pillows" roundel and icon) is not done; the
-checklist rows are 60 px apart where the prototype's were 66 (request 5, not asked for);
-`check-script` sees only a module's own top-level `def`s; the stored-image frame tests pin
-layout, not fonts (the fresh-process font test pins fonts).
+Waiting on Squirrel: nothing. The inbox is empty (requests 1–9 are in `inbox/done/`). What
+comes next is the training-video project's: checking the four commands against its own scripts
+on the bed video, the second video, and any request it sends here.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
-passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30.
+passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30. The
+`compare-video` commit (`65a20b5`) swept in 215 coverage fragments; the `compare-frames` commit
+removed them and `.gitignore` now has `.coverage.*`.
 
 How the tests work: `tests/tier1/` pure functions (pycairo for `test_draw*.py` and
 `test_fonts.py`); `tests/tier2/` runs each command as a subprocess through `conftest.run()`
@@ -71,7 +55,8 @@ fake the products of `narrate` and `render`; `test_frame.py` compares drawn fram
 `tests/tier2/frames/` at 192×108 (its README says how to renew them and what the tolerance does
 not see); `test_missing_packages.py` hides a package with a module on `PYTHONPATH`. One tier:
 `.venv/bin/pytest tests/tier1`. Coverage of the subprocesses comes through
-`COVERAGE_PROCESS_START`, which `run()` sets.
+`COVERAGE_PROCESS_START`, which `run()` sets. Never `git add -A` while a suite is running: the
+coverage fragments it writes would be swept in.
 
 ## Log
 
@@ -1360,3 +1345,50 @@ subprocess and combines them at the end of the run). They are deleted from git i
 checks the scene exists (usage error naming the scenes) so a typo cannot silently do nothing.
 
 **State.** Green: 330 tests, 98%, lint clean. Next: `brand-preview`, the last of the four.
+
+### 9 October 2026 — Request 9, `brand-preview`; request 9 complete
+
+**Goal.** Item 11's last command: the kit through `brand.read`, drawn with `videotools.draw` in
+its own fonts: swatches, a specimen per named font role, the mark via `frame.mark`, pills, the
+rule-3 pair, settings, the illustration and credit, the caption band, and the WCAG contrast
+ratios of the chrome's thirteen text-on-fill pairs, printed too; a bad kit refused in the
+reader's words, an existing output refused, a missing pycairo one line.
+
+**Test.** `tests/tier1/test_contrast.py` (three: black on white 21, a colour on itself 1, the
+WCAG example `#767676` on white 4.54 either way round, the verdicts at 4.5 and 3) and
+`tests/tier2/test_brand_preview.py` (eight) on a copy of the example kit, plus a missing-package
+case. The thirteen ratios of the example kit, and those of a `muted` and `correct` changed to
+fail, were worked by hand outside the package before the run (two of my first guesses for the
+changed colours were wrong, 2.6 and 3.5 for 2.13 and 3.43; corrected before implementing).
+
+**Red.** `12 failed`: `NotImplementedError` from both stub modules.
+
+**Green.** `1 failed, 11 passed` after implementing: the missing-package case, because the
+module imported `videotools.draw` (and so cairo) at the top, ahead of `cli.need`; moved to the
+point of use. `12 passed`. Lint: a `%` format and a long line, fixed. The suite:
+```
+TOTAL                           2569     26    826     33    98%
+342 passed in 125.65s (0:02:05)
+All checks passed!
+```
+
+**Tier 3.** The example kit's preview looked at; a second run refused (exit 3). Then the real kit
+(`training-video/brands/douglassquirrel`, read-only, the preview into the scratchpad): reads,
+12 colours, 7 fonts; its ratios by role: three pairs are `large text only (3-4.5)` (accent on
+background 3.63, accent on surface 4.11, on-accent on accent 4.11; the rest 4.96–12.63), which
+is what rule 3 and `small-text-accent` are for, since accent text is 24 px and up. **Looking at
+the real kit's preview found two layout faults the example's three fonts had hidden:** with
+seven specimen lines the pills and the rule-3 line ran into the illustration, and thirteen
+contrast rows at 26 px ran into the caption band. The specimen pitch is now `size + 16`, the
+contrast list is two columns of up to seven rows, and the illustration is fitted to a 540×150
+box anchored above the band. Both previews looked at again: clean. No test pins that layout
+(as none pins the chrome's beyond the stored images); the README's section shows the run.
+
+**Decision / surprise.** The preview is drawn by cairo and written by cairo, so Pillow is not
+needed (PLAN.md item 11 corrected). `frame.mark` takes a tiny namespace with `brand` and
+`scale`, so the roundel and wordmark are the chrome's own drawing, not a second copy. The
+contrast pairs are fixed in `brand_preview.PAIRS` plus the caption band; a kit's `caption-band`
+role names the last pair.
+
+**State.** Request 9 complete: four commands, 342 tests, 98%, lint clean, README and PLAN.md
+current. Nothing waiting.

@@ -44,6 +44,7 @@ def prepared(example, ffstub):
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "numpy", "numpy"),
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
+    ("brand-preview", ["--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("crop-insets", [], "PIL", "Pillow"),

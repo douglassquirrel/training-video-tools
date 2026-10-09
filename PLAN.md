@@ -423,7 +423,7 @@ below `small-text-accent`, so rule 3 is visible; the end-card illustration and
 (relative luminance, 1 to 21) of each text-on-fill pair the chrome uses (ink, muted and accent on
 background and surface; on-accent on accent, accent-dark, mistake and correct; the caption text
 on `caption-band`), with the 4.5 and 3 thresholds marked. Refuses an existing output. Needs
-pycairo and Pillow.
+pycairo (cairo writes the PNG; no Pillow).
 
 ## What is written where
 
@@ -544,6 +544,9 @@ remote ("Settled" 7).
    `frame-hashes` (no ffmpeg; a regression check for the package at once), `compare-video` (the
    stub ffmpeg gains raw audio and raw frames), `compare-frames` (reusing the frame reader),
    `brand-preview`; then the README for the four, "Notes for users", and lint as its own pass.
+   **Done 9 October 2026, 21:46–22:20**: all four built, each in the README with a real run;
+   the training-video project checks them against its own scripts on the bed video and retires
+   its copies (their side).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
