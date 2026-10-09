@@ -7,7 +7,7 @@ is the source of truth for *what* the program does and the order it gets built i
 DIARY.md, which says where things stand. This file is the source of truth for *how* to build
 it.
 
-This folder is the repository (`git@github.com:douglassquirrel/video-tools.git`, private until Squirrel decides otherwise: PLAN.md, open question 2), one branch, `main`.
+This folder is the repository (`git@github.com:douglassquirrel/video-tools.git`, private for now (Squirrel, 9 October 2026, 16:16)), one branch, `main`.
 CLAUDE.md, PLAN.md and DIARY.md are committed in it. If it ever goes public, move the three
 out to a folder beside the checkout (`video-tools-code/` holding `CLAUDE.md`, `PLAN.md`,
 `DIARY.md` and the checkout `video-tools/`, as halmos-code/ and book-tools-code/ do), so process
@@ -69,8 +69,8 @@ Every one of these must be true before you report the work as done:
 4. **Minimal installation.** It runs on a stock Mac from Terminal with what ships with macOS
    plus the dependencies PLAN.md lists under "Dependencies" and nothing else. Drawing, speech
    and video can't be done with the standard library, so this is the one project from the
-   coding template that needs some (cairo, ffmpeg, a speech-model runtime); which ones, and how
-   they are installed, is Squirrel's decision (PLAN.md, open question 1). Each command imports
+   coding template that needs some (cairo, ffmpeg, a speech-model runtime); Squirrel allowed
+   the ones PLAN.md lists (Squirrel, 9 October 2026, 16:16). Each command imports
    only what it needs, so the commands that need none run on `/usr/bin/python3` alone, kept
    compatible with 3.9. No daemon, server, Docker or watch folder. Dev-only tooling (pytest, pytest-cov, ruff) goes in a gitignored
    `.venv/` from `requirements-dev.txt` and is mentioned only under the README's

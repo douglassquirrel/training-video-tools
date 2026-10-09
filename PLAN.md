@@ -56,7 +56,7 @@ oblique 3D camera, and the brand kit reader.
 
 ## Dependencies
 
-Proposed, for Squirrel's decision (open question 1). The prototype used:
+Allowed (Squirrel, 9 October 2026, 16:16), installed in one documented step. The prototype used:
 
 - ffmpeg and ffprobe (Homebrew `ffmpeg`), for encoding, joining and checking;
 - cairo and pycairo (Homebrew `cairo`, `py3cairo`), for drawing;
@@ -121,18 +121,10 @@ suite, a commit and a push, all on `main`.
 
 Assumptions made to keep working, each with the default chosen.
 
-1. **Dependencies beyond the standard library** (see "Dependencies"). The coding template's rule
-   is standard-library Python on a stock Mac; drawing, speech and video can't meet it. Default:
-   allow the listed Homebrew and pip packages, installed in one documented step, with every
-   command importing only what it needs.
-2. **Private or public?** Default: private, the template's default, with CLAUDE.md, PLAN.md and
-   DIARY.md committed here. If public, like `book-tools`, they move to `video-tools-code/` beside
-   the checkout, and commit messages are written for any reader.
-3. **One package with several commands, or separate scripts?** Default: one Python package
+1. **One package with several commands, or separate scripts?** Default: one Python package
    `video_tools/` with a thin script per command in `bin/`, like `book-tools`.
-4. **The GitHub repository.** The local repository has one commit and no remote. Default:
-   Squirrel creates `douglassquirrel/video-tools` (private) and pushes, since the device shell
-   has no key.
+2. **The GitHub repository.** The local repository has no remote. Default: Squirrel creates
+   `douglassquirrel/video-tools` (private) and pushes, since the device shell has no key.
 
 ## Settled
 
@@ -140,3 +132,6 @@ Assumptions made to keep working, each with the default chosen.
    arrives (Squirrel, 9 October 2026, 16:06).
 2. It holds the tools pulled out of the training-video mechanism; the method itself stays in the
    training-video project (Squirrel, 9 October 2026, 16:06).
+3. The dependencies listed under "Dependencies" are allowed, with every command importing only
+   what it needs and everything else standard-library (Squirrel, 9 October 2026, 16:16).
+4. Private for now: CLAUDE.md, PLAN.md and DIARY.md stay committed here (Squirrel, 9 October 2026, 16:16).

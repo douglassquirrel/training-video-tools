@@ -5,13 +5,13 @@
 9 October 2026. Nothing is built and nothing is specified yet. The repository holds the coding
 template's guidance files, filled in for video-tools: CLAUDE.md (how), PLAN.md (the expected
 scope, provisional until a request arrives from the training-video project), this diary, a
-README, and the dev tooling files. One commit on `main`; no remote yet.
+README, and the dev tooling files. Two commits on `main`; no remote yet.
 
 Green: nothing yet (no tests, no code).
 
-Waiting on Squirrel: the open questions in PLAN.md (dependencies, public or private, layout,
-creating the GitHub repository and pushing); and the first request from
-`~/projects/non-code/training-video/tools/`.
+Waiting on Squirrel: creating the GitHub repository (private) and pushing; and the first
+request from `~/projects/non-code/training-video/tools/`. Settled: private for now, and the
+dependencies in PLAN.md allowed (Squirrel, 9 October 2026, 16:16).
 
 How the tests will work: `tests/tier1/` for pure functions (timing, layout, colour and font
 parsing); `tests/tier2/conftest.py` will put stub `ffmpeg`, `ffprobe` and a stub speech model
@@ -35,3 +35,13 @@ for drawing, speech and video; that is PLAN.md's open question 1.
 
 **State.** No code. Next: Squirrel's answers; then, when a request arrives, rewrite PLAN.md from
 it and start step 1 (look).
+
+### 9 October 2026 — Squirrel's answers
+
+**Decision / surprise.** Squirrel (16:16): private for now; the dependencies in PLAN.md are
+allowed. Both moved to "Settled" in PLAN.md and recorded in CLAUDE.md. With delete permission,
+the files git couldn't remove after the first commit were deleted (temporary object files and
+two lock files that had been renamed out of the way), as were `TEMPLATE.md`'s folder
+`_to_delete/` and its line in `.git/info/exclude`; `git fsck` clean.
+
+**State.** No code. Next: the first request from the training-video project.
