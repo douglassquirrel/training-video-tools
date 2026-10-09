@@ -6,7 +6,19 @@ with a property table and `### Narration`, `### Side panel`, `### On screen` lis
 else is prose for people and is skipped. Standard library only; runs on Python 3.9.
 """
 
+import os
 import re
+
+# The Settings table: key -> required?
+SETTINGS = {"title": True, "subtitle": False, "eyebrow": False, "brand": True, "voice": True,
+            "speed": True, "language": True, "speech-model": True, "size": True, "fps": True,
+            "quality": False, "lead": False, "cue-gap": False, "tail": False, "fade": False,
+            "source": True, "source-image": False, "source-label": False,
+            "title-image-caption": False, "credit": False, "output": True, "scene-code": True}
+NUMBER_SETTINGS = ("speed", "fps", "quality", "lead", "cue-gap", "tail")
+FILE_SETTINGS = ("source", "source-image")
+NUMBER = re.compile(r"^\d+(\.\d+)?$")
+SIZE = re.compile(r"^\d+x\d+$")
 
 SCENE_HEADING = re.compile(r"^## Scene ([A-Za-z0-9-]+): (.+)$")
 TABLE_SECTIONS = {"Settings": "settings", "Colours": "colours", "Insets": "insets"}
@@ -36,7 +48,7 @@ def parse(text):
     problems: structural faults found while reading, each naming its line.
     """
     problems = []
-    data = {"title": None, "settings": {}, "colours": {}, "insets": {}, "scenes": []}
+    data = {"title": None, "settings": {}, "colours": {}, "insets": {}, "scenes": [], "lines": {}}
     section = None      # "settings" | "colours" | "insets" | "scene" | "notes" | None
     sub = None          # the current ### heading inside a scene, lower-cased
     scene = None
@@ -67,6 +79,7 @@ def parse(text):
                 row = _table_row(line)
                 if row:
                     data[section][row[0]] = row[1]
+                    data["lines"][(section, row[0])] = n
             continue
         if section != "scene":
             continue
@@ -75,6 +88,7 @@ def parse(text):
                 row = _table_row(line)
                 if row:
                     scene["props"][row[0]] = row[1]
+                    data["lines"][(scene["key"], row[0])] = n
             continue
         if sub == "narration":
             m = CUE_ITEM.match(line)
@@ -105,3 +119,53 @@ def parse(text):
                 problems.append("line %d: scene %s, %s: not a list item: %s"
                                 % (n, scene["key"], sub, line.strip()[:60]))
     return data, problems
+
+
+def _at(data, section, key):
+    """'line N: ' for a table row the parser saw, or '' when there is no line to name."""
+    n = data["lines"].get((section, key))
+    return "line %d: " % n if n else ""
+
+
+def brands_root(script_path):
+    """The first folder, from the script's folder upwards, that holds `brands/`; or None."""
+    folder = os.path.dirname(os.path.abspath(script_path))
+    while True:
+        if os.path.isdir(os.path.join(folder, "brands")):
+            return folder
+        parent = os.path.dirname(folder)
+        if parent == folder:
+            return None
+        folder = parent
+
+
+def check(data, script_path):
+    """Every problem with parsed script data, against the format; [] when it is well formed."""
+    problems = []
+    if not data["title"]:
+        problems.append("no '# title' line at the top")
+    st = data["settings"]
+    for key, required in SETTINGS.items():
+        if required and not st.get(key):
+            problems.append("Settings: '%s' is missing" % key)
+    for key, value in st.items():
+        where = _at(data, "settings", key)
+        if key not in SETTINGS and not key.startswith("x-"):
+            problems.append("%sSettings: unknown key '%s'" % (where, key))
+        elif key in NUMBER_SETTINGS and value and not NUMBER.match(value):
+            problems.append("%sSettings: '%s' should be a number, not '%s'" % (where, key, value))
+        elif key == "size" and value and not SIZE.match(value):
+            problems.append("%sSettings: 'size' should look like 1920x1080, not '%s'" % (where, value))
+    folder = os.path.dirname(os.path.abspath(script_path))
+    for key in FILE_SETTINGS:
+        if st.get(key) and not os.path.isfile(os.path.join(folder, st[key])):
+            problems.append("%sSettings: '%s' file not found: %s" % (_at(data, "settings", key), key, st[key]))
+    brand = st.get("brand")
+    if brand:
+        root = brands_root(script_path)
+        where = _at(data, "settings", "brand")
+        if root is None:
+            problems.append("%sSettings: brand '%s': no 'brands/' folder in or above %s" % (where, brand, folder))
+        elif not os.path.isfile(os.path.join(root, "brands", brand, "BRAND.md")):
+            problems.append("%sSettings: brand '%s' has no brands/%s/BRAND.md under %s" % (where, brand, brand, root))
+    return problems

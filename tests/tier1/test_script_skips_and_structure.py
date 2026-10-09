@@ -17,7 +17,7 @@ Prose for people between two scenes, with a table the tools must not read:
 
 def _without_lines(data):
     """The data with every 'line' dropped, so two scripts can be compared across an insertion."""
-    out = {k: v for k, v in data.items() if k != "scenes"}
+    out = {k: v for k, v in data.items() if k not in ("scenes", "lines")}
     out["scenes"] = []
     for sc in data["scenes"]:
         s = {k: v for k, v in sc.items() if k != "line"}

@@ -176,3 +176,24 @@ a scene `1 failed`; narration junk ignored `2 failed` (the stray-line and the su
 tests); list junk ignored `1 failed`; non-ASCII stripped `1 failed`.
 
 **State.** Green: 10 tests. Next: `script.check`, the validation rules, in groups.
+
+### 9 October 2026 — Script check: the Settings table and the title
+
+**Goal.** `script.check(data, path)`: missing or empty required settings, unknown keys (unless
+`x-`), numbers, `size`, source files, the brand kit found by walking up to `brands/`, the title.
+
+**Test.** `tests/tier1/test_script_check_settings.py`, ten tests on a temporary project folder.
+
+**Red.** `AttributeError: module 'videotools.script' has no attribute 'check'` ×10.
+
+**Green.** First run after implementing: `5 failed, 15 passed`. Three were my line numbers again
+(`"line 12: Settings: 'speed'…" != "line 11: …"`): the Settings rows are lines 9–19 of the
+fixture, so speed is 12, size 15, an inserted `lead` 17 and `source-image` 18; counted by hand
+and corrected. Two were the previous file's "same data" helper, which did not drop the new
+`lines` map that `parse` now records for every table row; it drops it now. `20 passed in 0.03s`.
+
+**Decision / surprise.** `parse` records the line of every table row (`data["lines"]`, keyed by
+section or scene key and the row's key) so that a check can say `line N:`; PLAN.md item 1 says
+"where there is one". A missing setting has no line, so its message starts `Settings:`.
+
+**State.** Green: 20 tests. Next: Colours, Insets and scene-property checks.
