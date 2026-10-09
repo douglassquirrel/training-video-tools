@@ -90,3 +90,12 @@ def test_the_variable_font_is_never_modified(tmp_path):
     before = open(src, "rb").read()
     run("font-weights", src, "--weights", "400", "--family-prefix", "TV", "--out", tmp_path / "out")
     assert open(src, "rb").read() == before
+
+
+def test_the_italic_at_regular_weight_is_just_italic(tmp_path):
+    src = variable_font(str(tmp_path / "TinyVar-Italic[wght].ttf"), italic=True)
+    out_dir = tmp_path / "out"
+    code, out, err = run("font-weights", src, "--weights", "400,600", "--family-prefix", "TV", "--out", out_dir)
+    assert (code, err) == (0, "")
+    assert sorted(os.listdir(out_dir)) == ["TV-Italic.ttf", "TV-SemiBoldItalic.ttf"]
+    assert names(out_dir / "TV-Italic.ttf")[1] == "TV Italic"

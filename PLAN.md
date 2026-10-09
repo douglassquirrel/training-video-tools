@@ -353,8 +353,17 @@ Kokoro-82M model and voices in `~/models/kokoro/` (`model.onnx`, `voices.npz`).
    with nothing installed.
 5. *To check in the device shell (Linux):* that setting `FONTCONFIG_FILE` in-process before the
    first text call is enough for cairo's fontconfig backend to find the brand's fonts.
-6. *To record before `check-video`'s parsers are written:* the real output of `ffprobe` on a
-   finished file and of `volumedetect` and `silencedetect` on its audio.
+6. **ffmpeg's output formats**, recorded 9 October 2026 on a 3 s invented file (blue frames, a
+   1 s tone from 1.0 s): `ffprobe -v error -show_entries format=duration,size:stream=index,codec_type,
+   nb_frames,r_frame_rate,width,height,sample_rate,channels -of json` gives strings
+   (`"duration": "3.000000"`, `"size": "25662"`, `"nb_frames": "90"`, `"r_frame_rate": "30/1"`,
+   `"sample_rate": "48000"`) and `"channels": 1` as a number; `-count_frames -select_streams v:0
+   -show_entries stream=nb_read_frames` gives `"nb_read_frames": "90"`. `-af volumedetect -f null -`
+   prints on stderr `[Parsed_volumedetect_0 @ …] mean_volume: -25.8 dB` and `max_volume: -18.0 dB`
+   (take the last of each: a first instance printed `n_samples: 0`). `-af silencedetect=n=-40dB:d=0.5`
+   prints `silence_start: 0`, then `silence_end: 1.000042 | silence_duration: 1.000042`, per
+   silence, on stderr. A frame: `ffmpeg -ss T -i V -frames:v 1 OUT.png`. The concat demuxer with
+   `-c copy` joined two copies to 6.02 s, exit 0. A missing input exits 254.
 
 ## Build order
 

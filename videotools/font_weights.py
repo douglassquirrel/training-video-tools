@@ -41,7 +41,10 @@ def weights(value):
 
 
 def style_name(weight, italic):
-    return WEIGHT_NAMES[weight] + ("Italic" if italic else "")
+    """Thin … Black, with Italic appended for an italic font; the italic at 400 is just Italic."""
+    if italic:
+        return "Italic" if weight == 400 else WEIGHT_NAMES[weight] + "Italic"
+    return WEIGHT_NAMES[weight]
 
 
 def is_italic(font):

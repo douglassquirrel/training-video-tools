@@ -463,3 +463,22 @@ head macStyle or its subfamily name.
 
 **State.** Green: 147 tests. Next: Tier 3 for both, then `assemble` and `check-video` against
 stub ffmpeg/ffprobe.
+
+### 9 October 2026 — Tier 3 for the small commands; a naming find; ffmpeg's formats recorded
+
+**Goal.** Both commands on the real thing, and the beliefs `assemble` and `check-video` rest on.
+
+**Red / Green.** `crop-insets` on the scratch copy of the example wrote the five files as the
+tests say (`A.png 388x167`, `full.png 248x360`, `title-page.png 529x750`). `font-weights` on the
+real EB Garamond variable fonts (read-only, output into the scratchpad) made files whose names
+and glyph widths equal the brand's own six `EBG-*.ttf`, except one: the italic at 400 came out
+`EBG RegularItalic` where the brand has `EBG Italic`. A test for that (`the_italic_at_regular_
+weight_is_just_italic`) failed `1 failed`, the fix made it `9 passed`, and the re-run matched:
+`EBG-Italic.ttf names equal: True A advance equal: True`.
+
+**Decision / surprise.** The real formats of ffprobe (JSON with numbers as strings),
+`volumedetect` and `silencedetect` (lines on stderr) are in PLAN.md "Things checked" 6, from an
+invented 3 s file made in the scratchpad; a missing input makes ffmpeg exit 254. The stub ffmpeg
+and ffprobe will speak these formats.
+
+**State.** Green: 149 tests. Next: `assemble` against the stubs.
