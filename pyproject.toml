@@ -1,0 +1,12 @@
+# Dev tooling only. The commands' own dependencies are listed in PLAN.md (open question 1).
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--cov=video_tools --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100

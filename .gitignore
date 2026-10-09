@@ -1,0 +1,8 @@
+# Dev tooling and caches; model files live in ~/models, secrets in ../<project>-secrets/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
