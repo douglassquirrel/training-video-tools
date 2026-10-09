@@ -243,7 +243,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 primitives, the camera); `tests/tier2/` runs each command as a subprocess against stubs
 (`tests/stubs/`: a fake `kokoro_onnx` package, and `ffstub.py` standing in for `ffmpeg` and
 `ffprobe` with fake media files) and a copy of the example. Coverage is reported by the test
-command; 94% on 9 October 2026 (180 tests).
+command; 96% on 9 October 2026 (179 tests).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): `./narrate COPY/script.md --dry-run`, then a real run, then a second run (it must

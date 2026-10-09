@@ -2,25 +2,45 @@
 
 ## Where things stand
 
-9 October 2026, 17:35. The first request has arrived and Squirrel has OK'd it: PLAN.md is
-rewritten from `inbox/done/request-from-training-video-2026-10-09.md` (eight commands and the
-package `videotools/`, build order there). Build step 1 ("look") is done: `.venv/` from Homebrew
-Python 3.12 with the dev tooling and the run-time packages, and every belief in PLAN.md "Things
-checked" seen on the Mac (kokoro speaks, ffmpeg takes BGRA, pycairo builds after `brew install
-pkgconf`, fonts need CoreText registration on macOS, not fontconfig). No code yet.
+9 October 2026, 19:40. Build steps 1–3 are done and most of 5 and 6: six of the eight commands
+work (`check-script`, `narrate`, `assemble`, `check-video`, `crop-insets`, `font-weights`), with
+the readers (`script`, `brand`, `config`), the timeline, the font loader, the drawing primitives
+and the camera underneath them. Not built: the chrome (item 4), `stills` and `render`, which all
+draw frames and so wait on the scene-code interface.
 
-Green: nothing yet (no tests, no code).
+Green: 179 tests, coverage 96% (`draw.py` 85% and `ffmpeg.py`'s probe paths are the gaps; a
+coverage pass is due with the lint pass). `.venv/bin/ruff check .` is not yet clean: the lint pass
+is build step 7, and most of what it flags is `%`-formatting to convert to f-strings.
 
-Next: the rest of step 1, `examples/` (an invented video and brand), then step 2 (the readers
-and `check-script`, then the timeline), test-first.
+Tier 3 done on a scratch copy of the example: `narrate` (real model, 11 clips, 10 s), `crop-insets`,
+`font-weights` on the real EB Garamond (output equals the brand's files). Not yet: `assemble` and
+`check-video` on a real file (they need `render`).
 
-Waiting on Squirrel: PLAN.md open question 2, the scene-code interface, before any chrome code
-(step 4). Open questions 1, 3 and 4 are assumptions he can overturn. The GitHub remote
-("Settled" 7): none yet, so nothing is pushed.
+**Waiting on Squirrel:** PLAN.md open question 2, the scene-code interface (item 4's proposal:
+one module per scene named by its `code`, with `draw(frame)`, `mistake(frame, rect)`,
+`right_way(frame, rect)`, `panel(frame, rect)`, and `frame.label(text)` checking the On-screen
+list). Also to confirm: open questions 1 (Python 3.12), 3 (`work/narration/timing.json`, cues
+from 01), 4 (`assemble --replace` covers intermediates only), and the reordering of the build
+(items 7, 8 and 9 were done before 4 and 5 because they do not depend on the interface). No
+GitHub remote yet ("Settled" 7): nothing is pushed.
 
-How the tests work: `tests/tier1/` for pure functions; `tests/tier2/conftest.py` puts stub
-`ffmpeg` and `ffprobe` on PATH and a fake `kokoro_onnx` module on `sys.path`, and names a config
-file through `VIDEO_TOOLS_CONF`. `.venv/bin/pytest tests/tier1` runs one tier. Nothing written yet.
+Next, once the interface is settled: `videotools/chrome.py` (background, header, tracker,
+reference column with its four panel kinds, caption band, mistake panels, title and end cards,
+fades), the scene-module loader, `stills`, then `render`; frame tests against stored images at
+192×108 with a tolerance; the example video's `scenes/` modules; Tier 3 of the whole chain on
+the example; then coverage, README, lint; then the training-video project's acceptance.
+
+How the tests work: `tests/tier1/` pure functions (pycairo needed for `test_draw.py` and
+`test_fonts.py`; it is in the venv); `tests/tier2/` runs each command as a subprocess through
+`conftest.run()` under the venv's Python, with `tests/stubs/kokoro_onnx/` (fake speech model, on
+`PYTHONPATH` by the `speech` fixture) and `tests/stubs/ffstub.py` (fake ffmpeg and ffprobe on PATH
+by the `ffstub` fixture, media as `key=value` text files, every call logged, `FFSTUB_FAIL` to make
+a job fail). `example` copies `examples/` to a temporary folder; `narrated()` and `rendered()` fake
+the products of `narrate` and `render`. One tier: `.venv/bin/pytest tests/tier1`. Coverage of the
+subprocesses comes through `COVERAGE_PROCESS_START`, which `run()` sets.
+
+Known-wrong in a past entry: the `check-video` entry says `180 passed`; the run was `179 passed`
+(a transcription slip; the count is in the entry above this line).
 
 ## Log
 
