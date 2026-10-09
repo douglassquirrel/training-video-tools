@@ -2,17 +2,18 @@
 
 ## Where things stand
 
-9 October 2026, 19:45 (from the clock). **Requests 1, 2 and 3 are built in full.** All eight
-commands work (`check-script`, `narrate`, `crop-insets`, `stills`, `render`, `assemble`,
-`check-video`, `font-weights`) on the package `videotools/`. Build steps 1–7 and 9 of PLAN.md
-are done; step 8 is the training-video project's: re-make the bed video with these tools and
-report back through `inbox/`. **For the training-video project:** request 2's seven items were
-verified by you; request 3's three are in: `assemble --replace` and `render --replace` work
-against real ffmpeg (`-y` for the listed files only, `-nostdin` always), a missing package is
-one line with exit 4 for every command, and the sheet-label test (and a new font test) draw
-their references in a fresh process; the `--basetemp` note is in the README's Testing section.
+9 October 2026, 19:53 (from the clock). **Requests 1 to 4 are built in full, and the bed video
+is accepted.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
+`render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
+step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
+`c1720ae` and matches the 7 October original to the frame and the millisecond (request 4).
+**For the training-video project:** request 3's three items and request 4's items 1 and 3 are
+in: a `side-panel-heading` scene property (above `steps` and `checklist` panels, or in place of
+KEY POINTS; proposed to the script format in PLAN.md item 4, the format file being yours to
+change), and `draw.hand(label_size=…)`. Request 4's item 2 (the "+ Pillows" roundel and icon)
+was not asked for and is not done.
 
-Green: 260 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 264 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -926,3 +927,54 @@ that it can fail: with both draws using the fonts, `0.0 > 5.0` failed, as it mus
 `--basetemp` line).
 
 **State.** Request 3 done. Next: "Where things stand", commit, push.
+
+### 9 October 2026 — The fourth request: the bed video accepted; two small asks OK'd
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-4.md` (19:26–19:46,
+training-video side; Squirrel had said "go ahead and do the remake" at 19:26): PLAN.md step 8
+done, the re-made bed video matching the original to the frame and the millisecond, `check-video`
+clean, 1,672 lines of scene code through the interface as documented. Three differences:
+no heading over the checklist (the prototype had one); the pillow step's roundel and icon; the
+hand's label at a fixed 28 px. Reported at 19:48. Squirrel (19:50): "Do 1 (with the new
+property) and 3." So: a `side-panel-heading` scene property, proposed to the script format in
+PLAN.md item 4 (the format file is theirs); a `label_size` on `draw.hand`. Item 2 not done.
+PLAN.md "Settled" 16; the item moved to `inbox/done/`.
+
+**State.** Next: item 1, the script reader's new property, test-first.
+
+### 9 October 2026 — Request 4, item 3: the hand label's size
+
+**Goal.** `draw.hand(..., label_size=28)`: the letter and its roundel scale with the size the
+scene code passes.
+
+**Test.** `tests/tier1/test_draw_more.py::the_hands_label_takes_a_size_and_its_roundel_grows_with_it`:
+at 56, the roundel's fill reaches 36 px from the wrist; at the default it does not.
+
+**Red.** `TypeError: hand() got an unexpected keyword argument 'label_size'`.
+
+**Green.** Roundel radius `21 * label_size / 28`, text baseline likewise. `17 passed` for the
+two draw files.
+
+### 9 October 2026 — Request 4, item 1: `side-panel-heading`
+
+**Goal.** A scene property `side-panel-heading`: accepted by the reader; a problem with a
+`none` or `custom` panel; drawn in KEY POINTS' style above a `steps` or `checklist` panel, the
+rows 38 px lower, or in place of KEY POINTS for `key-points`.
+
+**Test.** `tests/tier1/test_script_check_scenes.py::side_panel_heading_is_a_scene_property_for_steps_checklist_and_key_points`;
+`tests/tier2/test_frame.py::a_side_panel_heading_sits_above_a_checklist_and_moves_its_rows_down`
+(scene R's first tick moves from row 153 to 191 and muted text appears above) and
+`a_side_panel_heading_replaces_key_points_without_moving_the_list` (scene A's first accent
+square stays put while the frame changes).
+
+**Red.** Reader: `unknown property 'side-panel-heading'`. Frames: `153 == 153 + 38` failed and
+the two scene A frames were byte-identical: the property was ignored.
+
+**Green.** `SCENE_KEYS` gains the key and the rule; `frame.reference_column` draws the heading
+and adds `HEADING_HEIGHT` for steps and checklist. The stored-image tests are unchanged, since
+nothing moves without the property. `20 passed`, `20 passed`; suite below.
+
+**Decision / surprise.** A pause before scanning for the first tick: scene R has no inset, so
+its checklist starts at the column's top and the "first green row at 153" that looked like a
+header pixel was the tick itself. The script-format wording for the property is proposed in
+PLAN.md item 4; the format file is the training-video project's to change.

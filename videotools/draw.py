@@ -256,9 +256,10 @@ def dimension(ctx, p0, p1, s, family, size, colour, text_colour, alpha=1.0, side
 
 
 def hand(ctx, x, y, angle, scale, skin, outline, sleeve, alpha=1.0, mirror=False, label=None,
-         label_fill=None, label_colour=None, label_font=None):
+         label_fill=None, label_colour=None, label_font=None, label_size=28):
     """A mitten-style hand with a sleeve. (x, y) is the fingertip; angle the direction from
-    wrist to fingertip; an optional letter label on a roundel at the wrist."""
+    wrist to fingertip; an optional letter label on a roundel at the wrist, `label_size` px
+    (the roundel scales with it; pass the brand-scaled size)."""
     if alpha <= 0:
         return
     ctx.save()
@@ -301,5 +302,5 @@ def hand(ctx, x, y, angle, scale, skin, outline, sleeve, alpha=1.0, mirror=False
     if label:
         lx = x + math.cos(angle) * (-150 * scale)
         ly = y + math.sin(angle) * (-150 * scale)
-        circle(ctx, lx, ly, 21, fill=label_fill, alpha=alpha)
-        text(ctx, label, lx, ly + 10, label_font, 28, label_colour, anchor="c", alpha=alpha)
+        circle(ctx, lx, ly, 21 * label_size / 28, fill=label_fill, alpha=alpha)
+        text(ctx, label, lx, ly + 10 * label_size / 28, label_font, label_size, label_colour, anchor="c", alpha=alpha)

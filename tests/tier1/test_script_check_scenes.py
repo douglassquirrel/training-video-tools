@@ -104,3 +104,10 @@ def test_added_must_say_where_it_comes_from(video):
     text = text.replace("  - added: the figure's note.", "  - added:")
     assert problems(text, video) == ["line 47: scene A cue 2: 'added:' must say where it comes from",
                                      "line 54: scene A, side panel: 'added:' must say where it comes from"]
+
+
+def test_side_panel_heading_is_a_scene_property_for_steps_checklist_and_key_points(video):
+    text = TWO_SCENES.replace("| code | first_loop | |", "| code | first_loop | |\n| side-panel-heading | CHECK THESE | |")
+    assert problems(text, video) == []
+    text = text.replace("| side-panel-heading | CHECK THESE | |", "| side-panel-heading | CHECK THESE | |\n| side-panel | none | |")
+    assert problems(text, video) == ["line 42: scene A: side-panel-heading needs a key-points, steps or checklist panel, not 'none'"]

@@ -282,8 +282,10 @@ for the cue speaking now, `start(cue)`, `length(cue)`, `total`), `scene` (its da
 script), `colours` (the script's Colours as red-green-blue triples in 0–1), `brand` (the kit:
 `colours`, `fonts`, `settings`), `area` (its rectangle) and `label(text)`, which returns the
 text after checking it is in the scene's "On screen" list and stops the run with a message if
-it is not. Draw with `videotools.draw` (text, pills, callouts, arrows, dimension lines, badges,
-hands, shapes) and `videotools.camera` for an oblique 3D view, with `ripple` (a wavy edge) and
+it is not. A scene's `side-panel-heading` property puts a small heading above a `steps` or
+`checklist` panel, or in place of KEY POINTS. Draw with `videotools.draw` (text, pills, callouts,
+arrows, dimension lines, badges, hands with a letter label whose `label_size` you pass scaled by
+the brand's `font-size-scale`, shapes) and `videotools.camera` for an oblique 3D view, with `ripple` (a wavy edge) and
 `clip` (a polygon cut to one side) for cloth and paper; import the primitives as `d`
 (`from videotools import draw as d`), since the module's own function is called `draw`.
 
@@ -359,7 +361,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(260 tests, lint clean).
+(264 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -402,6 +404,10 @@ with ffmpeg 4.4.
   call carries `-nostdin`, so it can never stop to ask. A package the command needs but its
   Python lacks is one line naming the package and the install (it was a traceback for numpy,
   soundfile and pycairo).
+- 9 October 2026 (evening, after the bed video's re-make): a scene may set
+  `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
+  POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
+  roundel scales with it), so scene code can pass the brand-scaled size.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

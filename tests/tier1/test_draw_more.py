@@ -71,3 +71,16 @@ def test_a_tag_anchored_right_ends_at_x():
     s, c = surface()
     x, y, w, h = draw.tag(c, "Hi", 190, 60, "serif", 20, fill=BLUE, colour=WHITE, anchor="r")
     assert x + w == 190 and pixel(s, 188, 60) == (0, 0, 255)
+
+
+def test_the_hands_label_takes_a_size_and_its_roundel_grows_with_it():
+    small, c = surface(400, 200)
+    draw.hand(c, 300, 100, angle=0.0, scale=1.0, skin=(1, 0.8, 0.6), outline=BLACK, sleeve=BLUE,
+              label="L", label_fill=RED, label_colour=(1, 1, 1), label_font="Sans")
+    big, c = surface(400, 200)
+    draw.hand(c, 300, 100, angle=0.0, scale=1.0, skin=(1, 0.8, 0.6), outline=BLACK, sleeve=BLUE,
+              label="L", label_fill=RED, label_colour=(1, 1, 1), label_font="Sans", label_size=56)
+    wrist = (300 - 150, 100)                                          # the roundel's centre at angle 0
+    assert pixel(small, wrist[0] + 18, wrist[1]) == pixel(big, wrist[0] + 18, wrist[1]) == (255, 0, 0)   # inside 21
+    assert pixel(small, wrist[0] + 36, wrist[1]) != (255, 0, 0)       # outside the 21 px roundel
+    assert pixel(big, wrist[0] + 36, wrist[1]) == (255, 0, 0)         # inside the 42 px one

@@ -4,7 +4,9 @@ Written 9 October 2026 by Claude at Squirrel's request; rewritten the same day (
 first request, `inbox/done/request-from-training-video-2026-10-09.md`, after Squirrel's OK
 (9 October 2026, 17:15: "go ahead"); amended the same day (19:01) from the second request,
 `inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14) and (19:31) from the
-third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15). CLAUDE.md says how the work is done; this file says what
+third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15), and (19:50) from
+the fourth, `inbox/done/request-from-training-video-2026-10-09-4.md` ("Settled" 16): the bed
+video re-made and accepted. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -189,10 +191,14 @@ later without touching scene code):
   accent / rule), a rule under it.
 - **Reference column**: `source-label` over the inset (`work/insets/<inset>.png`, made by
   `crop-insets`; refused by name if missing), then the side panel: `key-points` (a list with
-  accent squares), `steps` (numbered, the current one from the cues' `step:` in accent, done ones
-  in ink), `checklist N` (ticks appearing one by one during cue N), `custom <name> N` (the
-  scene code's `panel` function from cue N, fading in over 0.5 s), `none`; the brand mark at the
-  foot.
+  accent squares, headed KEY POINTS), `steps` (numbered, the current one from the cues' `step:`
+  in accent, done ones in ink), `checklist N` (ticks appearing one by one during cue N),
+  `custom <name> N` (the scene code's `panel` function from cue N, fading in over 0.5 s),
+  `none`; the brand mark at the foot. A scene property `side-panel-heading` (request 4, item 1;
+  Squirrel, 9 October 2026, 19:50) puts its text, in the small muted tracked style of KEY POINTS,
+  above a `steps` or `checklist` panel (the rows move down to make room) or in place of KEY
+  POINTS; with `none` or `custom` it is a problem. The property is proposed to the script format
+  (`training-video/videos/SCRIPT-FORMAT.md`, theirs to change) in those words.
 - **Caption band**: the brand's `caption-band` fill and `caption-rule`; the current cue's caption
   wrapped and centred in `body-medium` at 36 px, fading in at each cue; on the mistake cue a
   "COMMON MISTAKE" tag in the mistake colour and the caption shifted right.
@@ -216,7 +222,9 @@ later without touching scene code):
 `videotools.draw` holds the primitives the prototype's `core.py` had, with colours passed in,
 never defaults from a palette: text with tracking, wrapping and anchors; polygons, lines,
 rounded rectangles, circles, Bézier curves, polylines cut to a fraction; arrows that draw on;
-pills (tags), callouts with leader lines, dimension lines, ✓/✗ badges, mitten hands; `shade`,
+pills (tags), callouts with leader lines, dimension lines, ✓/✗ badges, mitten hands (whose
+letter label takes a `label_size`, the roundel scaling with it, so scene code can pass the
+brand-scaled size: request 4, item 3); `shade`,
 `mix`, `rgb`. `videotools.camera` holds the oblique projection `Camera(scale, focus, centre,
 direction, kx, ky)` with `point(x, y, z)`, interpolation between two cameras, points on a
 plane (`front`, `top`, `end`), generalised from the prototype's box, and the prototype's two
@@ -420,6 +428,13 @@ remote ("Settled" 7).
    missing package is a traceback (numpy, soundfile and cairo were unguarded); item 3, the sheet
    label test draws its reference in-process, which on Linux gets fontconfig's fallback fonts
    when a tier 1 test drew text first (references drawn in a subprocess, as a command does).
+   **Done, 9 October 2026 (request 4):** the bed video re-made in the device shell at `c1720ae`
+   matches the 7 October original to the frame (262.439 s, 7,873 frames), every clip to the
+   millisecond, frames every 5 s within 0.6 of 255 on average; `check-video` clean. Three
+   differences seen; two asked for and built: item 1, a `side-panel-heading` scene property
+   (the prototype's "CHECK BEFORE YOU LEAVE IT" over the checklist); item 3, the hand label's
+   size (it was fixed at 28 px, so `font-size-scale` did not reach it). Item 2 (the prototype's
+   "+ Pillows" roundel and pillow icon) is not asked for and not done.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -497,3 +512,6 @@ None.
     items, with the missing-package message naming the package and the pip line, and
     `VIDEO_TOOLS_PYTHON` only when it is unset (Squirrel, 9 October 2026, 19:31: "agree with
     your thoughts on the package message. Go ahead and fix.").
+16. The fourth request (`inbox/done/request-from-training-video-2026-10-09-4.md`): item 1 with a
+    new `side-panel-heading` scene property, and item 3; not item 2 (Squirrel, 9 October 2026,
+    19:50: "Do 1 (with the new property) and 3.").

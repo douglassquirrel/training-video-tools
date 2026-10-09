@@ -17,6 +17,8 @@ import cairo
 from videotools import brand as brand_
 from videotools import chrome, cli, draw, fonts, scenes, script, timeline
 
+HEADING_HEIGHT = 38      # what a side-panel heading adds above a steps or checklist panel
+
 
 class Video:
     """Everything a frame needs, loaded once."""
@@ -179,6 +181,11 @@ def reference_column(ctx, video, scene, tl, t, frame):
         ctx.paint()
         y = iy + ih + 34
     kind, _, cue = script.side_panel(scene)
+    heading = scene["props"].get("side-panel-heading")
+    if heading and kind in ("steps", "checklist"):
+        # The heading in KEY POINTS' style above the rows, which move down to make room for it.
+        _text(ctx, video, heading, cx, y + 6, "display", 16, "muted", track=2)
+        y += HEADING_HEIGHT
     if kind == "custom":
         alpha = tl.p(t, cue, 0.0, 0.5)
         if alpha > 0:
@@ -206,7 +213,7 @@ def reference_column(ctx, video, scene, tl, t, frame):
             draw.badge(ctx, cx + 22, yy, True, kit["colours"]["correct"], kit["colours"]["on-accent"], 18, p)
             _text(ctx, video, item["text"], cx + 54, yy + 8, "body-medium", 24, "ink", alpha=0.35 + 0.65 * p)
     elif kind == "key-points":
-        _text(ctx, video, "KEY POINTS", cx, y + 6, "display", 16, "muted", track=2)
+        _text(ctx, video, heading or "KEY POINTS", cx, y + 6, "display", 16, "muted", track=2)
         for i, item in enumerate(scene["side"]):
             yy = y + 44 + i * 44
             ctx.rectangle(cx, yy - 13, 12, 12)

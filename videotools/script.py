@@ -18,7 +18,7 @@ SETTINGS = {"title": True, "subtitle": False, "eyebrow": False, "brand": True, "
 NUMBER_SETTINGS = ("speed", "fps", "quality", "lead", "cue-gap", "tail")
 FILE_SETTINGS = ("source", "source-image")
 SCENE_KEYS = {"kind", "letter", "tracker-label", "eyebrow", "title", "inset", "source",
-              "side-panel", "code", "extra"}
+              "side-panel", "side-panel-heading", "code", "extra"}
 CUE_KEYS = {"say", "min", "mistake", "step", "added"}
 KINDS = ("title", "step", "end")
 SIDE_PANEL = re.compile(r"^(key-points|steps|none)$|^checklist (\d+)$|^custom ([a-z0-9-]+) (\d+)$")
@@ -224,6 +224,9 @@ def _check_scene(data, scene, seen):
         cue_n = int(m.group(2) or m.group(4))
         if not 1 <= cue_n <= len(scene["cues"]):
             problems.append(f"{panel_where}: side-panel refers to cue {cue_n}, which doesn't exist")
+    if "side-panel-heading" in props and m and not (panel in ("key-points", "steps") or panel.startswith("checklist")):
+        problems.append(f"{at('side-panel-heading')}: side-panel-heading needs a key-points, steps or checklist "
+                        f"panel, not '{panel}'")
     if kind != "end" and not scene["cues"] and not props.get("extra"):
         problems.append(f"{where}: no narration and no 'extra'")
     mistakes = 0

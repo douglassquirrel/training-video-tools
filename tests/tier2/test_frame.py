@@ -174,3 +174,37 @@ def test_a_frame_drawn_in_a_fresh_process_uses_the_brands_fonts(example, tmp_pat
     # And a second fresh process with the fonts draws the same frame exactly: the route is deterministic.
     again = fresh_frame(example, tmp_path / "again.png", without_fonts=False)
     assert ImageChops.difference(with_fonts, again).getbbox() is None
+
+
+def with_heading(example, key, heading):
+    """The example copy with a side-panel-heading on scene `key`."""
+    text = open(example, encoding="utf-8").read()
+    marker = f"## Scene {key}:"
+    head, sep, rest = text.partition(marker)
+    rest = rest.replace("| code |", f"| side-panel-heading | {heading} |\n| code |", 1)
+    open(example, "w", encoding="utf-8").write(head + sep + rest)
+
+
+def first_row_of(surface, colour, x, y0=130, y1=900):
+    return next((y for y in range(y0, y1) if pixel(surface, x, y) == hex_rgb(colour)), None)
+
+
+def test_a_side_panel_heading_sits_above_a_checklist_and_moves_its_rows_down(video):
+    cx = video.layout.column[0]
+    plain = rendered(video, "R", 5.0)                               # R: checklist 2, both ticks shown by 5 s
+    with_heading(video.script_path, "R", "CHECK BEFORE YOU LEAVE IT")
+    headed = rendered(frame.Video(video.script_path), "R", 5.0)
+    badge_x = cx + 22
+    before, after = first_row_of(plain, "#3E7D4F", badge_x), first_row_of(headed, "#3E7D4F", badge_x)
+    assert before is not None and after == before + 38                # the ticks move down for the heading
+    assert first_row_of(headed, "#6B6560", cx + 2, before - 60, before) is not None   # muted heading text above
+
+
+def test_a_side_panel_heading_replaces_key_points_without_moving_the_list(video):
+    cx = video.layout.column[0]
+    plain = rendered(video, "A", 1.0)                               # A: key-points by default
+    with_heading(video.script_path, "A", "TIPS")
+    headed = rendered(frame.Video(video.script_path), "A", 1.0)
+    square_x = cx + 6
+    assert first_row_of(plain, "#1F6F8B", square_x, 300) == first_row_of(headed, "#1F6F8B", square_x, 300)
+    assert as_image(plain).tobytes() != as_image(headed).tobytes()   # KEY POINTS became TIPS
