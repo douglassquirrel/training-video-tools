@@ -1200,3 +1200,19 @@ nothing; raised with Squirrel, not changed.
 
 **State.** Green and clean as at the handover (280 tests, 98%; the suite not re-run this
 session, no code changed). Nothing waiting.
+
+### 9 October 2026 — The ninth request arrives and is OK'd: four checking commands
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-9.md` (21:39–21:40,
+training-video side, after Squirrel asked why their `brand-preview`, `compare-frames` and
+`frame-hashes` scripts were not video-tools commands): four commands, `brand-preview`,
+`frame-hashes`, `compare-frames` and `compare-video` (the last the acceptance comparison run by
+hand at request 4 and never kept). Their three scripts read as the reference for behaviour.
+Reported at 21:43 with the build order (`frame-hashes` first, no ffmpeg; then `compare-video`,
+whose stub needs raw audio and raw frames; `compare-frames` reusing that; `brand-preview` last)
+and three questions. Squirrel (21:44): `frame-hashes --compare` exits 1 when frames differ;
+`compare-frames` uses the current `timing.json` plus `--offset`; contrast ratios always, and
+"Describe all three when describing what you change"; then "go ahead!". PLAN.md item 11, the
+commands list, the exit-code table, build step 10, "Settled" 20; the item moved to `inbox/done/`.
+
+**State.** Next: `frame-hashes`, test-first.

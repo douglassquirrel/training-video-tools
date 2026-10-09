@@ -6,7 +6,9 @@ first request, `inbox/done/request-from-training-video-2026-10-09.md`, after Squ
 `inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14) and (19:31) from the
 third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15), and (19:50) from
 the fourth, `inbox/done/request-from-training-video-2026-10-09-4.md` ("Settled" 16): the bed
-video re-made and accepted; and (20:14) from the fifth and sixth ("Settled" 17). CLAUDE.md says how the work is done; this file says what
+video re-made and accepted; and (20:14) from the fifth and sixth ("Settled" 17); and (21:46) from
+the ninth, `inbox/done/request-from-training-video-2026-10-09-9.md` ("Settled" 20): four checking
+commands, item 11. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -18,7 +20,9 @@ captions, mistakes shown beside the right way, in a brand's look. The first, *Ma
 (4 min 22 s), was made on 6–7 October 2026 by a one-off prototype of about 2,250 lines
 (`~/projects/non-code/make-bed-training-video/_work/film.py`, `core.py`, `sheet.py`, read-only).
 About 850 of those lines are not about beds. These tools are those lines done properly: eight
-commands and a shared package, driven by three files instead of code.
+commands and a shared package, driven by three files instead of code; and, from the ninth request,
+four checking commands (item 11) that replace the scripts the training-video project wrote for
+approving a brand kit and accepting a re-made video.
 
 | File | Owned by | What the tools take from it |
 |---|---|---|
@@ -39,7 +43,7 @@ stderr in plain words, results and progress to stdout. Exit codes are shared:
 | Code | Meaning |
 |------|---------|
 | 0 | Success; or, with `--dry-run`, everything checked and nothing written. For `check-script` and `check-video`: nothing wrong. |
-| 1 | `check-script` / `check-video` only: problems found, listed on stdout. |
+| 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ (Squirrel, 9 October 2026, 21:44). |
 | 2 | Bad arguments or usage (argparse's own code too). Nothing touched. |
 | 3 | An input refuses: the script or brand kit is malformed or missing, a file it names is missing, a config setting is missing, timings are missing, or an output already exists. Nothing written. |
 | 4 | An external program (ffmpeg, ffprobe, the speech model, a Python package the command needs) is missing or failed. What was written before the failure is named, nothing is deleted. A missing package is one line naming the package and the pip line for the venv, and `VIDEO_TOOLS_PYTHON` when that is unset (request 3, item 2; Squirrel, 9 October 2026, 19:31); every package import is guarded, cairo included. |
@@ -57,6 +61,10 @@ assemble     SCRIPT.md [--out FILE] [--replace]
 check-video  SCRIPT.md [VIDEO] [--sheet OUT.png]
 crop-insets  SCRIPT.md
 font-weights VARIABLE.ttf --weights 400,500,… --family-prefix PREFIX --out DIR
+brand-preview  BRAND_DIR --out PREVIEW.png
+frame-hashes   SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N]
+compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …]
+compare-video  NEW.mp4 OLD.mp4 [--every SECONDS] [--sheet OUT.png]
 ```
 
 ### Which Python
@@ -362,11 +370,68 @@ ffmpeg's exit status ignored; `-y` anywhere; estimated timings used silently for
 assumed; the chrome knowing one video's letters or labels; dead code; no `--help`; tracebacks for
 errors; `from core import *`; colour names (`gold`, `navy`) that no longer describe the colours.
 
+## 11. Four checking commands (request 9; Squirrel, 9 October 2026, 21:44: "go ahead!")
+
+The training-video project's `tools/brand-preview.py`, `frame-hashes.py` and `compare-frames.py`
+are the reference for behaviour (read-only; rebuilt here test-first, not copied); the fourth is
+the comparison run by hand for the bed video's acceptance (request 4) and never kept. Each
+reads through the package's own readers, so what it accepts and refuses is what the tools accept
+and refuse, in the same words (exit 3). Each refuses an existing output. Exit codes as the table
+above; `compare-video` always exits 0 when it runs, since it reports rather than judges.
+
+**`frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…]
+[--step N]`**: every N-th frame (default every one) of each scene drawn as `render` draws it
+(cairo, no ffmpeg) and the MD5 of its pixels recorded by scene and frame number:
+`{"<scene>": {"<frame>": "<md5>"}}`. Needs a complete `timing.json` for every scene it hashes,
+refused like `render` (exit 3). `--out` refuses an existing file unless `--merge`, which keeps
+the file's other scenes and replaces the hashed ones (the one case where it reads then rewrites).
+`--compare` draws the same frames and prints, per scene, `all match` or how many differ and the
+first twelve frame numbers, and how many hashed frames are not in the reference; exit 1 if any
+differ ("Settled" 20), 0 if all match. Prints each scene's frame count and the frames a second.
+Needs pycairo.
+
+**`compare-video NEW.mp4 OLD.mp4 [--every SECONDS] [--sheet OUT.png]`**: for each file, duration
+and frame count (`ffprobe`) and peak and mean level (`volumedetect`); the two mono mixes decoded
+to 48 kHz through ffmpeg (`-f s16le -ac 1 -ar 48000`), each cut into 0.1 s windows of RMS level,
+the Pearson correlation of the two envelopes over the shorter length, and the number of windows
+that are speech (above −40 dBFS) in one and silence in the other; then one frame from each file
+every `--every` seconds (default 5, from 0 up to the shorter duration, `ffmpeg -ss T -frames:v 1
+-f rawvideo -pix_fmt rgb24`) and their mean absolute difference over RGB (0–255): the mean, the
+median, and the five largest with their times, largest first. With `--sheet`, the pairs at those
+five times side by side, new left, old right, each labelled in a strip under it
+(`videotools.sheet`), refused if it exists. Exit 0 always; 4 if ffmpeg or ffprobe fail. Needs
+numpy and Pillow (for the sheet).
+
+**`compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …]`**:
+for each time (as `stills` reads them: a negative time counts back from the scene's end, one
+past the end refused, exit 2), the frame drawn now from the script and its scene code beside the
+old video's frame at the same moment, new left, old right, one pair per row, each pair labelled
+in a strip under it with its scene, time, the old video's time and the mean absolute difference
+over RGB (0–255), printed one line per pair. The old video's moment is the scene's start plus the
+time, the start being the sum of the earlier scenes' lengths from the current `timing.json`
+("Settled" 20); `--offset SCENE=SECONDS` adds to one scene's start (repeatable). Needs a complete
+`timing.json` as `render` does; a moment past the old video's end is refused by name (exit 3);
+refuses an existing sheet. Needs pycairo, numpy, Pillow and ffmpeg.
+
+**`brand-preview BRAND_DIR --out PREVIEW.png`**: the kit read with `brand.read` (a bad kit refused
+in its words, exit 3) and drawn with `videotools.draw` in the kit's own fonts on a 1920×1080
+sheet: every colour as a swatch with its role and hex; every font role the kit names (extra
+roles such as `mono` included) with a specimen line in that font at its size; the mark and
+wordmark drawn as the chrome draws them; sample pills and accent text at one size above and one
+below `small-text-accent`, so rule 3 is visible; the end-card illustration and
+`illustration-credit`; the settings table; and, always ("Settled" 20), the WCAG contrast ratio
+(relative luminance, 1 to 21) of each text-on-fill pair the chrome uses (ink, muted and accent on
+background and surface; on-accent on accent, accent-dark, mistake and correct; the caption text
+on `caption-band`), with the 4.5 and 3 thresholds marked. Refuses an existing output. Needs
+pycairo and Pillow.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
   segments, assemble, fonts) or `out/` (the finished video), or the file a `--out`/`--json` flag
-  names; never into a script, a brand kit, a source, or another project.
+  names; never into a script, a brand kit, a source, or another project. The checking commands of
+  item 11 write only their `--out` or `--sheet` file (`frame-hashes --merge` rewrites the hashes
+  file it was given, and nothing else).
 - Nothing is written over an existing file: the command refuses before starting, and the two
   with `--replace` list what they will replace first. The finished video is never replaced.
 - Nothing is deleted, moved or sent anywhere. A partial file left by a failed external program is
@@ -471,6 +536,10 @@ remote ("Settled" 7).
    Request 8: the bed video rebuilt on the frame methods, every frame hash-identical, the whole
    chain with `--replace` against real ffmpeg, `check-video` clean (request 3 and 6 confirmed end
    to end); request 7 verified; `check-video --sheet` labels in a strip, as `stills` (item 8).
+10. **Request 9** (9 October 2026, 21:40; OK'd 21:44): item 11, in this order, each test-first:
+   `frame-hashes` (no ffmpeg; a regression check for the package at once), `compare-video` (the
+   stub ffmpeg gains raw audio and raw frames), `compare-frames` (reusing the frame reader),
+   `brand-preview`; then the README for the four, "Notes for users", and lint as its own pass.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -558,3 +627,8 @@ None.
     checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").
 19. The eighth request (`inbox/done/request-from-training-video-2026-10-09-8.md`): `check-video`'s
     sheet labels in a strip under each frame (Squirrel, 9 October 2026, 21:07: "go ahead").
+20. The ninth request (`inbox/done/request-from-training-video-2026-10-09-9.md`), all four
+    commands, with three choices (Squirrel, 9 October 2026, 21:44: "1. exit 1 2. use current
+    timing plus --offset. always contrast ratios", then "go ahead!"): `frame-hashes --compare`
+    exits 1 when any frame differs; `compare-frames` takes the old video's scene starts from the
+    current `timing.json` plus `--offset`; `brand-preview` always lists the contrast ratios.
