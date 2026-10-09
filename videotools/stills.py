@@ -35,7 +35,7 @@ def parse_frames(text):
         try:
             out.append((key, float(seconds), part))
         except ValueError:
-            raise cli.Failure(f"'{part}' is not SCENE:SECONDS", cli.USAGE)
+            raise cli.Failure(f"'{part}' is not SCENE:SECONDS", cli.USAGE) from None
         if not sep or not key:
             raise cli.Failure(f"'{part}' is not SCENE:SECONDS", cli.USAGE)
     return out
@@ -60,7 +60,7 @@ def _run(args):
     try:
         columns, rows = (int(v) for v in args.grid.lower().split("x"))
     except ValueError:
-        raise cli.Failure(f"--grid should be COLUMNSxROWS, not '{args.grid}'", cli.USAGE)
+        raise cli.Failure(f"--grid should be COLUMNSxROWS, not '{args.grid}'", cli.USAGE) from None
     if len(wanted) > columns * rows:
         raise cli.Failure(f"{len(wanted)} frames do not fit a {columns}x{rows} grid; give a bigger --grid", cli.USAGE)
     cli.refuse_existing(args.out)
@@ -68,7 +68,7 @@ def _run(args):
         from PIL import Image, ImageDraw, ImageFont
     except ImportError as e:
         raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL)
+                          cli.EXTERNAL) from e
     video = frame.Video(args.SCRIPT)
     timelines, warned, jobs = {}, set(), []
     for key, t, spec in wanted:
@@ -78,7 +78,8 @@ def _run(args):
             tl = timelines[key]
             if tl.estimated and key not in warned:
                 warned.add(key)
-                sys.stderr.write(f"{PROG}: scene {key} has no narration clips (cues {', '.join(str(n) for n in tl.estimated)}); "
+                cues = ", ".join(str(n) for n in tl.estimated)
+                sys.stderr.write(f"{PROG}: scene {key} has no narration clips (cues {cues}); "
                                  "times are estimated at 2.6 words a second\n")
         tl = timelines[key]
         if t < 0:
@@ -102,7 +103,7 @@ def _run(args):
         label = f"{scene['key']} @ {t:.2f} s" + (f"  cue {cue}" if cue else "")
         draw.rectangle([x + 8, y + 8, x + 24 + draw.textlength(label, font=font), y + 40], fill=(43, 43, 43))
         draw.text((x + 16, y + 12), label, font=font, fill=(255, 255, 255))
-        print(f"{scene['key']} at {t:.3f} s (of {tl.total:.3f} s, {'cue %d' % cue if cue else 'no cue'})")
+        print(f"{scene['key']} at {t:.3f} s (of {tl.total:.3f} s, {f'cue {cue}' if cue else 'no cue'})")
     sheet.save(args.out)
     print(f"Wrote {args.out}: {len(jobs)} frames, {columns}x{rows}")
     return cli.OK

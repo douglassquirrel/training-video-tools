@@ -17,9 +17,8 @@ def summary(data):
     """The lines check-script prints for a script: counts, tracker, mistakes, added lines."""
     cues = [(sc, c) for sc in data["scenes"] for c in sc["cues"]]
     words = sum(len(c["text"].split()) for _, c in cues)
-    out = ["%s: %d scenes, %d cues, %d words (about %d s of speech at %.1f words a second)"
-           % (data["title"], len(data["scenes"]), len(cues), words, round(words / WORDS_PER_SECOND),
-              WORDS_PER_SECOND)]
+    out = [f"{data['title']}: {len(data['scenes'])} scenes, {len(cues)} cues, {words} words "
+           f"(about {round(words / WORDS_PER_SECOND)} s of speech at {WORDS_PER_SECOND:.1f} words a second)"]
     letters = []
     for sc in data["scenes"]:
         letter = sc["props"].get("letter")
@@ -29,14 +28,14 @@ def summary(data):
     out.append("Mistakes:")
     for sc, c in cues:
         if "mistake" in c:
-            out.append("  %s cue %d: %s" % (sc["key"], c["n"], c["mistake"]))
-    added = [(sc["key"], "cue %d" % c["n"], c["text"], c["added"]) for sc, c in cues if "added" in c]
+            out.append(f"  {sc['key']} cue {c['n']}: {c['mistake']}")
+    added = [(sc["key"], f"cue {c['n']}", c["text"], c["added"]) for sc, c in cues if "added" in c]
     for sc in data["scenes"]:
         for name, items in (("side panel", sc["side"]), ("on screen", sc["screen"])):
             added += [(sc["key"], name, it["text"], it["added"]) for it in items if "added" in it]
-    out.append("Beyond the source (added:), %d, for approval and checking:" % len(added))
+    out.append(f"Beyond the source (added:), {len(added)}, for approval and checking:")
     for key, where, text, why in added:
-        out.append('  %s, %s: "%s"\n      -> %s' % (key, where, text, why))
+        out.append(f'  {key}, {where}: "{text}"\n      -> {why}')
     return "\n".join(out)
 
 
@@ -52,7 +51,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         if not os.path.isfile(args.SCRIPT):
-            raise cli.Failure("no such file: %s" % args.SCRIPT)
+            raise cli.Failure(f"no such file: {args.SCRIPT}")
         if args.json:
             cli.refuse_existing(args.json)
     except cli.Failure as f:
@@ -64,9 +63,9 @@ def main(argv=None):
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump({k: v for k, v in data.items() if k != "lines"}, f, indent=1, ensure_ascii=False)
-        print("Parsed script written to %s" % args.json)
+        print(f"Parsed script written to {args.json}")
     if problems:
-        print("\n%d problem%s:" % (len(problems), "" if len(problems) == 1 else "s"))
+        print(f"\n{len(problems)} problem{'' if len(problems) == 1 else 's'}:")
         for p in problems:
             print("  - " + p)
         return cli.PROBLEMS

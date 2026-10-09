@@ -14,7 +14,8 @@ import os
 
 import cairo
 
-from videotools import brand as brand_, chrome, cli, draw, fonts, scenes, script, timeline
+from videotools import brand as brand_
+from videotools import chrome, cli, draw, fonts, scenes, script, timeline
 
 
 class Video:
@@ -130,7 +131,8 @@ def header(ctx, video, scene):
     letter = scene["props"].get("letter")
     if letter:
         draw.circle(ctx, 92, 62, 37, fill=kit["colours"]["accent"])
-        draw.text(ctx, letter, 92, 79, _font(video, "display"), chrome.px(video.scale, 46), kit["colours"]["on-accent"], anchor="c")
+        draw.text(ctx, letter, 92, 79, _font(video, "display"), chrome.px(video.scale, 46), kit["colours"]["on-accent"],
+                  anchor="c")
         x = 150
     _text(ctx, video, scene["props"].get("eyebrow", ""), x, 50, "display", 18, "accent", track=3)
     _text(ctx, video, scene["props"].get("title", ""), x, 93, "display", 46, "ink")
@@ -171,7 +173,8 @@ def reference_column(ctx, video, scene, tl, t, frame):
         _text(ctx, video, video.settings["source-label"], cx, y + 10, "display", 16, "muted", track=2)
         iw, ih = img.get_width(), img.get_height()
         ix, iy = cx + (cw - iw) / 2, y + 24
-        draw.fill_rrect(ctx, ix - 6, iy - 6, iw + 12, ih + 12, 6, kit["colours"]["surface"], stroke=kit["colours"]["rule"], lw=1.5)
+        draw.fill_rrect(ctx, ix - 6, iy - 6, iw + 12, ih + 12, 6, kit["colours"]["surface"],
+                        stroke=kit["colours"]["rule"], lw=1.5)
         ctx.set_source_surface(img, ix, iy)
         ctx.paint()
         y = iy + ih + 34
@@ -189,7 +192,8 @@ def reference_column(ctx, video, scene, tl, t, frame):
         now, done = chrome.current_step(scene, tl, t), chrome.steps_done(scene, tl, t)
         for i, item in enumerate(scene["side"], 1):
             yy = y + 18 + (i - 1) * 52
-            colour = kit["colours"]["accent"] if i == now else kit["colours"]["ink"] if i in done else kit["colours"]["rule"]
+            role = "accent" if i == now else "ink" if i in done else "rule"
+            colour = kit["colours"][role]
             draw.circle(ctx, cx + 20, yy, 18, fill=colour)
             fg = kit["colours"]["on-accent"] if (i == now or i in done) else kit["colours"]["muted"]
             draw.text(ctx, str(i), cx + 20, yy + 9, _font(video, "display"), chrome.px(video.scale, 24), fg, anchor="c")
@@ -237,7 +241,8 @@ def caption(ctx, video, scene, tl, t):
     lines = draw.wrap(ctx, cue["text"], _font(video, "body-medium"), size, max_w)
     y0 = by + 66 - (len(lines) - 1) * 23 + 12
     for k, line in enumerate(lines):
-        draw.text(ctx, line, cx, y0 + k * 46, _font(video, "body-medium"), size, kit["colours"]["on-accent"], anchor="c", alpha=alpha)
+        draw.text(ctx, line, cx, y0 + k * 46, _font(video, "body-medium"), size, kit["colours"]["on-accent"],
+                  anchor="c", alpha=alpha)
 
 
 def mistake_panels(ctx, video, scene, tl, t, frame):
@@ -286,7 +291,7 @@ def mistake_panels(ctx, video, scene, tl, t, frame):
 
 
 def title_card(ctx, video, scene, tl, t):
-    kit, st, lay = video.brand, video.settings, video.layout
+    kit, st, _lay = video.brand, video.settings, video.layout
     a = timeline.ep(t, 0.1, 1.0)
     mark(ctx, video, 152, 150, 30, 36, alpha=a)
     _text(ctx, video, st["eyebrow"], 120, 318, "display", 22, "accent", alpha=a, track=4)
@@ -303,7 +308,8 @@ def title_card(ctx, video, scene, tl, t):
         col, row = i % 3, i // 3
         x, y = 120 + col * 320, 650 + row * 78
         draw.circle(ctx, x + 24, y - 8, 24, fill=kit["colours"]["accent"], alpha=p)
-        draw.text(ctx, letter, x + 24, y + 3, _font(video, "display"), chrome.px(video.scale, 28), kit["colours"]["on-accent"], anchor="c", alpha=p)
+        draw.text(ctx, letter, x + 24, y + 3, _font(video, "display"), chrome.px(video.scale, 28),
+                  kit["colours"]["on-accent"], anchor="c", alpha=p)
         _text(ctx, video, title, x + 62, y + 2, "body-medium", 28, "ink", alpha=p)
     page = video.insets.get("title-page")
     if page:
@@ -322,7 +328,8 @@ def title_card(ctx, video, scene, tl, t):
         ctx.set_line_width(1.5)
         ctx.stroke()
         ctx.restore()
-        _text(ctx, video, st["title-image-caption"], x + iw / 2, y + ih + 44, "italic", 22, "muted", anchor="c", alpha=pa)
+        _text(ctx, video, st["title-image-caption"], x + iw / 2, y + ih + 44, "italic", 22, "muted", anchor="c",
+              alpha=pa)
 
 
 def end_card(ctx, video, scene, tl, t):

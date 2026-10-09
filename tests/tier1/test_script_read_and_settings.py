@@ -4,7 +4,6 @@ import os
 
 import pytest
 
-from tests.tier1.test_script_check_settings import video  # noqa: F401
 from tests.tier1.test_script_reads import TWO_SCENES
 from videotools import script
 
@@ -26,7 +25,7 @@ def test_read_refuses_a_malformed_script_with_every_problem(video):
     with pytest.raises(script.ScriptError) as e:
         script.read(str(path))
     assert e.value.problems == ["Settings: 'voice' is missing", "line 24: Colours: 'ribbon' is not #RRGGBB: red"]
-    assert str(e.value) == "%s: 2 problems:\n  - Settings: 'voice' is missing\n  - line 24: Colours: 'ribbon' is not #RRGGBB: red" % path
+    assert str(e.value) == f"{path}: 2 problems:\n  - Settings: 'voice' is missing\n  - line 24: Colours: 'ribbon' is not #RRGGBB: red"
 
 
 def test_read_refuses_a_missing_file_by_name(tmp_path):

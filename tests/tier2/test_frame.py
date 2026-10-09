@@ -12,8 +12,8 @@ import cairo
 import pytest
 from PIL import Image, ImageChops, ImageStat
 
-from tests.tier2.conftest import EXAMPLES, REPO, narrated
-from videotools import brand, cli, frame, script
+from tests.tier2.conftest import REPO, narrated
+from videotools import cli, frame
 
 FRAMES = os.path.join(os.path.dirname(__file__), "frames")
 TOLERANCE = 6.0          # mean absolute difference per channel, 0–255, at 192x108

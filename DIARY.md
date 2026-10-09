@@ -2,45 +2,38 @@
 
 ## Where things stand
 
-9 October 2026, 19:40. Build steps 1–3 are done and most of 5 and 6: six of the eight commands
-work (`check-script`, `narrate`, `assemble`, `check-video`, `crop-insets`, `font-weights`), with
-the readers (`script`, `brand`, `config`), the timeline, the font loader, the drawing primitives
-and the camera underneath them. Not built: the chrome (item 4), `stills` and `render`, which all
-draw frames and so wait on the scene-code interface.
+9 October 2026, 21:30. **The first request is built in full.** All eight commands work
+(`check-script`, `narrate`, `crop-insets`, `stills`, `render`, `assemble`, `check-video`,
+`font-weights`) on the package `videotools/` (readers for the script, brand kit and config; the
+timeline; the drawing primitives; the camera; the font loader; the chrome and the frame; the
+scene-module loader). Build steps 1–7 of PLAN.md are done; step 8 is the training-video
+project's: re-make the bed video with these tools and report back through `inbox/`.
 
-Green: 179 tests, coverage 96% (`draw.py` 85% and `ffmpeg.py`'s probe paths are the gaps; a
-coverage pass is due with the lint pass). `.venv/bin/ruff check .` is not yet clean: the lint pass
-is build step 7, and most of what it flags is `%`-formatting to convert to f-strings.
+Green: 238 tests, coverage 98%, `ruff check .` clean. The suite needs pycairo, numpy, soundfile,
+Pillow and fontTools from the venv (libraries, not programs) and no external program, model or
+network: ffmpeg, ffprobe and the speech model are stubs in `tests/stubs/`.
 
-Tier 3 done on a scratch copy of the example: `narrate` (real model, 11 clips, 10 s), `crop-insets`,
-`font-weights` on the real EB Garamond (output equals the brand's files). Not yet: `assemble` and
-`check-video` on a real file (they need `render`).
+Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
+video, which `check-video` passes clean (the entry "Tier 3: the whole chain"). Not yet tried: the
+Linux device shell (fontconfig fonts: PLAN.md "Things checked" 5), and a real `assemble` with
+clips at a rate other than 24 kHz.
 
-**Waiting on Squirrel:** PLAN.md open question 2, the scene-code interface (item 4's proposal:
-one module per scene named by its `code`, with `draw(frame)`, `mistake(frame, rect)`,
-`right_way(frame, rect)`, `panel(frame, rect)`, and `frame.label(text)` checking the On-screen
-list). Also to confirm: open questions 1 (Python 3.12), 3 (`work/narration/timing.json`, cues
-from 01), 4 (`assemble --replace` covers intermediates only), and the reordering of the build
-(items 7, 8 and 9 were done before 4 and 5 because they do not depend on the interface). No
-GitHub remote yet ("Settled" 7): nothing is pushed.
+Waiting on Squirrel: nothing in PLAN.md. There is no GitHub remote yet ("Settled" 7), so nothing
+is pushed; `git log` has every increment. The bed video's acceptance (PLAN.md step 8) is the
+training-video project's work; anything it finds comes back through `inbox/`.
 
-Next, once the interface is settled: `videotools/chrome.py` (background, header, tracker,
-reference column with its four panel kinds, caption band, mistake panels, title and end cards,
-fades), the scene-module loader, `stills`, then `render`; frame tests against stored images at
-192×108 with a tolerance; the example video's `scenes/` modules; Tier 3 of the whole chain on
-the example; then coverage, README, lint; then the training-video project's acceptance.
+Known-wrong in a past entry: the `check-video` entry says `180 passed`; the run was `179 passed`.
 
-How the tests work: `tests/tier1/` pure functions (pycairo needed for `test_draw.py` and
-`test_fonts.py`; it is in the venv); `tests/tier2/` runs each command as a subprocess through
-`conftest.run()` under the venv's Python, with `tests/stubs/kokoro_onnx/` (fake speech model, on
-`PYTHONPATH` by the `speech` fixture) and `tests/stubs/ffstub.py` (fake ffmpeg and ffprobe on PATH
-by the `ffstub` fixture, media as `key=value` text files, every call logged, `FFSTUB_FAIL` to make
-a job fail). `example` copies `examples/` to a temporary folder; `narrated()` and `rendered()` fake
-the products of `narrate` and `render`. One tier: `.venv/bin/pytest tests/tier1`. Coverage of the
-subprocesses comes through `COVERAGE_PROCESS_START`, which `run()` sets.
-
-Known-wrong in a past entry: the `check-video` entry says `180 passed`; the run was `179 passed`
-(a transcription slip; the count is in the entry above this line).
+How the tests work: `tests/tier1/` pure functions (pycairo for `test_draw*.py` and
+`test_fonts.py`); `tests/tier2/` runs each command as a subprocess through `conftest.run()`
+under the venv's Python, with `tests/stubs/kokoro_onnx/` (fake speech model, on `PYTHONPATH` by
+the `speech` fixture) and `tests/stubs/ffstub.py` (fake ffmpeg and ffprobe on PATH by the `ffstub`
+fixture: media as `key=value` text files, every call logged, `FFSTUB_FAIL`/`FFSTUB_DIE`/
+`FFSTUB_DROP` to make a job fail). `example` copies `examples/` to a temporary folder;
+`narrated()` and `rendered()` fake the products of `narrate` and `render`; `test_frame.py`
+compares drawn frames with `tests/tier2/frames/` at 192×108 (its README says how to renew them).
+One tier: `.venv/bin/pytest tests/tier1`. Coverage of the subprocesses comes through
+`COVERAGE_PROCESS_START`, which `run()` sets.
 
 ## Log
 
@@ -622,3 +615,48 @@ scene, time and cue in the brand's display font.
 
 **State.** All eight commands built. Next: Tier 3 of the whole chain on the scratch copy, then
 coverage, README and lint.
+
+### 9 October 2026 — Tier 3: the whole chain on the example; the sheet's grid
+
+**Goal.** Every command for real, in order, on the scratch copy of the example (narration and
+insets already made there).
+
+**Green.** `stills` (four frames, 2×2; estimated nothing, the clips were there); `render --dry-run`
+(7 scenes, 60.067 s, 1802 frames); `render`: every scene, e.g.
+```
+Rendered C: 320 frames in 1.5 s (212.1 frames/s)
+./render … 24.70s user 4.45s system 247% cpu 11.763 total
+```
+`assemble`: `length 60.067 s (1802 frames), size 2546758 bytes`, sha256 `dcee4bb1…`; `check-video
+--sheet`: length OK, `peak -1.0 dBFS, mean -21.9 dBFS`, six silences all between cues or on the
+end card, every cue heard, `No problems found.`, exit 0.
+
+**Decision / surprise.** The real sheet showed `check-video`'s grid wrong: four columns of 16:9
+frames filled only half of each 480×540 cell. The test was changed first (a near-square grid,
+three by three for seven, frames fitted to their cells, `1 failed`), then the code (`14 passed`).
+Rendering runs at about 200 frames a second on this Mac, four to five times the device shell's
+prototype. The 1,802-frame video took under a minute end to end.
+
+**State.** Every command works on the real thing. Next: coverage and lint.
+
+### 9 October 2026 — Coverage pass and lint pass
+
+**Goal.** Coverage of `draw.py`'s untested branches (it was 85%); then lint as its own pass.
+
+**Test.** `tests/tier1/test_draw_more.py`, seven characterisation tests (tracking, strokes,
+dashes, `cut`, curved arrows, alpha zero, mirrored and labelled hands, right-anchored pills):
+`7 passed` at once, then the code broken seven ways: six breaks caught (`1 failed` each); the
+seventh, removing the badge's alpha guard, was not, because at alpha 0 cairo paints nothing
+either way: that guard is a shortcut, not a behaviour, and the test pins the behaviour.
+
+**Lint.** `pyproject.toml` takes book-tools' rule set (`E, F, W, I, B, UP`; tests may have long
+lines; the example's scene modules import their shared helper by name), line length 120.
+`ruff --fix --unsafe-fixes` converted 130 things (printf formatting to f-strings, mostly) and
+the suite stayed green (`238 passed`); the remaining 86 by hand: the rest of the `%` formats,
+`from e`/`from None` on every raise inside an except, 25 long lines wrapped, and the shared
+`video` fixture moved to `tests/tier1/conftest.py` (ruff's F811 on fixture imports). `narrate`'s
+own `--scenes` parser folded into `script.select`. `All checks passed!`; suite `238 passed`,
+coverage 98%. Found by lint, not by testing: nothing in behaviour; two unused imports and one
+unused variable were the only non-style finds.
+
+**State.** Lint clean, 238 tests, 98%. README complete for all eight commands.

@@ -30,7 +30,8 @@ def _register_with_coretext(path):
     cf = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreFoundation"))
     ct = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreText"))
     cf.CFURLCreateFromFileSystemRepresentation.restype = ctypes.c_void_p
-    cf.CFURLCreateFromFileSystemRepresentation.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_long, ctypes.c_bool]
+    cf.CFURLCreateFromFileSystemRepresentation.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_long,
+                                                           ctypes.c_bool]
     ct.CTFontManagerRegisterFontsForURL.restype = ctypes.c_bool
     ct.CTFontManagerRegisterFontsForURL.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_void_p]
     raw = os.fsencode(path)

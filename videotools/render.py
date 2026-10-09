@@ -27,7 +27,8 @@ def parser():
     p.add_argument("--scenes", metavar="KEY,...", help="only these scenes (default: all, in script order)")
     p.add_argument("--frames", metavar="A-B", help="only frames A to B (B excluded) of the one scene in --scenes")
     p.add_argument("--replace", action="store_true", help="write over existing segments, listing them first")
-    p.add_argument("--dry-run", action="store_true", help="list the scenes, their lengths, frame counts and segments; write nothing")
+    p.add_argument("--dry-run", action="store_true",
+                   help="list the scenes, their lengths, frame counts and segments; write nothing")
     return p
 
 
@@ -46,9 +47,10 @@ def segment_name(scene, first):
 def encode(video, scene, tl, first, last, path):
     """Draw frames first..last-1 of the scene into ffmpeg; returns (frames, seconds taken)."""
     st, lay = video.settings, video.layout
-    args = [ffmpeg.require("ffmpeg")] + ffmpeg.QUIET + ["-f", "rawvideo", "-pix_fmt", "bgra", "-s", f"{lay.width}x{lay.height}",
-                                                       "-r", str(st["fps"]), "-i", "-", "-c:v", "libx264", "-preset", "veryfast",
-                                                       "-crf", str(st["quality"]), "-pix_fmt", "yuv420p", "-r", str(st["fps"]), path]
+    args = [ffmpeg.require("ffmpeg")] + ffmpeg.QUIET + [
+        "-f", "rawvideo", "-pix_fmt", "bgra", "-s", f"{lay.width}x{lay.height}", "-r", str(st["fps"]), "-i", "-",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", str(st["quality"]), "-pix_fmt", "yuv420p",
+        "-r", str(st["fps"]), path]
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, lay.width, lay.height)
     ctx = cairo.Context(surface)
     ctx.set_antialias(cairo.ANTIALIAS_BEST)
@@ -89,9 +91,10 @@ def _run(args):
             try:
                 first, last = (int(v) for v in args.frames.split("-"))
             except ValueError:
-                raise cli.Failure(f"--frames should be A-B, not '{args.frames}'", cli.USAGE)
+                raise cli.Failure(f"--frames should be A-B, not '{args.frames}'", cli.USAGE) from None
             if not 0 <= first < last <= tl.frames:
-                raise cli.Failure(f"--frames {args.frames} is outside scene {scene['key']}'s {tl.frames} frames", cli.USAGE)
+                raise cli.Failure(f"--frames {args.frames} is outside scene {scene['key']}'s {tl.frames} frames",
+                                  cli.USAGE)
         jobs.append((scene, tl, first, last, os.path.join(folder, segment_name(scene, first))))
     if args.dry_run:
         for scene, tl, first, last, path in jobs:
@@ -114,6 +117,8 @@ def _run(args):
         n, seconds = encode(video, scene, tl, first, last, path)
         counted = ffmpeg.count_frames(path)
         if counted != n:
-            raise cli.Failure(f"{path} holds {counted} frames, not the {n} rendered; it is left for inspection", cli.EXTERNAL)
-        print(f"Rendered {scene['key']}: {n} frames in {seconds:.1f} s ({n / max(seconds, 1e-6):.1f} frames/s) -> {path}", flush=True)
+            raise cli.Failure(f"{path} holds {counted} frames, not the {n} rendered; it is left for inspection",
+                              cli.EXTERNAL)
+        rate = n / max(seconds, 1e-6)
+        print(f"Rendered {scene['key']}: {n} frames in {seconds:.1f} s ({rate:.1f} frames/s) -> {path}", flush=True)
     return cli.OK

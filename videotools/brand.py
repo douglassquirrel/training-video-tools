@@ -30,7 +30,7 @@ class BrandError(Exception):
 
     def __init__(self, folder, problems):
         self.folder, self.problems = folder, list(problems)
-        super().__init__("%s: %s" % (folder, "\n".join(self.problems)))
+        super().__init__("{}: {}".format(folder, "\n".join(self.problems)))
 
 
 def rgb(hex_colour):
@@ -60,7 +60,7 @@ def _role_and_number(value, what, name, problems):
     parts = value.split()
     if len(parts) == 2 and NUMBER.match(parts[1]):
         return parts[0], float(parts[1]) if "." in parts[1] else int(parts[1])
-    problems.append("Settings: '%s' should be '%s', not '%s'" % (name, what, value))
+    problems.append(f"Settings: '{name}' should be '{what}', not '{value}'")
     return None
 
 
@@ -72,7 +72,7 @@ def _settings(rows, problems):
     if NUMBER.match(v):
         out["font-size-scale"] = float(v)
     else:
-        problems.append("Settings: 'font-size-scale' should be a number, not '%s'" % v)
+        problems.append(f"Settings: 'font-size-scale' should be a number, not '{v}'")
     v = raw["background-grid"]
     parts = v.split()
     if v == "none":
@@ -80,7 +80,7 @@ def _settings(rows, problems):
     elif len(parts) == 4 and parts[0] == "dots" and all(NUMBER.match(p) for p in parts[1:]):
         out["background-grid"] = ("dots", int(parts[1]), int(parts[2]), float(parts[3]))
     else:
-        problems.append("Settings: 'background-grid' should be 'dots SPACING SIZE OPACITY' or 'none', not '%s'" % v)
+        problems.append(f"Settings: 'background-grid' should be 'dots SPACING SIZE OPACITY' or 'none', not '{v}'")
     out["caption-band"] = raw["caption-band"]
     for key in ("caption-rule", "title-rule"):
         out[key] = _role_and_number(raw[key], "ROLE HEIGHT", key, problems)
@@ -95,7 +95,7 @@ def read(folder):
     folder = os.path.abspath(folder)
     path = os.path.join(folder, "BRAND.md")
     if not os.path.isfile(path):
-        raise BrandError(folder, ["no BRAND.md in %s" % folder])
+        raise BrandError(folder, [f"no BRAND.md in {folder}"])
     with open(path, encoding="utf-8") as f:
         tables = _tables(f.read())
     problems = []
@@ -105,31 +105,31 @@ def read(folder):
         """Whether the table is there; a missing one is a problem, reported in its place."""
         if name in tables:
             return True
-        problems.append("no '%s' table" % name.title())
+        problems.append(f"no '{name.title()}' table")
         return False
 
     identity = {k: v for k, v, _ in rows["identity"]}
     for key in IDENTITY_KEYS:
         if present("identity") and not identity.get(key):
-            problems.append("Identity: '%s' is missing" % key)
+            problems.append(f"Identity: '{key}' is missing")
     colours = {}
     for key, value, _ in rows["colours"]:
         if HEX.match(value):
             colours[key] = rgb(value)
         else:
-            problems.append("Colours: '%s' is not #RRGGBB: %s" % (key, value))
+            problems.append(f"Colours: '{key}' is not #RRGGBB: {value}")
     for role in COLOUR_ROLES:
         if present("colours") and role not in {k for k, _, _ in rows["colours"]}:
-            problems.append("Colours: '%s' is missing" % role)
+            problems.append(f"Colours: '{role}' is missing")
     fonts, files = {}, {}
     for role, name, file in rows["fonts"]:
         fonts[role] = name
         files[role] = os.path.join(folder, file)
         if not os.path.isfile(files[role]):
-            problems.append("Fonts: file for '%s' not found: %s" % (role, files[role]))
+            problems.append(f"Fonts: file for '{role}' not found: {files[role]}")
     for role in FONT_ROLES:
         if present("fonts") and role not in fonts:
-            problems.append("Fonts: '%s' is missing" % role)
+            problems.append(f"Fonts: '{role}' is missing")
     for role, fallback in FONT_FALLBACKS.items():
         if role not in fonts and fallback in fonts:
             fonts[role] = fonts[fallback]
@@ -137,13 +137,13 @@ def read(folder):
     if present("mark"):
         for key in ("letter", "wordmark"):
             if not mark.get(key):
-                problems.append("Mark: '%s' is missing" % key)
+                problems.append(f"Mark: '{key}' is missing")
     illustration = {k: os.path.join(folder, v) for k, v, _ in rows["illustration"]}
     if present("illustration") and "end-card" not in illustration:
         problems.append("Illustration: 'end-card' is missing")
     for key, file in illustration.items():
         if not os.path.isfile(file):
-            problems.append("Illustration: file for '%s' not found: %s" % (key, file))
+            problems.append(f"Illustration: file for '{key}' not found: {file}")
     settings = _settings(rows["settings"], problems)
     if problems:
         raise BrandError(folder, problems)
@@ -157,7 +157,7 @@ def colour(kit, value):
         return kit["colours"][value]
     if HEX.match(value):
         return rgb(value)
-    raise BrandError(kit["folder"], ["no colour role '%s' in the brand kit (and it is not #RRGGBB)" % value])
+    raise BrandError(kit["folder"], [f"no colour role '{value}' in the brand kit (and it is not #RRGGBB)"])
 
 
 def text_colour(kit, role, size):

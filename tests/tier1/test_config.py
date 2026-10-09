@@ -23,8 +23,8 @@ def test_an_unknown_key_or_a_line_without_equals_is_refused_naming_its_line(tmp_
     conf.write_text("VOICE=af_heart\nVOICES=x\njust words\n")
     with pytest.raises(config.ConfigError) as e:
         config.read(str(conf))
-    assert str(e.value) == ("%s: line 2: unknown setting 'VOICES' (the settings are SPEECH_MODEL_DIR, VOICE, SPEED)\n"
-                            "%s: line 3: not KEY=value: just words" % (conf, conf))
+    assert str(e.value) == (f"{conf}: line 2: unknown setting 'VOICES' (the settings are SPEECH_MODEL_DIR, VOICE, SPEED)\n"
+                            f"{conf}: line 3: not KEY=value: just words")
 
 
 def test_the_default_path_is_in_home_unless_the_environment_names_another(tmp_path, monkeypatch):

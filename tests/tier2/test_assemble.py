@@ -1,7 +1,6 @@
 """assemble: segments joined, narration laid at cue times, refusals, the report."""
 
 import hashlib
-import json
 import os
 
 import numpy as np

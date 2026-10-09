@@ -188,7 +188,7 @@ def test_a_missing_kit_is_refused_by_path(tmp_path):
     with pytest.raises(brand.BrandError) as e:
         brand.read(str(tmp_path / "none"))
     assert e.value.problems == ["no BRAND.md in %s" % (tmp_path / "none")]
-    assert str(e.value) == "%s: no BRAND.md in %s" % (tmp_path / "none", tmp_path / "none")
+    assert str(e.value) == "{}: no BRAND.md in {}".format(tmp_path / "none", tmp_path / "none")
 
 
 def test_the_brand_a_script_names_is_found_above_the_script(kit, tmp_path):

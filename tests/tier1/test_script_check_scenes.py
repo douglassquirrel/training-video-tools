@@ -1,6 +1,6 @@
 """videotools.script.check: Colours, Insets, scene properties, cues and side panels."""
 
-from tests.tier1.test_script_check_settings import problems, video  # noqa: F401
+from tests.tier1.test_script_check_settings import problems
 from tests.tier1.test_script_reads import TWO_SCENES
 
 

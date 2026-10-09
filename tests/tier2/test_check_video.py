@@ -123,11 +123,11 @@ def test_sheet_pastes_one_frame_from_the_middle_of_each_scene(ready, ffstub, tmp
     assert f"sheet of 7 frames written to {sheet}\n" in out
     im = Image.open(sheet)
     assert im.size == (1920, 1080)
-    # 7 frames in a 4 x 2 grid of 480 x 540 cells; each stub frame is red
-    assert im.getpixel((240, 200))[:3] == (200, 40, 40)
-    assert im.getpixel((240 + 480 * 3, 200))[:3] == (200, 40, 40)
-    assert im.getpixel((240 + 480 * 2, 540 + 200))[:3] == (200, 40, 40)
-    assert im.getpixel((240 + 480 * 3, 540 + 200))[:3] != (200, 40, 40)      # the empty eighth cell
+    # 7 frames in a 3 x 3 grid of 640 x 360 cells, each frame filling its cell; stub frames are red
+    assert im.getpixel((320, 300))[:3] == (200, 40, 40)
+    assert im.getpixel((320 + 640 * 2, 300))[:3] == (200, 40, 40)
+    assert im.getpixel((320, 360 * 2 + 300))[:3] == (200, 40, 40)             # the seventh, bottom left
+    assert im.getpixel((320 + 640, 360 * 2 + 300))[:3] != (200, 40, 40)       # the empty eighth cell
     frames = [c["ffmpeg"] for c in ff_calls(ffstub) if "ffmpeg" in c and "-frames:v" in c["ffmpeg"]]
     assert len(frames) == 7
     assert frames[0][:4] == ["-hide_banner", "-loglevel", "error", "-ss"] and float(frames[0][4]) == pytest.approx(249 / 30 / 2, abs=0.001)

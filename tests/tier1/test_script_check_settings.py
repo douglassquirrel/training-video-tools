@@ -1,20 +1,8 @@
 """videotools.script.check: the Settings table and the title."""
 
-import pytest
 
 from tests.tier1.test_script_reads import TWO_SCENES
 from videotools import script
-
-
-@pytest.fixture
-def video(tmp_path):
-    """A video folder with its source file and a brand kit two levels up, as in a project."""
-    folder = tmp_path / "videos" / "bow"
-    (folder / "sources").mkdir(parents=True)
-    (folder / "sources" / "bow.png").write_bytes(b"not really a png")
-    (tmp_path / "brands" / "demo").mkdir(parents=True)
-    (tmp_path / "brands" / "demo" / "BRAND.md").write_text("# demo\n")
-    return folder
 
 
 def problems(text, folder):
@@ -66,7 +54,7 @@ def test_a_source_file_that_does_not_exist_is_named(video):
 def test_a_brand_with_no_kit_is_named_with_where_it_was_looked_for(video, tmp_path):
     text = TWO_SCENES.replace("| brand | demo | |", "| brand | other | |")
     assert problems(text, video) == [
-        "line 10: Settings: brand 'other' has no brands/other/BRAND.md under %s" % tmp_path]
+        f"line 10: Settings: brand 'other' has no brands/other/BRAND.md under {tmp_path}"]
 
 
 def test_a_brand_is_refused_when_no_folder_above_the_script_has_brands(tmp_path):
@@ -74,7 +62,7 @@ def test_a_brand_is_refused_when_no_folder_above_the_script_has_brands(tmp_path)
     (folder / "sources").mkdir(parents=True)
     (folder / "sources" / "bow.png").write_bytes(b"")
     assert problems(TWO_SCENES, folder) == [
-        "line 10: Settings: brand 'demo': no 'brands/' folder in or above %s" % folder]
+        f"line 10: Settings: brand 'demo': no 'brands/' folder in or above {folder}"]
 
 
 def test_a_script_without_a_title_line_is_a_problem(video):

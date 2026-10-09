@@ -13,4 +13,13 @@ source = ["videotools"]
 
 [tool.ruff]
 target-version = "py39"
-line-length = 100
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# The tests hold long expected lines of output, kept whole so they can be read.
+"tests/*" = ["E501"]
+# The example's scene modules are a video's own code: they import their shared helper by name.
+"examples/*" = ["E402", "I001"]

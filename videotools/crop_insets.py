@@ -70,7 +70,7 @@ def _run(args):
         from PIL import Image
     except ImportError as e:
         raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL)
+                          cli.EXTERNAL) from e
     folder = script.folder(args.SCRIPT)
     image = Image.open(os.path.join(folder, source))
     jobs = plan(data, image.size)

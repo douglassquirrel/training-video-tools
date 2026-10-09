@@ -33,7 +33,7 @@ def speech(tmp_path):
     (model / "model.onnx").write_bytes(b"")
     (model / "voices.npz").write_bytes(b"")
     conf = tmp_path / "video-tools.conf"
-    conf.write_text("SPEECH_MODEL_DIR=%s\nVOICE=bm_george\nSPEED=1.0\n" % model)
+    conf.write_text(f"SPEECH_MODEL_DIR={model}\nVOICE=bm_george\nSPEED=1.0\n")
     log = tmp_path / "kokoro-calls.jsonl"
     return {"PYTHONPATH": STUBS, "VIDEO_TOOLS_CONF": str(conf), "KOKORO_STUB_LOG": str(log),
             "SPEECH_MODEL_DIR_FOR_TESTS": str(model)}
@@ -96,6 +96,7 @@ EXAMPLE_CUES = {"title": 2, "A": 2, "B": 2, "B2": 1, "C": 2, "R": 2, "end": 0}
 def narrated(example, rate=24000, seconds=1.0):
     """Write real 1 s clips (a quiet tone) and a timing.json for every cue of the example copy."""
     import json
+
     import numpy as np
     import soundfile
     folder = os.path.join(os.path.dirname(example), "work", "narration")

@@ -70,8 +70,8 @@ def _run(args):
         from fontTools.ttLib import TTFont
         from fontTools.varLib import instancer
     except ImportError as e:
-        raise cli.Failure(f"fontTools is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL)
+        raise cli.Failure(f"fontTools is not installed in this Python ({e}); install it into the venv as the "
+                          "README says", cli.EXTERNAL) from e
     font = TTFont(args.FONT)
     axes = {a.axisTag: a for a in font["fvar"].axes} if "fvar" in font else {}
     if "wght" not in axes:

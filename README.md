@@ -9,9 +9,9 @@ training-video project (`~/projects/non-code/training-video/`) and anyone making
 video from Terminal on a Mac. Nothing leaves the machine: no service is called, nothing is
 uploaded, and no command ever writes over an existing file.
 
-**Status (9 October 2026):** `check-script`, `narrate`, `assemble`, `check-video`, `crop-insets`
-and `font-weights` are built; `stills` and `render` (the drawing) are under way (see `PLAN.md`
-for the full set and `DIARY.md` for where things stand).
+**Status (9 October 2026):** all eight commands are built and the whole chain has made the
+example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`.
 
 ## Requirements
 
@@ -110,7 +110,51 @@ R_02.wav  ~5.4 s  Edges even, creases sharp, and a hull that opens. That's a boa
 A real run (`./narrate …` without `--dry-run`) writes the clips and `timing.json` into the
 video's `work/narration/`; on the example it took about 10 s and printed each clip's length
 (`title_01.wav  2.314 s`, …). Try it on a copy of the example rather than the one in the
-repository.
+repository. Then, on that copy:
+
+```
+$ ./crop-insets COPY/script.md
+…/work/insets/A.png  388x167  (inset A, 1040x450 at 80 150)
+…
+Wrote 5 files to …/work/insets
+
+$ ./stills COPY/script.md "title:3.0,A:2.0,B:4.0,R:6.0" --out sheet.png
+title at 3.000 s (of 8.333 s, cue 1)
+A at 2.000 s (of 10.500 s, cue 1)
+B at 4.000 s (of 10.000 s, cue 1)
+R at 6.000 s (of 8.967 s, cue 2)
+Wrote sheet.png: 4 frames, 2x2
+
+$ ./render COPY/script.md --dry-run
+title  8.333 s  250 frames  -> …/work/segments/title_00000.mp4
+A  10.500 s  315 frames  -> …/work/segments/A_00000.mp4
+…
+7 scenes, 60.067 s, 1802 frames; nothing written (dry run).
+
+$ ./render COPY/script.md
+title  8.333 s  250 frames
+Rendered title: 250 frames in 1.3 s (190.2 frames/s) -> …/work/segments/title_00000.mp4
+…
+Rendered end: 171 frames in 0.8 s (205.9 frames/s) -> …/work/segments/end_00000.mp4
+
+$ ./assemble COPY/script.md
+Narration mixed: 60.067 s to …/work/assemble/narration.wav
+Segments joined to …/work/assemble/video-only.mp4
+Wrote …/out/Folding a Paper Boat.mp4
+length 60.067 s (1802 frames), size 2546758 bytes
+sha256 dcee4bb1adbd11215f8e7fb288572524b234764c30c593959396274539b0211b
+
+$ ./check-video COPY/script.md --sheet check.png
+…/out/Folding a Paper Boat.mp4
+length 60.067 s; the script's scenes give 60.067 s: OK
+peak -1.0 dBFS, mean -21.9 dBFS: OK
+silences of 2 s or more: 6, at 6.782-9.109 (between cues), … 52.799-60.067 (scene end, no cues): OK
+narration in every cue's window: OK
+sheet of 7 frames written to check.png
+No problems found.
+```
+
+(On this Mac, 9 October 2026: the whole example, 60 s of video, in under a minute.)
 
 ## Usage
 
@@ -178,6 +222,48 @@ fonts/EBG-SemiBold.ttf  EBG SemiBold  (wght 600)
 fonts/EBG-Bold.ttf  EBG Bold  (wght 700)
 ```
 
+### `stills SCRIPT.md SCENE:SECONDS[,…] --out SHEET.png [--grid CxR]`
+
+Draws the frames at the given times (a negative time counts back from the scene's end) onto
+one 1920×1080 sheet, `--grid` columns by rows (default `2x2`; more frames than cells is
+refused), each labelled with its scene, time and cue. This is how a scene's layout is checked
+before rendering. It needs the insets (`crop-insets`) and, for exact times, the narration; with
+no clips it estimates the timing at 2.6 words a second and says so on stderr. Refuses an
+existing sheet and a time past the scene's end.
+
+### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run]`
+
+Draws every frame of each scene (all, or `--scenes`) and pipes them to ffmpeg as raw BGRA
+(`libx264`, the script's `quality` as CRF, `veryfast`, `yuv420p`, the script's `fps`) into
+`work/segments/<scene>_<first frame>.mp4`. `--frames 100-130` renders that range of the one
+scene named, into `<scene>_00100.mp4`. Refuses without a complete `timing.json` (timings are
+never estimated for a render), and an existing segment unless `--replace` (listed first).
+After each segment, ffmpeg's exit status is checked and the segment's frames counted; a
+failure names the partial file and leaves it (exit 4). Prints each scene's progress and the
+frames a second achieved. `--dry-run` lists the scenes, lengths, frame counts and segment
+names and writes nothing.
+
+### Writing a video's scene code
+
+A video's own drawing lives in the folder its script's `scene-code` names, one Python module
+per scene, named by the scene's `code` property (`examples/videos/paper-boat/scenes/` is the
+worked example; its README has the details). A module defines:
+
+- `draw(frame)`: the animation area, every scene;
+- `mistake(frame, rect)` and `right_way(frame, rect)`: the two panel bodies, for a scene whose
+  narration has a `mistake:` cue;
+- `panel(frame, rect)`: the side panel, for a scene whose `side-panel` is `custom <name> N`.
+
+`frame` carries `ctx` (the cairo context, clipped to the area), `t` (seconds into the scene),
+`timeline` (`p(t, cue, a, b)` for eased progress between two offsets from a cue's start, `cue(t)`
+for the cue speaking now, `start(cue)`, `length(cue)`, `total`), `scene` (its data from the
+script), `colours` (the script's Colours as red-green-blue triples in 0–1), `brand` (the kit:
+`colours`, `fonts`, `settings`), `area` (its rectangle) and `label(text)`, which returns the
+text after checking it is in the scene's "On screen" list and stops the run with a message if
+it is not. Draw with `videotools.draw` (text, pills, callouts, arrows, dimension lines, badges,
+hands, shapes) and `videotools.camera` for an oblique 3D view; import the primitives as `d`
+(`from videotools import draw as d`), since the module's own function is called `draw`.
+
 ### `assemble SCRIPT.md [--out FILE] [--replace]`
 
 Joins the rendered segments (`work/segments/<scene>_<frame>.mp4`) in script order with ffmpeg's
@@ -240,20 +326,25 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 ```
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
-primitives, the camera); `tests/tier2/` runs each command as a subprocess against stubs
-(`tests/stubs/`: a fake `kokoro_onnx` package, and `ffstub.py` standing in for `ffmpeg` and
-`ffprobe` with fake media files) and a copy of the example. Coverage is reported by the test
-command; 96% on 9 October 2026 (179 tests).
+primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
+as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and `ffstub.py`
+standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
+draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
+192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
+(238 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
-repository): `./narrate COPY/script.md --dry-run`, then a real run, then a second run (it must
-refuse); `./crop-insets COPY/script.md`; `./font-weights` on a real variable font into a scratch
-folder. Done and recorded in `DIARY.md` on 9 October 2026. `assemble` and `check-video` wait for
-`render`.
+repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
+refuse) and `font-weights` on a real variable font into a scratch folder. Done and recorded in
+`DIARY.md` on 9 October 2026, on macOS; the Linux device shell (fontconfig fonts) is still to be
+tried there.
 
 ## Known limitations and non-goals
 
-- Only one frame size, 1920×1080, and only the Kokoro model through kokoro-onnx.
+- Only one frame size, 1920×1080 (every region is named in one place, `chrome.Layout`, so a
+  second size can come later), and only the Kokoro model through kokoro-onnx.
+- Fonts are found through CoreText on macOS and fontconfig elsewhere; the fontconfig route has
+  not yet been run on Linux.
 - No network use at run time: no cloud speech, no fetching of models or brand assets.
 - No timeline editing and no graphical interface; no slide decks.
 - Anything particular to one video (its drawing, narration, sources) belongs in that video's
@@ -269,6 +360,10 @@ folder. Done and recorded in `DIARY.md` on 9 October 2026. `assemble` and `check
   prototype, nothing writes over an existing file, ffmpeg's failures are reported, and clips of
   any sample rate are placed correctly. The whole-page image for the title card is
   `work/insets/title-page.png`; the italic at weight 400 is named `PREFIX Italic`.
+- 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
+  the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
+  and a label drawn on screen must be in the script's "On screen" list. The caption band's text
+  waits for the first cue; small accent text uses the brand's darker role.
 
 ## Contributing
 

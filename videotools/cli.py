@@ -23,11 +23,11 @@ class Failure(Exception):
 
 def report(prog, failure):
     """Print a Failure on stderr as `prog: message` and return its exit code."""
-    sys.stderr.write("%s: %s\n" % (prog, failure))
+    sys.stderr.write(f"{prog}: {failure}\n")
     return failure.code
 
 
 def refuse_existing(path):
     """Raise Failure if `path` exists: no command writes over a file."""
     if os.path.lexists(path):
-        raise Failure("%s already exists; give a new name" % path)
+        raise Failure(f"{path} already exists; give a new name")

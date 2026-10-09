@@ -91,7 +91,7 @@ def build(settings, scene, clips, estimate=False):
     cues = scene["cues"]
     if clips is None:
         if cues and not estimate:
-            raise cli.Failure("scene %s has no narration clips; run narrate first" % scene["key"])
+            raise cli.Failure("scene {} has no narration clips; run narrate first".format(scene["key"]))
         clips = [None] * len(cues)
     starts, lengths, estimated = [], [], []
     t = settings["lead"]
@@ -99,7 +99,7 @@ def build(settings, scene, clips, estimate=False):
         clip = clips[cue["n"] - 1]
         if clip is None:
             if not estimate:
-                raise cli.Failure("scene %s cue %d has no narration clip; run narrate first" % (scene["key"], cue["n"]))
+                raise cli.Failure(f"scene {scene['key']} cue {cue['n']} has no narration clip; run narrate first")
             clip = len(cue["text"].split()) / WORDS_PER_SECOND
             estimated.append(cue["n"])
         length = max(clip + settings["cue-gap"], script.minimum(cue))

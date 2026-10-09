@@ -82,7 +82,8 @@ def check_frames(plan):
                                   f"but the segments before it end at {total}")
             total += ffmpeg.count_frames(path)
         if total != tl.frames:
-            raise cli.Failure(f"scene {scene['key']}: its segments hold {total} frames, the script's timing gives {tl.frames}")
+            raise cli.Failure(f"scene {scene['key']}: its segments hold {total} frames, "
+                              f"the script's timing gives {tl.frames}")
 
 
 def narration(plan, out_path):
@@ -146,9 +147,9 @@ def _run(args):
                "joining the segments", partial=video_only)
     print(f"Segments joined to {video_only}", flush=True)
     os.makedirs(os.path.dirname(os.path.abspath(out_file)), exist_ok=True)
-    ffmpeg.run("ffmpeg", ffmpeg.QUIET + ["-i", video_only, "-i", narration_path, "-c:v", "copy", "-c:a", "aac",
-                                         "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-shortest", out_file],
-               "muxing the narration", partial=out_file)
+    mux = ["-i", video_only, "-i", narration_path, "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000",
+           "-movflags", "+faststart", "-shortest", out_file]
+    ffmpeg.run("ffmpeg", ffmpeg.QUIET + mux, "muxing the narration", partial=out_file)
     frames = sum(tl.frames for _, tl, _, _ in plan)
     sha = hashlib.sha256()
     with open(out_file, "rb") as f:

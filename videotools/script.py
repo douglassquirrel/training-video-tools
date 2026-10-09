@@ -79,7 +79,7 @@ def parse(text):
         if line.startswith("### "):
             sub, item = line[4:].strip().lower(), None
             if section != "scene":
-                problems.append("line %d: '%s' outside a scene" % (n, line.strip()))
+                problems.append(f"line {n}: '{line.strip()}' outside a scene")
             continue
         if section in ("settings", "colours", "insets"):
             if line.startswith("|"):
@@ -108,8 +108,7 @@ def parse(text):
                 item[m.group(1)] = m.group(2).strip()
                 continue
             if line.strip():
-                problems.append("line %d: scene %s: not a cue or a cue's sub-bullet: %s"
-                                % (n, scene["key"], line.strip()[:60]))
+                problems.append(f"line {n}: scene {scene['key']}: not a cue or a cue's sub-bullet: {line.strip()[:60]}")
             continue
         if sub in ("side panel", "on screen"):
             dest = scene["side"] if sub == "side panel" else scene["screen"]
@@ -123,15 +122,14 @@ def parse(text):
                 item["added"] = m.group(2).strip()
                 continue
             if line.strip():
-                problems.append("line %d: scene %s, %s: not a list item: %s"
-                                % (n, scene["key"], sub, line.strip()[:60]))
+                problems.append(f"line {n}: scene {scene['key']}, {sub}: not a list item: {line.strip()[:60]}")
     return data, problems
 
 
 def _at(data, section, key):
     """'line N: ' for a table row the parser saw, or '' when there is no line to name."""
     n = data["lines"].get((section, key))
-    return "line %d: " % n if n else ""
+    return f"line {n}: " if n else ""
 
 
 def brands_root(script_path):
@@ -154,34 +152,34 @@ def check(data, script_path):
     st = data["settings"]
     for key, required in SETTINGS.items():
         if required and not st.get(key):
-            problems.append("Settings: '%s' is missing" % key)
+            problems.append(f"Settings: '{key}' is missing")
     for key, value in st.items():
         where = _at(data, "settings", key)
         if key not in SETTINGS and not key.startswith("x-"):
-            problems.append("%sSettings: unknown key '%s'" % (where, key))
+            problems.append(f"{where}Settings: unknown key '{key}'")
         elif key in NUMBER_SETTINGS and value and not NUMBER.match(value):
-            problems.append("%sSettings: '%s' should be a number, not '%s'" % (where, key, value))
+            problems.append(f"{where}Settings: '{key}' should be a number, not '{value}'")
         elif key == "size" and value and not SIZE.match(value):
-            problems.append("%sSettings: 'size' should look like 1920x1080, not '%s'" % (where, value))
+            problems.append(f"{where}Settings: 'size' should look like 1920x1080, not '{value}'")
     folder = os.path.dirname(os.path.abspath(script_path))
     for key in FILE_SETTINGS:
         if st.get(key) and not os.path.isfile(os.path.join(folder, st[key])):
-            problems.append("%sSettings: '%s' file not found: %s" % (_at(data, "settings", key), key, st[key]))
+            problems.append("{}Settings: '{}' file not found: {}".format(_at(data, "settings", key), key, st[key]))
     brand = st.get("brand")
     if brand:
         root = brands_root(script_path)
         where = _at(data, "settings", "brand")
         if root is None:
-            problems.append("%sSettings: brand '%s': no 'brands/' folder in or above %s" % (where, brand, folder))
+            problems.append(f"{where}Settings: brand '{brand}': no 'brands/' folder in or above {folder}")
         elif not os.path.isfile(os.path.join(root, "brands", brand, "BRAND.md")):
-            problems.append("%sSettings: brand '%s' has no brands/%s/BRAND.md under %s" % (where, brand, brand, root))
+            problems.append(f"{where}Settings: brand '{brand}' has no brands/{brand}/BRAND.md under {root}")
     for key, value in data["colours"].items():
         if not COLOUR.match(value):
-            problems.append("%sColours: '%s' is not #RRGGBB: %s" % (_at(data, "colours", key), key, value))
+            problems.append("{}Colours: '{}' is not #RRGGBB: {}".format(_at(data, "colours", key), key, value))
     for key, value in data["insets"].items():
         if not INSET.match(value):
-            problems.append("%sInsets: '%s' should be four whole numbers x0 y0 x1 y1: %s"
-                            % (_at(data, "insets", key), key, value))
+            problems.append(f"{_at(data, 'insets', key)}Insets: '{key}' should be four whole numbers "
+                            f"x0 y0 x1 y1: {value}")
     seen = {}
     for scene in data["scenes"]:
         problems += _check_scene(data, scene, seen)
@@ -195,67 +193,68 @@ def _side_panel_text(scene):
 
 def _check_scene(data, scene, seen):
     problems = []
-    key, props, where = scene["key"], scene["props"], "line %d: scene %s" % (scene["line"], scene["key"])
+    key, props, where = scene["key"], scene["props"], f"line {scene['line']}: scene {scene['key']}"
     if key in seen:
-        problems.append("%s: key used twice (first at line %d)" % (where, seen[key]))
+        problems.append(f"{where}: key used twice (first at line {seen[key]})")
     seen.setdefault(key, scene["line"])
 
     def at(prop):
-        return "line %d: scene %s" % (data["lines"][(key, prop)], key)
+        return f"line {data['lines'][(key, prop)]}: scene {key}"
 
-    for prop, value in props.items():
+    for prop, _value in props.items():
         if prop not in SCENE_KEYS and not prop.startswith("x-"):
-            problems.append("%s: unknown property '%s'" % (at(prop), prop))
+            problems.append(f"{at(prop)}: unknown property '{prop}'")
     kind = props.get("kind", "step")
     if kind not in KINDS:
-        problems.append("%s: kind must be title, step or end, not '%s'" % (at("kind"), kind))
+        problems.append("{}: kind must be title, step or end, not '{}'".format(at("kind"), kind))
     if kind == "step" and props.get("letter") and not props.get("source"):
-        problems.append("%s: a lettered step needs a 'source'" % where)
+        problems.append(f"{where}: a lettered step needs a 'source'")
     if props.get("inset") and props["inset"] not in data["insets"]:
-        problems.append("%s: inset '%s' is not in Insets" % (at("inset"), props["inset"]))
+        problems.append("{}: inset '{}' is not in Insets".format(at("inset"), props["inset"]))
     if "extra" in props and not NUMBER.match(props["extra"]):
-        problems.append("%s: extra should be a number of seconds, not '%s'" % (at("extra"), props["extra"]))
+        problems.append("{}: extra should be a number of seconds, not '{}'".format(at("extra"), props["extra"]))
     panel = _side_panel_text(scene)
     panel_where = at("side-panel") if "side-panel" in props else where
     m = SIDE_PANEL.match(panel)
     if not m:
-        problems.append("%s: side-panel '%s' not understood" % (panel_where, panel))
+        problems.append(f"{panel_where}: side-panel '{panel}' not understood")
     elif (panel in ("key-points", "steps") or panel.startswith("checklist")) and not scene["side"]:
-        problems.append("%s: side-panel '%s' but no Side panel list" % (panel_where, panel))
+        problems.append(f"{panel_where}: side-panel '{panel}' but no Side panel list")
     if m and (m.group(2) or m.group(4)):
         cue_n = int(m.group(2) or m.group(4))
         if not 1 <= cue_n <= len(scene["cues"]):
-            problems.append("%s: side-panel refers to cue %d, which doesn't exist" % (panel_where, cue_n))
+            problems.append(f"{panel_where}: side-panel refers to cue {cue_n}, which doesn't exist")
     if kind != "end" and not scene["cues"] and not props.get("extra"):
-        problems.append("%s: no narration and no 'extra'" % where)
+        problems.append(f"{where}: no narration and no 'extra'")
     mistakes = 0
     for i, cue in enumerate(scene["cues"], 1):
-        cue_where = "line %d: scene %s cue %d" % (cue["line"], key, i)
+        cue_where = f"line {cue['line']}: scene {key} cue {i}"
         if cue["n"] != i:
-            problems.append("line %d: scene %s: cue numbered %d where %d was expected" % (cue["line"], key, cue["n"], i))
+            problems.append(f"line {cue['line']}: scene {key}: cue numbered {cue['n']} where {i} was expected")
         for sub in cue:
             if sub not in ("n", "text", "line") and sub not in CUE_KEYS:
-                problems.append("%s: unknown sub-bullet '%s'" % (cue_where, sub))
+                problems.append(f"{cue_where}: unknown sub-bullet '{sub}'")
         if "min" in cue and not NUMBER.match(cue["min"]):
-            problems.append("%s: min should be a number of seconds, not '%s'" % (cue_where, cue["min"]))
+            problems.append("{}: min should be a number of seconds, not '{}'".format(cue_where, cue["min"]))
         if "mistake" in cue:
             mistakes += 1
             if " / " not in cue["mistake"]:
-                problems.append("%s: mistake needs '<wrong> / <right>'" % cue_where)
+                problems.append(f"{cue_where}: mistake needs '<wrong> / <right>'")
         if "step" in cue:
             if panel != "steps":
-                problems.append("%s: step %s needs 'side-panel: steps'" % (cue_where, cue["step"]))
+                problems.append("{}: step {} needs 'side-panel: steps'".format(cue_where, cue["step"]))
             elif not cue["step"].isdigit() or not 1 <= int(cue["step"]) <= len(scene["side"]):
-                problems.append("%s: step %s is not in the Side panel list (%d item%s)"
-                                % (cue_where, cue["step"], len(scene["side"]), "" if len(scene["side"]) == 1 else "s"))
+                count = len(scene["side"])
+                problems.append(f"{cue_where}: step {cue['step']} is not in the Side panel list "
+                                f"({count} item{'' if count == 1 else 's'})")
         if "added" in cue and not cue["added"]:
-            problems.append("%s: 'added:' must say where it comes from" % cue_where)
+            problems.append(f"{cue_where}: 'added:' must say where it comes from")
     if mistakes > 1:
-        problems.append("%s: %d mistakes; one per scene" % (where, mistakes))
+        problems.append(f"{where}: {mistakes} mistakes; one per scene")
     for name, items in (("side panel", scene["side"]), ("on screen", scene["screen"])):
         for item in items:
             if "added" in item and not item["added"]:
-                problems.append("line %d: scene %s, %s: 'added:' must say where it comes from" % (item["line"], key, name))
+                problems.append(f"line {item['line']}: scene {key}, {name}: 'added:' must say where it comes from")
     return problems
 
 
@@ -265,14 +264,14 @@ class ScriptError(Exception):
     def __init__(self, path, problems):
         self.path, self.problems = path, list(problems)
         n = len(self.problems)
-        super().__init__("%s: %d problem%s:\n%s" % (path, n, "" if n == 1 else "s",
-                                                   "\n".join("  - " + p for p in self.problems)))
+        listed = "\n".join("  - " + p for p in self.problems)
+        super().__init__(f"{path}: {n} problem{'' if n == 1 else 's'}:\n{listed}")
 
 
 def read(path):
     """The data of the script at `path`, or ScriptError with every problem."""
     if not os.path.isfile(path):
-        raise ScriptError(path, ["no such file: %s" % path])
+        raise ScriptError(path, [f"no such file: {path}"])
     with open(path, encoding="utf-8") as f:
         data, problems = parse(f.read())
     problems += check(data, path)

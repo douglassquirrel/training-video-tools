@@ -15,7 +15,8 @@ def draw(frame):
               stroke=frame.colours["paper-edge"], lw=3)
     p = tl.p(t, 1, 0.4, 1.6)
     strip_h = 60 * (1 - p) + 60 * p
-    d.fill_rrect(frame.ctx, x, y + h - 60 - 60 * p, w, strip_h, 4, frame.colours["paper"], stroke=frame.colours["paper-edge"], lw=3)
+    d.fill_rrect(frame.ctx, x, y + h - 60 - 60 * p, w, strip_h, 4, frame.colours["paper"],
+                 stroke=frame.colours["paper-edge"], lw=3)
     label(frame, "fold the strip up", cx, y + h + 60, alpha=tl.p(t, 1, 0.3, 0.8))
     label(frame, "both sides", cx, y - 50, alpha=tl.p(t, 1, 2.0, 2.5))
 

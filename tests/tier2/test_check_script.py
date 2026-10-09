@@ -61,7 +61,7 @@ def test_json_writes_the_parsed_script_and_says_so(example, tmp_path):
     out_path = tmp_path / "parsed.json"
     code, out, err = run("check-script", example, "--json", out_path)
     assert (code, err) == (0, "")
-    assert out == SUMMARY + "Parsed script written to %s\n\nNo problems found.\n" % out_path
+    assert out == SUMMARY + f"Parsed script written to {out_path}\n\nNo problems found.\n"
     data = json.load(open(out_path, encoding="utf-8"))
     assert data["title"] == "Folding a Paper Boat"
     assert [s["key"] for s in data["scenes"]] == ["title", "A", "B", "B2", "C", "R", "end"]
@@ -74,7 +74,7 @@ def test_json_refuses_to_write_over_an_existing_file_and_writes_nothing(example,
     out_path.write_text("keep me")
     code, out, err = run("check-script", example, "--json", out_path)
     assert (code, out) == (3, "")
-    assert err == "check-script: %s already exists; give a new name\n" % out_path
+    assert err == f"check-script: {out_path} already exists; give a new name\n"
     assert out_path.read_text() == "keep me"
 
 

@@ -46,30 +46,18 @@ def parser():
 
 
 def clip_name(scene, cue):
-    return "%s_%02d.wav" % (scene["key"], cue["n"])
-
-
-def _scenes(data, keys):
-    """The scenes to narrate: all, or those named in --scenes (refused if one does not exist)."""
-    if not keys:
-        return data["scenes"]
-    by_key = {s["key"]: s for s in data["scenes"]}
-    wanted = [k.strip() for k in keys.split(",") if k.strip()]
-    for k in wanted:
-        if k not in by_key:
-            raise cli.Failure("no scene '%s' in the script (scenes: %s)" % (k, ", ".join(by_key)), cli.USAGE)
-    return [by_key[k] for k in wanted]
+    return f"{scene['key']}_{cue['n']:02d}.wav"
 
 
 def _model_dir(conf):
     """The folder holding model.onnx and voices.npz, from SPEECH_MODEL_DIR."""
     folder = conf.get("SPEECH_MODEL_DIR")
     if not folder:
-        raise cli.Failure("SPEECH_MODEL_DIR is not set in %s; see the README's one-time set-up" % config.path())
+        raise cli.Failure(f"SPEECH_MODEL_DIR is not set in {config.path()}; see the README's one-time set-up")
     model, voices = os.path.join(folder, "model.onnx"), os.path.join(folder, "voices.npz")
     if not (os.path.isfile(model) and os.path.isfile(voices)):
-        raise cli.Failure("no model.onnx and voices.npz in %s (SPEECH_MODEL_DIR in %s); "
-                          "see the README's one-time set-up" % (folder, config.path()))
+        raise cli.Failure(f"no model.onnx and voices.npz in {folder} (SPEECH_MODEL_DIR in {config.path()}); "
+                          "see the README's one-time set-up")
     return model, voices
 
 
@@ -77,8 +65,8 @@ def _load_model(model, voices):
     try:
         from kokoro_onnx import Kokoro
     except ImportError as e:
-        raise cli.Failure("the speech packages are not installed in this Python (%s); install them "
-                          "into the venv as the README says" % e, cli.EXTERNAL)
+        raise cli.Failure(f"the speech packages are not installed in this Python ({e}); install them "
+                          "into the venv as the README says", cli.EXTERNAL) from e
     return Kokoro(model, voices)
 
 
@@ -94,7 +82,7 @@ def _run(args):
     data = script.read(args.SCRIPT)
     settings = script.settings(data)
     conf = config.read()
-    scenes = _scenes(data, args.scenes)
+    scenes = script.select(data, args.scenes)
     voice = args.voice or settings["voice"] or conf.get("VOICE", "")
     speed = args.speed if args.speed is not None else settings["speed"]
     model, voices = _model_dir(conf)
@@ -102,15 +90,15 @@ def _run(args):
     timing_path = os.path.join(folder, "timing.json")
     cues = [(sc, cue) for sc in scenes for cue in sc["cues"]]
     if args.dry_run:
-        print("narrate (dry run): %s" % data["title"])
-        print("voice %s, speed %s, language %s, model %s from %s"
-              % (voice, speed, settings["language"], settings["speech-model"], os.path.dirname(model)))
+        print("narrate (dry run): {}".format(data["title"]))
+        print(f"voice {voice}, speed {speed}, language {settings['language']}, model {settings['speech-model']} "
+              f"from {os.path.dirname(model)}")
         words = 0
         for sc, cue in cues:
             n = len(script.spoken(cue).split())
             words += n
-            print("%s  ~%.1f s  %s" % (clip_name(sc, cue), n / WORDS_PER_SECOND, script.spoken(cue)))
-        print("%d cues, about %d s of speech; nothing written (dry run)." % (len(cues), round(words / WORDS_PER_SECOND)))
+            print(f"{clip_name(sc, cue)}  ~{n / WORDS_PER_SECOND:.1f} s  {script.spoken(cue)}")
+        print(f"{len(cues)} cues, about {round(words / WORDS_PER_SECOND)} s of speech; nothing written (dry run).")
         return cli.OK
     outputs = [os.path.join(folder, clip_name(sc, cue)) for sc, cue in cues] + [timing_path]
     existing = [p for p in outputs if os.path.lexists(p)]
@@ -120,7 +108,7 @@ def _run(args):
     speech = _load_model(model, voices)
     available = sorted(speech.get_voices())
     if voice not in available:
-        raise cli.Failure("the model has no voice '%s' (it has %s)" % (voice, ", ".join(available)))
+        raise cli.Failure("the model has no voice '{}' (it has {})".format(voice, ", ".join(available)))
     if existing:
         print("Replacing:\n" + "\n".join("  " + p for p in existing))
     import numpy as np
@@ -137,17 +125,17 @@ def _run(args):
             try:
                 samples, rate = speech.create(script.spoken(cue), voice=voice, speed=speed, lang=settings["language"])
             except Exception as e:  # the model's own errors are not ours to classify
-                raise cli.Failure("the speech model failed on scene %s cue %d (%s); nothing written for it"
-                                  % (sc["key"], cue["n"], e), cli.EXTERNAL)
+                raise cli.Failure(f"the speech model failed on scene {sc['key']} cue {cue['n']} ({e}); "
+                                  "nothing written for it", cli.EXTERNAL) from e
             samples = trim(np.asarray(samples, dtype=np.float32), rate)
             soundfile.write(os.path.join(folder, clip_name(sc, cue)), samples, rate)
             timing["sample_rate"] = rate
             length = round(len(samples) / rate, 3)
             lengths.append(length)
             written += 1
-            print("%s  %.3f s" % (clip_name(sc, cue), length), flush=True)
+            print(f"{clip_name(sc, cue)}  {length:.3f} s", flush=True)
         timing["scenes"][sc["key"]] = lengths
         with open(timing_path, "w", encoding="utf-8") as f:
             json.dump(timing, f, indent=1)
-    print("Wrote %d clips and %s" % (written, timing_path))
+    print(f"Wrote {written} clips and {timing_path}")
     return cli.OK

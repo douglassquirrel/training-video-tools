@@ -73,9 +73,9 @@ def sheet(path, scenes, video_file):
         from PIL import Image, ImageDraw
     except ImportError as e:
         raise cli.Failure(f"Pillow is not installed in this Python ({e}); install it into the venv as the README says",
-                          cli.EXTERNAL)
+                          cli.EXTERNAL) from e
     n = len(scenes)
-    columns = min(n, 4)
+    columns = max(1, math.ceil(math.sqrt(n)))       # near-square: cells keep the frame's shape
     rows = math.ceil(n / columns)
     cell = (SHEET_SIZE[0] // columns, SHEET_SIZE[1] // rows)
     im = Image.new("RGB", SHEET_SIZE, "white")
@@ -87,7 +87,8 @@ def sheet(path, scenes, video_file):
             ffmpeg.run("ffmpeg", ffmpeg.QUIET + ["-ss", f"{t:.3f}", "-i", video_file, "-frames:v", "1", frame],
                        f"taking a frame at {t:.3f} s", partial=frame)
             img = Image.open(frame).convert("RGB")
-            img = img.resize((cell[0], round(img.height * cell[0] / img.width))) if img.width else img
+            scale = min(cell[0] / img.width, cell[1] / img.height)
+            img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))))
             x, y = (i % columns) * cell[0], (i // columns) * cell[1]
             im.paste(img, (x, y))
             draw.text((x + 8, y + 6), f"{key} @ {t:.1f} s", fill=(0, 0, 0))

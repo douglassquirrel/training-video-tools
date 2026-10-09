@@ -212,7 +212,8 @@ def badge(ctx, x, y, ok, fill, mark, r=24, alpha=1.0):
         return
     circle(ctx, x, y, r, fill=fill, alpha=alpha)
     if ok:
-        line(ctx, [(x - r * 0.45, y + r * 0.02), (x - r * 0.1, y + r * 0.38), (x + r * 0.5, y - r * 0.35)], mark, r * 0.2, alpha)
+        tick = [(x - r * 0.45, y + r * 0.02), (x - r * 0.1, y + r * 0.38), (x + r * 0.5, y - r * 0.35)]
+        line(ctx, tick, mark, r * 0.2, alpha)
     else:
         line(ctx, [(x - r * 0.38, y - r * 0.38), (x + r * 0.38, y + r * 0.38)], mark, r * 0.2, alpha)
         line(ctx, [(x + r * 0.38, y - r * 0.38), (x - r * 0.38, y + r * 0.38)], mark, r * 0.2, alpha)

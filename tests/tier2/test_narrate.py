@@ -31,8 +31,7 @@ def test_dry_run_lists_the_cues_voice_and_estimates_and_writes_nothing(example, 
     code, out, err = run("narrate", example, "--dry-run", env=speech)
     assert (code, err) == (0, "")
     assert out.splitlines()[0] == "narrate (dry run): Folding a Paper Boat"
-    assert out.splitlines()[1] == ("voice af_heart, speed 0.98, language en-us, model kokoro-82m from %s"
-                                   % speech["SPEECH_MODEL_DIR_FOR_TESTS"])
+    assert out.splitlines()[1] == ("voice af_heart, speed 0.98, language en-us, model kokoro-82m from {}".format(speech["SPEECH_MODEL_DIR_FOR_TESTS"]))
     assert "title_02.wav  ~3.8 s  This film follows Figure seven, one fold at a time." in out
     assert out.splitlines()[-1] == "11 cues, about 48 s of speech; nothing written (dry run)."
     assert not os.path.exists(os.path.join(os.path.dirname(example), "work"))
@@ -54,8 +53,8 @@ def test_one_clip_per_cue_and_timing_json_from_the_stub_model(example, speech):
     assert calls[2] == {"create": {"text": "This film follows Figure seven, one fold at a time.",
                                    "voice": "af_heart", "speed": 0.98, "lang": "en-us"}}
     assert len(calls) == 12
-    assert "title_02.wav  %.3f s" % stub_length(10) in out
-    assert out.splitlines()[-1] == "Wrote 11 clips and %s" % os.path.join(work(example), "timing.json")
+    assert f"title_02.wav  {stub_length(10):.3f} s" in out
+    assert out.splitlines()[-1] == "Wrote 11 clips and {}".format(os.path.join(work(example), "timing.json"))
 
 
 def test_the_clips_are_real_wav_files_of_the_recorded_length(example, speech):
@@ -106,7 +105,7 @@ def test_existing_clips_or_timing_are_refused_and_nothing_is_changed(example, sp
     code, out, err = run("narrate", example, "--scenes", "A,B", env=speech)
     assert (code, out) == (3, "")
     assert err == ("narrate: these would be written over; delete them, or run with --replace:\n"
-                   "  %s\n  %s\n  %s\n" % tuple(os.path.join(work(example), f) for f in ("A_01.wav", "A_02.wav", "timing.json")))
+                   "  {}\n  {}\n  {}\n".format(*tuple(os.path.join(work(example), f) for f in ("A_01.wav", "A_02.wav", "timing.json"))))
     assert {f: open(os.path.join(work(example), f), "rb").read() for f in os.listdir(work(example))} == before
     assert len(stub_calls(speech)) == 3
 
@@ -115,8 +114,8 @@ def test_replace_lists_what_it_replaces_and_keeps_other_scenes_timings(example, 
     run("narrate", example, "--scenes", "A,B", env=speech)
     code, out, err = run("narrate", example, "--scenes", "A", "--replace", "--voice", "zz_test", env=speech)
     assert (code, err) == (0, "")
-    assert out.startswith("Replacing:\n  %s\n  %s\n  %s\n" % tuple(os.path.join(work(example), f)
-                                                                    for f in ("A_01.wav", "A_02.wav", "timing.json")))
+    assert out.startswith("Replacing:\n  {}\n  {}\n  {}\n".format(*tuple(os.path.join(work(example), f)
+                                                                    for f in ("A_01.wav", "A_02.wav", "timing.json"))))
     timing = json.load(open(os.path.join(work(example), "timing.json")))
     assert list(timing["scenes"]) == ["A", "B"] and timing["voice"] == "zz_test"
     assert timing["scenes"]["B"] == [stub_length(10), stub_length(14)]
@@ -127,8 +126,8 @@ def test_a_missing_model_folder_is_refused_naming_the_setting(example, speech, t
     conf.write_text("SPEECH_MODEL_DIR=%s\n" % (tmp_path / "nowhere"))
     code, out, err = run("narrate", example, env=dict(speech, VIDEO_TOOLS_CONF=str(conf)))
     assert (code, out) == (3, "")
-    assert err == ("narrate: no model.onnx and voices.npz in %s (SPEECH_MODEL_DIR in %s); "
-                   "see the README's one-time set-up\n" % (tmp_path / "nowhere", conf))
+    assert err == ("narrate: no model.onnx and voices.npz in {} (SPEECH_MODEL_DIR in {}); "
+                   "see the README's one-time set-up\n".format(tmp_path / "nowhere", conf))
 
 
 def test_a_config_without_the_model_setting_is_refused(example, speech, tmp_path):
@@ -136,7 +135,7 @@ def test_a_config_without_the_model_setting_is_refused(example, speech, tmp_path
     conf.write_text("VOICE=af_heart\n")
     code, out, err = run("narrate", example, env=dict(speech, VIDEO_TOOLS_CONF=str(conf)))
     assert (code, out) == (3, "")
-    assert err == "narrate: SPEECH_MODEL_DIR is not set in %s; see the README's one-time set-up\n" % conf
+    assert err == f"narrate: SPEECH_MODEL_DIR is not set in {conf}; see the README's one-time set-up\n"
 
 
 def test_a_voice_the_model_does_not_have_is_refused_with_the_list(example, speech):
@@ -151,7 +150,7 @@ def test_a_malformed_script_is_refused_with_its_problems(example, speech):
     open(example, "w", encoding="utf-8").write(text)
     code, out, err = run("narrate", example, env=speech)
     assert (code, out) == (3, "")
-    assert err == "narrate: %s: 1 problem:\n  - Settings: 'voice' is missing\n" % example
+    assert err == f"narrate: {example}: 1 problem:\n  - Settings: 'voice' is missing\n"
 
 
 def test_a_missing_speech_package_is_a_useful_error_exit_4(example, speech, tmp_path):

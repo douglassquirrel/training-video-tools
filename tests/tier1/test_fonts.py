@@ -42,7 +42,7 @@ def test_on_other_platforms_a_private_fontconfig_file_is_written_and_named(tmp_p
     conf = tmp_path / "work" / "fonts" / "fonts.conf"
     assert os.environ["FONTCONFIG_FILE"] == str(conf)
     text = conf.read_text()
-    assert "<dir>%s</dir>" % os.path.abspath(os.path.join(EXAMPLE, "fonts")) in text
+    assert "<dir>{}</dir>".format(os.path.abspath(os.path.join(EXAMPLE, "fonts"))) in text
     assert "<cachedir>%s</cachedir>" % (tmp_path / "work" / "fonts" / "cache") in text
     assert '<include ignore_missing="yes">/etc/fonts/fonts.conf</include>' in text
     assert sorted(os.path.basename(f) for f in loaded) == ["PBS-Italic.ttf", "PBS-Regular.ttf", "PBS-SemiBold.ttf"]

@@ -19,8 +19,7 @@ def copy_with_fake_venv(tmp_path):
     (tmp_path / ".venv" / "bin").mkdir(parents=True)
     fake = tmp_path / ".venv" / "bin" / "python"
     # The shim marks itself as the venv (a real venv is known by sys.prefix instead).
-    fake.write_text("#!/bin/sh\necho used-the-venv >> '%s'\nVIDEO_TOOLS_VENV='%s' exec '%s' \"$@\"\n"
-                    % (tmp_path / "venv.log", fake, sys.executable))
+    fake.write_text("#!/bin/sh\necho used-the-venv >> '{}'\nVIDEO_TOOLS_VENV='{}' exec '{}' \"$@\"\n".format(tmp_path / "venv.log", fake, sys.executable))
     fake.chmod(0o755)
     return tmp_path
 

@@ -48,7 +48,7 @@ def load(folder, scene):
         try:
             spec.loader.exec_module(module)
         except Exception as e:  # the video's own code: any error is reported, none classified
-            raise cli.Failure(f"scene {scene['key']}: {path} could not be loaded: {type(e).__name__}: {e}")
+            raise cli.Failure(f"scene {scene['key']}: {path} could not be loaded: {type(e).__name__}: {e}") from e
         finally:
             sys.path.remove(folder)
         _loaded[path] = module

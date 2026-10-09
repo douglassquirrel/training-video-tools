@@ -29,12 +29,11 @@ def read(conf_path=None):
             if not line:
                 continue
             if "=" not in line:
-                problems.append("%s: line %d: not KEY=value: %s" % (conf_path, n, line))
+                problems.append(f"{conf_path}: line {n}: not KEY=value: {line}")
                 continue
             key, value = (part.strip() for part in line.split("=", 1))
             if key not in KEYS:
-                problems.append("%s: line %d: unknown setting '%s' (the settings are %s)"
-                                % (conf_path, n, key, ", ".join(KEYS)))
+                problems.append(f"{conf_path}: line {n}: unknown setting '{key}' (the settings are {', '.join(KEYS)})")
                 continue
             if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
                 value = value[1:-1]
