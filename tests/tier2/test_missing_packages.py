@@ -39,6 +39,8 @@ def prepared(example, ffstub):
     ("narrate", ["--scenes", "A", "--replace"], "soundfile", "soundfile"),
     ("render", ["--scenes", "A"], "cairo", "pycairo"),
     ("frame-hashes", ["--scenes", "A", "--out", "h.json"], "cairo", "pycairo"),
+    ("compare-video", ["SELF"], "numpy", "numpy"),                 # SELF: the first file again
+    ("compare-video", ["SELF", "--sheet", "sheet.png"], "PIL", "Pillow"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("crop-insets", [], "PIL", "Pillow"),
@@ -54,6 +56,7 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
     target = tmp_path / "font.ttf" if command == "font-weights" else prepared
     if command == "font-weights":
         target.write_bytes(b"\0")
+    args = [target if a == "SELF" else a for a in args]
     code, out, err = run(command, target, *args, env=env, cwd=tmp_path)
     assert (code, out) == (4, ""), err
     assert "Traceback" not in err

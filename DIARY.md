@@ -2,10 +2,10 @@
 
 ## Where things stand
 
-9 October 2026, 21:53 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
+9 October 2026, 22:03 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
 full, the bed video is accepted and rebuilt on the frame methods, and request 9 (four checking
-commands, PLAN.md item 11, "Settled" 20) is one command in: `frame-hashes` is built, green and
-in the README; `compare-video`, `compare-frames` and `brand-preview` are next, in that order
+commands, PLAN.md item 11, "Settled" 20) is two commands in: `frame-hashes` and `compare-video`
+are built, green and in the README; `compare-frames` and `brand-preview` are next, in that order
 (build step 10).** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
 (empty at 21:22; anything at its top level other than README.md is new and is reported to
 Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
@@ -23,7 +23,7 @@ item 4. Request 7: `check-script` checks the scene code without running it (a st
 frame in a strip under it, as `stills` does (`videotools.sheet`, shared). Request 4's item 2
 (the "+ Pillows" roundel and icon) was not asked for and is not done.
 
-Green: 296 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 316 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -1261,3 +1261,56 @@ takes twenty seconds on a minute of video. The output format follows their scrip
 
 **State.** Green: 296 tests, 98%, lint clean. Next: `compare-video` (the stub ffmpeg gains raw
 audio and raw frames).
+
+### 9 October 2026 — Request 9, `compare-video`
+
+**Goal.** Item 11's second command: two finished files compared on length, frames, levels, the
+narration envelopes' correlation and speech/silence disagreements, and the frames every N
+seconds (mean, median, five largest); `--sheet` with the five pairs; exit 0 always; ffmpeg's
+failures exit 4; a missing numpy or Pillow one line, exit 4.
+
+**Test.** First the real formats (PLAN.md "Things checked" 7): raw 48 kHz mono audio is the
+file's length to the sample, a raw rgb24 frame is width × height × 3 bytes. Then
+`tests/tier1/test_compare_video_measures.py` (five, on hand-written arrays: the envelope, the
+correlation and its undefined case, the disagreements, the speech line, the summary with ties by
+time) and `tests/tier2/test_compare_video.py` (thirteen) against the stub, which gained two
+behaviours: `-f s16le` writes samples loud (−20 dBFS) in a fake file's `tone` spans and silent
+elsewhere, and `-frames:v 1 … -f rawvideo … -` writes one frame of the colour the fake's
+`colours` gives for that time. The expected numbers were worked by hand before the run: eleven
+pairs with three at 151.7 and three at 161.7 give mean 85.5 and median 151.7; two envelopes
+loud 0–10 and 20–30 s against 0–10 and 25–30 s give 50 disagreeing windows and Pearson 0.8069.
+Two missing-package cases added.
+
+**Red.** `20 failed, 11 deselected`: `NotImplementedError` (tier 1) and exit 1 with the
+traceback against every expectation (tier 2).
+
+**Green.** Four rounds, none a fault in the command's logic. (1) The stub dispatched `-f rawvideo`
+to its render branch before looking for `-frames:v`, so a frame request read an empty stdin and
+wrote a fake file named `-` into the repository (deleted; the branch now excludes `-frames:v`).
+(2) My "different lengths" fixture was loud for the whole 20 s compared, so both envelopes were
+flat and `undefined` was the right answer; the fixture now varies within the 20 s. (3) The
+strip probe at x=100 landed on a letter of the label (248, not 85); moved to x=600. (4) The
+`is_speech` test's threshold value was exactly the −40 dBFS line, 327.68, where float rounding
+decides; the test uses 328 and 327. `20 passed`; the suite:
+```
+TOTAL                          2337     24    780     29    98%
+316 passed in 106.19s (0:01:46)
+```
+Lint: one line over 120 columns, wrapped; `All checks passed!`
+
+**Tier 3.** The scratch example video against the copy `assemble --replace --out` made earlier:
+identical in every measure (`correlation 1.0000`, `0 windows`, every difference 0.0). Then
+scene R re-rendered in a second scratch copy with `water` red and assembled to `red.mp4`;
+`compare-video red.mp4 new.mp4 --every 2 --sheet`: the levels and envelopes identical, `mean
+difference 3.0, median 0.0`, the five largest 18.9 at 46, 48, 50, 52 s and 18.4 at 54 s, all in
+scene R; the sheet looked at: five rows, new left with the red water, old right with the blue,
+labels in the strips. The README's section shows this run.
+
+**Decision / surprise.** The sheet is 1920 wide by five rows of 570 (two 949×533 frames and a
+36 px strip), not 1920×1080, since five pairs need the height; its label font is Pillow's
+default (the command has no brand kit to take one from). `ffmpeg.run` takes `binary=True` for
+raw output; `audio_samples` and `frame_at` beside it will serve `compare-frames` too. The
+`frames` count comes from ffprobe's `nb_frames`, falling back to a decode count when a file
+has none.
+
+**State.** Green: 316 tests, 98%, lint clean. Next: `compare-frames`.

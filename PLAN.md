@@ -495,6 +495,10 @@ Kokoro-82M model and voices in `~/models/kokoro/` (`model.onnx`, `voices.npz`).
    prints `silence_start: 0`, then `silence_end: 1.000042 | silence_duration: 1.000042`, per
    silence, on stderr. A frame: `ffmpeg -ss T -i V -frames:v 1 OUT.png`. The concat demuxer with
    `-c copy` joined two copies to 6.02 s, exit 0. A missing input exits 254.
+7. **Raw audio and raw frames** (9 October 2026, ffmpeg 9.0.2, on the 60.067 s example video):
+   `-i V -map 0:a -f s16le -ac 1 -ar 48000 -` writes 5,766,400 bytes to stdout, 2,883,200
+   samples, the file's length exactly; `-ss T -i V -frames:v 1 -f rawvideo -pix_fmt rgb24 -s
+   1920x1080 -` writes 6,220,800 bytes, one frame; both exit 0 with `-nostdin`.
 
 ## Build order
 

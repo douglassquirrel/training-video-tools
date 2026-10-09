@@ -22,17 +22,35 @@ def require(name):
     return path
 
 
-def run(name, args, doing, partial=None, stdin=None):
-    """Run ffmpeg or ffprobe with `args`; returns its stdout. A non-zero exit is a Failure
-    (exit 4) saying what it was doing, with the program's own output and the file that may be
-    partial. Nothing is deleted."""
+def run(name, args, doing, partial=None, stdin=None, binary=False):
+    """Run ffmpeg or ffprobe with `args`; returns its stdout (text, or bytes with `binary`). A
+    non-zero exit is a Failure (exit 4) saying what it was doing, with the program's own output
+    and the file that may be partial. Nothing is deleted."""
     program = require(name)
-    p = subprocess.run([program] + args, capture_output=True, text=True, stdin=stdin)
+    p = subprocess.run([program] + args, capture_output=True, text=not binary, stdin=stdin)
     if p.returncode != 0:
         tail = f", and {partial} may be partial" if partial else ""
+        stderr = p.stderr.decode(errors="replace") if binary else p.stderr
         raise cli.Failure(f"{name} failed (exit {p.returncode}) {doing}; its output follows{tail}\n"
-                          + p.stderr.strip(), cli.EXTERNAL)
+                          + stderr.strip(), cli.EXTERNAL)
     return p.stdout
+
+
+def audio_samples(path, rate=48000):
+    """The file's audio decoded to mono 16-bit at `rate`, as bytes (little-endian)."""
+    return run("ffmpeg", QUIET + ["-i", path, "-map", "0:a", "-f", "s16le", "-ac", "1", "-ar", str(rate), "-"],
+               f"decoding the audio of {path}", binary=True)
+
+
+def frame_at(path, seconds, width, height):
+    """One frame of the file at `seconds`, as raw RGB bytes of width x height."""
+    data = run("ffmpeg", QUIET + ["-ss", f"{seconds:.3f}", "-i", path, "-frames:v", "1", "-f", "rawvideo",
+                                  "-pix_fmt", "rgb24", "-s", f"{width}x{height}", "-"],
+               f"reading the frame of {path} at {seconds:.3f} s", binary=True)
+    if len(data) != width * height * 3:
+        raise cli.Failure(f"ffmpeg gave {len(data)} bytes for the frame of {path} at {seconds:.3f} s, not the "
+                          f"{width * height * 3} of a {width}x{height} frame; is the file that long?", cli.EXTERNAL)
+    return data
 
 
 def count_frames(path):

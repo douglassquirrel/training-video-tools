@@ -1,7 +1,9 @@
 """A stand-in for ffmpeg and ffprobe (tests/tier2/conftest.py puts both names on PATH).
 
 Media files are fake: text files of `key=value` lines (`frames=90`, `duration=3.0`,
-`max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`). Every call is appended as a
+`max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`, `tone=0-1.0,2.0-3.0` the spans
+where the decoded audio is loud, `colours=0:200.40.40,10:0.0.255` the colour of every frame
+from each time). Every call is appended as a
 JSON line to FFSTUB_LOG. FFSTUB_FAIL names a job (`concat`, `mux`, `render`, `probe`, `volume`,
 `silence`, `frame`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
 render stop reading stdin part-way. An existing output is refused unless `-y` is given, as
@@ -100,7 +102,7 @@ def ffmpeg(args):
         duration = sum(float(read_fake(p).get("duration", 0)) for p in inputs)
         write_fake(output, {"frames": frames, "duration": f"{duration:.6f}", "joined": len(inputs)})
         return 0
-    if "-f" in args and arg_after(args, "-f") == "rawvideo":
+    if "-f" in args and arg_after(args, "-f") == "rawvideo" and "-frames:v" not in args:   # render's pipe
         width, height = (int(v) for v in arg_after(args, "-s").split("x"))
         fail_if("render", output)
         frame_bytes = width * height * 4
@@ -137,9 +139,31 @@ def ffmpeg(args):
             sys.stderr.write(f"[Parsed_silencedetect_0 @ 0x1] silence_end: {b} | silence_duration: {float(b) - float(a):.6f}\n")
         return 0
     if "-frames:v" in args:
-        fail_if("frame", output)
+        fail_if("frame", output if output != "-" else None)
+        if output == "-":                       # one raw rgb24 frame of the colour at -ss
+            fake = read_fake(arg_after(args, "-i"))
+            at = float(arg_after(args, "-ss", "0"))
+            colour = (200, 40, 40)
+            for entry in fake.get("colours", "").split(","):
+                if entry and float(entry.split(":")[0]) <= at:
+                    colour = tuple(int(v) for v in entry.split(":")[1].split("."))
+            width, height = (int(v) for v in arg_after(args, "-s", "1920x1080").split("x"))
+            sys.stdout.buffer.write(bytes(colour) * (width * height))
+            return 0
         with open(output, "wb") as f:
             f.write(tiny_png())
+        return 0
+    if "-f" in args and arg_after(args, "-f") == "s16le":   # the audio decoded: loud in the tone spans
+        fail_if("audio")
+        fake = read_fake(arg_after(args, "-i"))
+        rate = int(arg_after(args, "-ar", "48000"))
+        total = int(round(float(fake.get("duration", "0")) * rate))
+        loud = struct.pack("<h", 3277)          # about -20 dBFS
+        out = bytearray(total * 2)
+        for span in [v for v in fake.get("tone", "").split(",") if v]:
+            a, b = (int(round(float(v) * rate)) for v in span.split("-"))
+            out[a * 2:b * 2] = loud * (b - a)
+        sys.stdout.buffer.write(out)
         return 0
     if "-c:v" in args and arg_after(args, "-c:v") == "copy":
         fail_if("mux", output)

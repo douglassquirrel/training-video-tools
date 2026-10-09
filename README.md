@@ -11,9 +11,9 @@ uploaded, and no command ever writes over an existing file.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
-`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. A ninth, `frame-hashes`, is
-the first of four checking commands being added (the others, `compare-video`, `compare-frames`
-and `brand-preview`, are in PLAN.md item 11 and not built yet).
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Two of four checking
+commands are added, `frame-hashes` and `compare-video` (the others, `compare-frames` and
+`brand-preview`, are in PLAN.md item 11 and not built yet).
 
 ## Requirements
 
@@ -376,6 +376,34 @@ end         18 frames in   0.2 s: all match
 26 frames differ.
 ```
 
+### `compare-video NEW.mp4 OLD.mp4 [--every SECONDS] [--sheet OUT.png]`
+
+The acceptance of a re-made or revised video: two finished files compared and reported, never
+judged (exit 0 whenever it runs; a remake that is meant to differ still compares). For each
+file, the length, frame count, peak and mean level; then the narration envelopes (each file's
+audio decoded to 48 kHz mono, the RMS of every 0.1 s window), their correlation over the shorter
+file (`undefined` when one is flat), and the windows that are speech (above −40 dBFS) in one and
+silence in the other; then one frame from each file every `--every` seconds (default 5) and the
+mean absolute difference of the pair over RGB, 0 to 255: the mean, the median and the five largest
+with their times. With `--sheet`, those five pairs side by side, new left, old right, each
+labelled under the frame (refuses an existing file). Needs ffmpeg, ffprobe and numpy, and Pillow
+for the sheet.
+
+```
+$ ./compare-video videos/x/out/X-v2.mp4 videos/x/out/X.mp4 --every 2 --sheet compare.png
+NEW videos/x/out/X-v2.mp4
+  length 60.067 s, 1802 frames; peak -1.0 dBFS, mean -21.9 dBFS
+OLD videos/x/out/X.mp4
+  length 60.067 s, 1802 frames; peak -1.0 dBFS, mean -21.9 dBFS
+narration envelopes (0.1 s windows, 600 compared): correlation 1.0000; speech in one and silence in the other: 0 windows
+frames every 2 s (31 pairs): mean difference 3.0, median 0.0 (0-255)
+  largest: 18.9 at 46.0 s, 18.9 at 48.0 s, 18.9 at 50.0 s, 18.9 at 52.0 s, 18.4 at 54.0 s
+sheet of 5 pairs written to compare.png
+```
+
+(That run: the example re-made with one colour changed in its last step scene; the five largest
+differences are all in that scene, and the sheet shows the colour.)
+
 ### Configuration: `~/.video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
@@ -419,7 +447,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(296 tests, lint clean).
+(316 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -466,9 +494,11 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 9 October 2026 (late): `frame-hashes` added, the first of four checking commands requested by
-  the training-video project; it replaces that project's `tools/frame-hashes.py` with the same
-  record format and output, and exits 1 when frames differ.
+- 9 October 2026 (late): `frame-hashes` and `compare-video` added, the first two of four
+  checking commands requested by the training-video project. `frame-hashes` replaces that
+  project's `tools/frame-hashes.py` with the same record format and output, and exits 1 when
+  frames differ; `compare-video` keeps the comparison that was run by hand for the bed video's
+  acceptance.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module
