@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""check-script: read a video's script.md, check it against the format, list what to approve."""
+
+import os
+import sys
+
+# Never write __pycache__ into a video's folder or anywhere else.
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
+from videotools.check_script import main  # noqa: E402
+
+sys.exit(main())

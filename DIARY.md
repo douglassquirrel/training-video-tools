@@ -240,3 +240,33 @@ reads clean.
 string form the checker uses became `_side_panel_text`.
 
 **State.** Green: 49 tests. Next: the `check-script` command, Tier 2.
+
+### 9 October 2026 — `check-script`
+
+**Goal.** The first command: `--help`, usage, the summary, problems listed with exit 1, a
+missing file (exit 3), `--json` writing the parsed script and refusing an existing file, a
+path with spaces, quotes, `$` and an accent, and the script never modified.
+
+**Test.** `tests/tier2/test_check_script.py`, nine tests, run through `tests/tier2/conftest.py`'s
+`run()` (the wrapper as a subprocess under the venv's Python).
+
+**Red.** `8 failed, 1 passed`: exit 1 with `NotImplementedError` tracebacks against every
+expectation. The ninth, `the_script_is_never_modified`, cannot fail against a command that
+writes nothing, so after the green run the code was broken to write `--json` over the script:
+`1 failed, 8 deselected`; restored (by hand: the file was not yet in git, so `git checkout`
+could not).
+
+**Green.** First run after implementing: `2 failed, 7 passed`, both test errors: the mistake
+cue's line (101 in the example, 100 with the voice row removed; I had written 69 without
+counting), and the hostile-path test had moved the video folder out from under `examples/`, so
+the brand kit could not be found (a manual run on a copy kept under `examples/videos/` passed).
+Then `9 passed`; the whole suite `58 passed`.
+
+**Decision / surprise.** Coverage showed 0% for the two command modules because Tier 2 runs them
+in subprocesses. pytest-cov 7 no longer hooks subprocesses itself; coverage.py 7's `.pth` hook
+does when `COVERAGE_PROCESS_START` names the config and `parallel = true` is set, so `run()`
+sets the variable and `pyproject.toml` the option: `TOTAL 99%`. `videotools/cli.py` holds what
+every command shares: the exit codes, `Failure`, `report`, `refuse_existing`.
+
+**State.** Green: 58 tests, coverage 99%. `check-script` works on the example. Next: the
+timeline (item 3).

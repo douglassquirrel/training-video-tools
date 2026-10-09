@@ -1,0 +1,74 @@
+"""check-script: read a script, check it, print the summary and every `added:` line.
+
+Standard library only; runs on Python 3.9.
+"""
+
+import argparse
+import json
+import os
+
+from videotools import cli, script
+
+PROG = "check-script"
+WORDS_PER_SECOND = 2.6
+
+
+def summary(data):
+    """The lines check-script prints for a script: counts, tracker, mistakes, added lines."""
+    cues = [(sc, c) for sc in data["scenes"] for c in sc["cues"]]
+    words = sum(len(c["text"].split()) for _, c in cues)
+    out = ["%s: %d scenes, %d cues, %d words (about %d s of speech at %.1f words a second)"
+           % (data["title"], len(data["scenes"]), len(cues), words, round(words / WORDS_PER_SECOND),
+              WORDS_PER_SECOND)]
+    letters = []
+    for sc in data["scenes"]:
+        letter = sc["props"].get("letter")
+        if letter and letter not in letters:
+            letters.append(letter)
+    out.append("Tracker: " + " ".join(letters))
+    out.append("Mistakes:")
+    for sc, c in cues:
+        if "mistake" in c:
+            out.append("  %s cue %d: %s" % (sc["key"], c["n"], c["mistake"]))
+    added = [(sc["key"], "cue %d" % c["n"], c["text"], c["added"]) for sc, c in cues if "added" in c]
+    for sc in data["scenes"]:
+        for name, items in (("side panel", sc["side"]), ("on screen", sc["screen"])):
+            added += [(sc["key"], name, it["text"], it["added"]) for it in items if "added" in it]
+    out.append("Beyond the source (added:), %d, for approval and checking:" % len(added))
+    for key, where, text, why in added:
+        out.append('  %s, %s: "%s"\n      -> %s' % (key, where, text, why))
+    return "\n".join(out)
+
+
+def parser():
+    p = argparse.ArgumentParser(prog=PROG, description="Read a video's script.md, check it against "
+                                "the script format, and list what needs approval and checking.")
+    p.add_argument("SCRIPT", help="the video's script.md")
+    p.add_argument("--json", metavar="OUT", help="also write the parsed script as JSON (never over an existing file)")
+    return p
+
+
+def main(argv=None):
+    args = parser().parse_args(argv)
+    try:
+        if not os.path.isfile(args.SCRIPT):
+            raise cli.Failure("no such file: %s" % args.SCRIPT)
+        if args.json:
+            cli.refuse_existing(args.json)
+    except cli.Failure as f:
+        return cli.report(PROG, f)
+    with open(args.SCRIPT, encoding="utf-8") as f:
+        data, problems = script.parse(f.read())
+    problems += script.check(data, args.SCRIPT)
+    print(summary(data))
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump({k: v for k, v in data.items() if k != "lines"}, f, indent=1, ensure_ascii=False)
+        print("Parsed script written to %s" % args.json)
+    if problems:
+        print("\n%d problem%s:" % (len(problems), "" if len(problems) == 1 else "s"))
+        for p in problems:
+            print("  - " + p)
+        return cli.PROBLEMS
+    print("\nNo problems found.")
+    return cli.OK
