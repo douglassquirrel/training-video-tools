@@ -30,6 +30,86 @@ class Frame:
                               f"script's On screen list ({', '.join(listed)})")
         return text
 
+    # ---- brand-aware drawing: thin layers over videotools.draw that fill in what the brand and
+    # script already say (fonts by role, sizes scaled, colours by name, rule 3, the On screen check)
+
+    def colour(self, name):
+        """An (r, g, b) by name: the script's Colours first, then the brand's roles."""
+        if name in self.colours:
+            return self.colours[name]
+        if name in self.brand["colours"]:
+            return self.brand["colours"][name]
+        raise cli.Failure(f"scene {self.scene['key']}: no colour '{name}' in the script's Colours "
+                          f"({', '.join(self.colours)}) or the brand's roles ({', '.join(self.brand['colours'])})")
+
+    def _font(self, role):
+        fonts = self.brand["fonts"]
+        if role not in fonts:
+            raise cli.Failure(f"scene {self.scene['key']}: no font role '{role}' in the brand kit ({', '.join(fonts)})")
+        return fonts[role]
+
+    def _size(self, size):
+        return size * self.brand["settings"]["font-size-scale"]
+
+    def _colour_at(self, name, size):
+        """A colour by name for text (or a pill) of `size` px: BRAND.md rule 3, accent below the
+        small-text size becomes the darker role."""
+        dark_role, limit = self.brand["settings"]["small-text-accent"]
+        if name == "accent" and size < limit:
+            name = dark_role
+        return self.colour(name)
+
+    def text(self, s, x, y, size, role="body", colour="ink", anchor="l", alpha=1.0, track=0, check=False):
+        """Text in the brand's font for `role`, `size` scaled, `colour` by name with rule 3;
+        `check` runs it through `label`."""
+        from videotools import draw
+        if check:
+            s = self.label(s)
+        size = self._size(size)
+        draw.text(self.ctx, s, x, y, self._font(role), size, self._colour_at(colour, size), anchor, alpha, track)
+
+    def tag(self, s, x, y, size=22, fill="ink", colour="on-accent", role="display", anchor="l", alpha=1.0,
+            padx=14, pady=9, border=None):
+        """A pill label, checked against the On screen list; colours by name, rule 3 on the fill."""
+        from videotools import draw
+        size = self._size(size)
+        return draw.tag(self.ctx, self.label(s), x, y, self._font(role), size, self._colour_at(fill, size),
+                        self._colour_at(colour, size), anchor, alpha, padx, pady,
+                        self.colour(border) if border else None)
+
+    def callout(self, s, target, at, size=22, leader="ink", fill="surface", colour="ink", role="display",
+                anchor="l", alpha=1.0):
+        """A checked pill at `at` with a leader line to a dot at `target`."""
+        from videotools import draw
+        size = self._size(size)
+        draw.callout(self.ctx, self.label(s), target, at, self._font(role), size, self.colour(leader),
+                     self._colour_at(fill, size), self._colour_at(colour, size), anchor, alpha)
+
+    def dimension(self, p0, p1, s, size=24, colour="accent", text_colour="on-accent", role="display", side=1,
+                  alpha=1.0):
+        """A dimension line with its measurement (checked) in a pill beside it."""
+        from videotools import draw
+        size = self._size(size)
+        draw.dimension(self.ctx, p0, p1, self.label(s), self._font(role), size, self._colour_at(colour, size),
+                       self._colour_at(text_colour, size), alpha, side)
+
+    def badge(self, x, y, ok, r=24, alpha=1.0):
+        """A ✓ (ok) or ✗ badge in the brand's correct or mistake colour."""
+        from videotools import draw
+        draw.badge(self.ctx, x, y, ok, self.colour("correct" if ok else "mistake"), self.colour("on-accent"), r, alpha)
+
+    def hand(self, x, y, angle, scale, alpha=1.0, mirror=False, label=None):
+        """A mitten hand in the script's `skin`, `skin-dark` and `sleeve` colours (neutral defaults
+        otherwise), its letter label on an accent roundel at the brand-scaled size."""
+        from videotools import draw
+        c = {name: self.colours.get(name, default) for name, default in HAND_DEFAULTS.items()}
+        draw.hand(self.ctx, x, y, angle, scale, c["skin"], c["skin-dark"], c["sleeve"], alpha, mirror, label,
+                  self.colour("accent"), self.colour("on-accent"), self._font("display"), self._size(28))
+
+
+# The hand's colours when the script's Colours do not name them: a neutral skin, its outline, a slate sleeve.
+HAND_DEFAULTS = {"skin": (0.93, 0.80, 0.66), "skin-dark": (0.45, 0.33, 0.25), "sleeve": (0.30, 0.33, 0.38)}
+
 
 _loaded = {}
 

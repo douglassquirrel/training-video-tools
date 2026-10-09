@@ -285,11 +285,28 @@ script), `colours` (the script's Colours as red-green-blue triples in 0–1), `b
 `colours`, `fonts`, `settings`), `area` (its rectangle) and `label(text)`, which returns the
 text after checking it is in the scene's "On screen" list and stops the run with a message if
 it is not. A scene's `side-panel-heading` property puts a small heading above a `steps` or
-`checklist` panel, or in place of KEY POINTS. Draw with `videotools.draw` (text, pills, callouts,
-arrows, dimension lines, badges, hands with a letter label whose `label_size` you pass scaled by
-the brand's `font-size-scale`, shapes) and `videotools.camera` for an oblique 3D view, with `ripple` (a wavy edge) and
-`clip` (a polygon cut to one side) for cloth and paper; import the primitives as `d`
-(`from videotools import draw as d`), since the module's own function is called `draw`.
+`checklist` panel, or in place of KEY POINTS.
+
+Draw words and pills through the frame, which fills in what the brand and script already say
+(the font by role, the size multiplied by the brand's `font-size-scale`, colours by name, the
+brand's rule 3 that accent below the small-text size becomes the darker role, for text and for a
+pill's fill alike, and the On screen check on every label):
+
+| Method | What it draws |
+|---|---|
+| `frame.colour(name)` | An (r, g, b): the script's Colours first (`paper`), then the brand's roles (`accent`); an unknown name stops the run listing both. |
+| `frame.text(s, x, y, size, role="body", colour="ink", anchor="l", alpha=1.0, track=0, check=False)` | Text; `check=True` runs it through `label` (words on screen that are not pills). Font roles: `display`, `display-medium`, `body`, `body-medium`, `bold`, `italic`, `italic-medium`. |
+| `frame.tag(s, x, y, size=22, fill="ink", colour="on-accent", role="display", anchor="l", alpha=1.0, padx=14, pady=9, border=None)` | A pill label, always checked. Returns the pill's rectangle. |
+| `frame.callout(s, target, at, size=22, leader="ink", fill="surface", colour="ink", role="display", anchor="l", alpha=1.0)` | A checked pill at `at` with a leader line to a dot at `target`. |
+| `frame.dimension(p0, p1, s, size=24, colour="accent", text_colour="on-accent", role="display", side=1, alpha=1.0)` | A dimension line with its (checked) measurement in a pill beside it. |
+| `frame.badge(x, y, ok, r=24, alpha=1.0)` | A ✓ or ✗ in the brand's `correct` or `mistake` colour with its `on-accent` mark. |
+| `frame.hand(x, y, angle, scale, alpha=1.0, mirror=False, label=None)` | A mitten hand in the script's `skin`, `skin-dark` and `sleeve` colours when it names them, else a neutral skin, its darker outline and a slate sleeve; the letter label in the display font on an accent roundel at 28 px scaled. |
+
+Shapes stay in `videotools.draw` (`poly`, `line`, `circle`, `fill_rrect`, `arrow`, `bezier`,
+`cut`, shading) with explicit colour triples, which `frame.colour` supplies, and the oblique 3D
+view in `videotools.camera` (`Camera`, `between`, `front`, `top`, `end`, with `ripple` and `clip`
+for cloth and paper). Import the primitives as `d` (`from videotools import draw as d`), since
+the module's own function is called `draw`. The example's `_sheet.py` shows both styles.
 
 ### `assemble SCRIPT.md [--out FILE] [--replace]`
 
@@ -367,7 +384,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(264 tests, lint clean).
+(272 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -415,7 +432,9 @@ with ffmpeg 4.4.
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
-  card modules are gone.
+  card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
+  `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module
+  for fonts, sizes, rule 3 and label checks.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

@@ -2,22 +2,24 @@
 
 ## Where things stand
 
-9 October 2026, 19:53 (from the clock). **Requests 1 to 4 are built in full, and the bed video
+9 October 2026, 20:29 (from the clock). **Requests 1 to 6 are built in full, and the bed video
 is accepted.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
 `c1720ae` and matches the 7 October original to the frame and the millisecond (request 4).
-**For the training-video project:** request 3's three items and request 4's items 1 and 3 are
-in: a `side-panel-heading` scene property (above `steps` and `checklist` panels, or in place of
-KEY POINTS; proposed to the script format in PLAN.md item 4, the format file being yours to
-change), and `draw.hand(label_size=…)`. Request 4's item 2 (the "+ Pillows" roundel and icon)
-was not asked for and is not done.
+**For the training-video project:** request 5's two test faults are fixed (the tests hand every
+command and child a clean environment), and request 6 is in: the frame object's brand-aware
+methods (`colour`, `text`, `tag`, `callout`, `dimension`, `badge`, `hand`: README, "Writing a
+video's scene code"), and `code` optional for title and end scenes, so `_kit.py`, `title_card.py`
+and `end_card.py` can go. The script format's wording for the optional `code` is in PLAN.md
+item 4. Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not done.
 
-Green: 264 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 272 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
-One test is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1.
+One test is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1,
+and with `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_env()`).
 
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
 video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); since then the
@@ -1036,3 +1038,32 @@ cue from line 100 to 99, and the check-script test names that line: changed to 9
 pinned a position in the example, not a behaviour).
 
 **State.** Request 5 and request 6 item 2 done. Next: item 1, the brand-aware frame methods.
+
+### 9 October 2026 — Request 6, item 1: brand-aware drawing on the frame
+
+**Goal.** Methods on `scenes.Frame`, each a thin layer over `videotools.draw`: `colour(name)`
+(script's Colours, then brand roles, else a refusal listing both); `text`, `tag`, `callout`,
+`dimension` (font by role, size × `font-size-scale`, colours by name, rule 3 on text and on a
+pill's fill at the scaled size, every label through `label`); `badge`; `hand` (the script's
+`skin`, `skin-dark`, `sleeve` or neutral defaults, the label on an accent roundel at 28 ×
+scale). So a video needs no glue module.
+
+**Test.** `tests/tier1/test_frame_methods.py`, seven tests on the example kit and a tiny scene
+(a 20 px accent pill at scale 1.12 is 22.4 px and takes `accent-dark`; at 24 px, 26.9, it keeps
+`accent`; unlisted text refused by all four; a font role that does not exist; badge colours;
+the hand's sleeve, palm and roundel; callout and dimension pills). And the example's
+`_sheet.label` rewritten as one `frame.tag` call: the stored images must not change.
+
+**Red.** `NotImplementedError` ×6 (stubs), and one wrong test assumption corrected first: I had
+asserted the example's `font-size-scale` was 1.0; it is 1.12 (the pill sizes still fall either
+side of the limit).
+
+**Green.** Two more faults in my tests, not the code: the sleeve probe sat where the label's
+roundel is (the sleeve spans x−200..x−96, the roundel at x−150; probe moved to x−190), and the
+default skin came back one unit off my `round()` (cairo's own 8-bit rounding; compared within
+1). `7 passed`; suite below, stored images unchanged with the example on `frame.tag`.
+
+**Decision / surprise.** `frame.colour` tries the script's Colours before the brand's roles, so a
+script could shadow a role name; the refusal lists both so a typo is caught. `callout`'s pill
+fill defaults to `surface` (the request left it open). The hand defaults (a neutral skin
+`(0.93, 0.80, 0.66)`, its outline, a slate sleeve) are mine, named in the README.

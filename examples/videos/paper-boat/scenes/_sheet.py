@@ -14,9 +14,9 @@ def crease(frame, p0, p1, alpha=1.0):
 
 
 def label(frame, text, x, y, alpha=1.0, anchor="c"):
-    kit = frame.brand
-    d.tag(frame.ctx, frame.label(text), x, y, kit["fonts"]["display"], 24 * kit["settings"]["font-size-scale"],
-             fill=kit["colours"]["accent"], colour=kit["colours"]["on-accent"], anchor=anchor, alpha=alpha)
+    # frame.tag checks the text against the script's On screen list, scales the size and applies
+    # the brand's rule 3 (24 x 1.12 is not small, so the pill stays accent).
+    frame.tag(text, x, y, size=24, fill="accent", anchor=anchor, alpha=alpha)
 
 
 def centre(frame):
