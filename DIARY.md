@@ -2,10 +2,10 @@
 
 ## Where things stand
 
-9 October 2026, 21:20 (from the clock), at the end of the session that built requests 2 to 8.
+9 October 2026, 21:22 (from the clock), at the end of the session that built requests 2 to 8.
 **Requests 1 to 8 are built in full, and the bed video is accepted and rebuilt on the frame
 methods.** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
-(empty at 21:20; anything at its top level other than README.md is new and is reported to
+(empty at 21:22; anything at its top level other than README.md is new and is reported to
 Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
