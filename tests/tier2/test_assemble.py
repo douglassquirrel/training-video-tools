@@ -39,10 +39,10 @@ def test_the_segments_are_joined_in_script_order_and_muxed_with_the_narration(re
         f"file '{os.path.join(video(ready), 'work', 'segments', k + '_00000.mp4')}'\n" for k in EXAMPLE_FRAMES)
     calls = ff_calls(ffstub)
     concat = [c["ffmpeg"] for c in calls if "ffmpeg" in c and "concat" in c["ffmpeg"]][0]
-    assert concat == ["-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i",
+    assert concat == ["-hide_banner", "-loglevel", "error", "-nostdin", "-f", "concat", "-safe", "0", "-i",
                       os.path.join(work, "segments.txt"), "-c", "copy", os.path.join(work, "video-only.mp4")]
     mux = [c["ffmpeg"] for c in calls if "ffmpeg" in c and "aac" in c["ffmpeg"]][0]
-    assert mux == ["-hide_banner", "-loglevel", "error", "-i", os.path.join(work, "video-only.mp4"), "-i",
+    assert mux == ["-hide_banner", "-loglevel", "error", "-nostdin", "-i", os.path.join(work, "video-only.mp4"), "-i",
                    os.path.join(work, "narration.wav"), "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000",
                    "-movflags", "+faststart", "-shortest", out_file]
     assert "-y" not in concat and "-y" not in mux
@@ -149,15 +149,20 @@ def test_an_existing_output_is_refused_and_never_replaced(ready, ffstub):
 
 def test_existing_intermediates_are_refused_unless_replace(ready, ffstub, tmp_path):
     run("assemble", ready, env=ffstub)
+    first_calls = [c for c in ff_calls(ffstub) if "ffmpeg" in c]
     work = os.path.join(video(ready), "work", "assemble")
     code, out, err = run("assemble", ready, "--out", tmp_path / "two.mp4", env=ffstub)
     assert (code, out) == (3, "")
     assert err == ("assemble: these would be written over; delete them, or run with --replace:\n"
                    + "".join(f"  {os.path.join(work, f)}\n" for f in ("narration.wav", "segments.txt", "video-only.mp4")))
+    assert [c for c in ff_calls(ffstub) if "ffmpeg" in c] == first_calls   # refused before ffmpeg ran
     code, out, err = run("assemble", ready, "--out", tmp_path / "two.mp4", "--replace", env=ffstub)
     assert (code, err) == (0, "")
     assert out.startswith("Replacing:\n")
     assert os.path.exists(tmp_path / "two.mp4")
+    concat, mux = [c["ffmpeg"] for c in ff_calls(ffstub)[len(first_calls):] if "ffmpeg" in c][-2:]
+    assert "-y" in concat and "-nostdin" in concat            # the listed intermediate may be written over
+    assert "-y" not in mux and "-nostdin" in mux              # the finished video never
 
 
 def test_a_failed_concat_names_the_partial_file_and_exits_4(ready, ffstub):

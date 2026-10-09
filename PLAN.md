@@ -3,7 +3,8 @@
 Written 9 October 2026 by Claude at Squirrel's request; rewritten the same day (17:30) from the
 first request, `inbox/done/request-from-training-video-2026-10-09.md`, after Squirrel's OK
 (9 October 2026, 17:15: "go ahead"); amended the same day (19:01) from the second request,
-`inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14). CLAUDE.md says how the work is done; this file says what
+`inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14) and (19:31) from the
+third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15). CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -39,7 +40,7 @@ stderr in plain words, results and progress to stdout. Exit codes are shared:
 | 1 | `check-script` / `check-video` only: problems found, listed on stdout. |
 | 2 | Bad arguments or usage (argparse's own code too). Nothing touched. |
 | 3 | An input refuses: the script or brand kit is malformed or missing, a file it names is missing, a config setting is missing, timings are missing, or an output already exists. Nothing written. |
-| 4 | An external program (ffmpeg, ffprobe, the speech model, a Python package the command needs) is missing or failed. What was written before the failure is named, nothing is deleted. |
+| 4 | An external program (ffmpeg, ffprobe, the speech model, a Python package the command needs) is missing or failed. What was written before the failure is named, nothing is deleted. A missing package is one line naming the package and the pip line for the venv, and `VIDEO_TOOLS_PYTHON` when that is unset (request 3, item 2; Squirrel, 9 October 2026, 19:31); every package import is guarded, cairo included. |
 
 Every command reads the script first (and the brand kit if it draws), and refuses with every
 problem listed (exit 3) before doing anything else; a malformed brand kit is reported in words
@@ -262,7 +263,8 @@ Refuses an existing `--out` (exit 3). Needs cairo and Pillow.
 Each scene (or the given ones; `--frames` only with one scene) to
 `work/segments/<scene>_<first frame, 5 digits>.mp4`: frames drawn with cairo and piped as raw
 BGRA to `ffmpeg -f rawvideo -pix_fmt bgra -s WxH -r FPS -i - -c:v libx264 -preset veryfast -crf
-QUALITY -pix_fmt yuv420p -r FPS OUT` (no `-y`: the command checks first). Refuses without a
+QUALITY -pix_fmt yuv420p -r FPS OUT` (`-nostdin` always, so ffmpeg never stops to ask; `-y` only
+when the segment was listed under "Replacing": request 3, item 1). Refuses without a
 complete `timing.json` for every scene it renders (exit 3, item 3), and refuses an existing
 segment unless `--replace` (listed first). After each segment: ffmpeg's exit status must be 0
 and `ffprobe -count_frames` must report the expected frame count; otherwise the partial file is
@@ -278,7 +280,9 @@ Refuses (exit 3), naming each: a scene with no segment; segments whose frame cou
 not add up to the scene's; a cue with no clip; an existing output (`--out`, default the script's
 `output`, relative to the video's folder); an existing intermediate unless `--replace` (which
 never touches the finished video). Then: the segments in script order through ffmpeg's concat
-demuxer with `-c copy` to `work/assemble/video-only.mp4` (list at `work/assemble/segments.txt`);
+demuxer with `-c copy` to `work/assemble/video-only.mp4` (list at `work/assemble/segments.txt`;
+with `--replace`, `-y` for the two intermediates it listed, never for the output; `-nostdin` on
+every call: request 3, item 1);
 every clip read with its own sample rate and resampled (linear) to 48 kHz, laid at its scene's
 start plus its cue's start plus 50 ms, the mix peak-normalised to 0.89, written to
 `work/assemble/narration.wav`; muxed with `-c:v copy -c:a aac -b:a 160k -ar 48000 -movflags
@@ -410,6 +414,12 @@ remote ("Settled" 7).
 6. Item 9 (`crop-insets`, `font-weights`).
 7. README, then lint as its own pass.
 8. The training-video project re-makes the bed video and reports back through `inbox/`.
+   Request 3 (9 October 2026, their verification of request 2, all seven items confirmed on
+   Linux with the real kit) found three things, none blocking: item 1, `--replace` against real
+   ffmpeg (the stub overwrote without `-y`; the stub now refuses as ffmpeg does); item 2, a
+   missing package is a traceback (numpy, soundfile and cairo were unguarded); item 3, the sheet
+   label test draws its reference in-process, which on Linux gets fontconfig's fallback fonts
+   when a tier 1 test drew text first (references drawn in a subprocess, as a command does).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -479,3 +489,7 @@ None.
     README section, rather than the section alone; the ripple and polygon-clipping helpers added
     to the package rather than left to scene code (Squirrel, 9 October 2026, 19:01: "1. agreed
     6. agreed 7. agreed. Go ahead and make the update per the request").
+15. The third request (`inbox/done/request-from-training-video-2026-10-09-3.md`), all three
+    items, with the missing-package message naming the package and the pip line, and
+    `VIDEO_TOOLS_PYTHON` only when it is unset (Squirrel, 9 October 2026, 19:31: "agree with
+    your thoughts on the package message. Go ahead and fix.").

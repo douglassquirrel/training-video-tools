@@ -818,3 +818,42 @@ algorithm, the cut square starts at the first crossing, `[(1.0, 0.0), (4, 0), (4
 **Decision / surprise.** The "21:30" in the previous "Where things stand" was never a clock
 reading; the session that wrote it ended at 18:30. Corrected in the rewrite below, from the
 clock, and a reminder to take every time from `TZ=Europe/London date +%H:%M`.
+
+### 9 October 2026 — The third request arrives and is OK'd
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-3.md` (19:18–19:22,
+training-video side): request 2 verified, all seven items, on Linux with the real kit; three
+finds. Checked against the code and reported at 19:27: (1) `assemble` passes no `-y`, so real
+ffmpeg prompts over an existing intermediate and `--replace` never works; the stub overwrote
+silently, so the test lied; `render --replace` has the same latent fault. (2) numpy, soundfile
+(assemble, narrate) and cairo (render, stills, frame, at module level) are unguarded imports.
+(3) the label test's in-process reference gets fontconfig's fallback fonts on Linux once a tier
+1 test has drawn text; the stored-image tests share the structure and their tolerance may hide
+it. Squirrel (19:31): "agree with your thoughts on the package message. Go ahead and fix."
+PLAN.md "Settled" 15; the item moved to `inbox/done/`.
+
+**State.** Next: item 1, the stub made honest, then `-nostdin`/`-y`.
+
+### 9 October 2026 — Request 3, item 1: `--replace` against real ffmpeg
+
+**Goal.** `assemble --replace` and `render --replace` write over the files they listed, through
+ffmpeg, and the finished video never; ffmpeg never stops to ask.
+
+**Test.** The stub first: `tests/stubs/ffstub.py` now refuses an existing output without `-y`
+with ffmpeg's own words ("Not overwriting - exiting", exit 1). Then the two existing replace
+tests, sharpened: `test_existing_intermediates_are_refused_unless_replace` asserts no ffmpeg
+call before the refusal, `-y` and `-nostdin` on the concat call, no `-y` on the mux;
+`test_an_existing_segment_is_refused_unless_replace` asserts `-y` on the segment's call.
+
+**Red.** With the honest stub alone, `2 failed, 28 passed`: both replace tests exit 4 with
+`File '…' already exists. Overwrite? [y/N] Not overwriting - exiting`, the real failure the
+request reported, and for `render` the latent one it had not reached.
+
+**Green.** `QUIET` gains `-nostdin`; `assemble` passes `-y` for the concat output when it was
+listed under "Replacing"; `render.encode` takes `replace`. Four exact argument lists in older
+tests gained `-nostdin` (predicted). Full suite below.
+
+**Decision / surprise.** The stub had been kinder than ffmpeg, so a test passed that the real
+program failed: a reminder that a stub is only as good as its record of the real thing
+("Things checked" 3 said nothing about an existing output). The `narration.wav` and
+`segments.txt` intermediates are written by Python, so `--replace` already covered them.

@@ -11,7 +11,7 @@ import subprocess
 
 from videotools import cli
 
-QUIET = ["-hide_banner", "-loglevel", "error"]
+QUIET = ["-hide_banner", "-loglevel", "error", "-nostdin"]   # -nostdin: never stop to ask about a file
 
 
 def require(name):

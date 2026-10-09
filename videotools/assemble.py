@@ -5,7 +5,8 @@ copied), lays every clip at its scene's start plus its cue's start plus 50 ms in
 peak-normalised to 0.89 (`work/assemble/narration.wav`), and muxes the two (AAC 160 kb/s, fast
 start) to the script's `output` or `--out`. Refuses, naming each, a scene with no segment,
 segments whose frames do not add up or do not chain, a cue with no clip, missing timings, an
-existing output; existing intermediates unless --replace. Needs numpy, soundfile and ffmpeg.
+existing output; existing intermediates unless --replace (ffmpeg then gets -y for those it listed,
+never for the output). Needs numpy, soundfile and ffmpeg.
 """
 
 import argparse
@@ -143,8 +144,10 @@ def _run(args):
             for _, path in segs:
                 f.write(f"file '{path}'\n")
     print(f"Narration mixed: {total:.3f} s to {narration_path}", flush=True)
-    ffmpeg.run("ffmpeg", ffmpeg.QUIET + ["-f", "concat", "-safe", "0", "-i", list_path, "-c", "copy", video_only],
-               "joining the segments", partial=video_only)
+    # -y only for an intermediate listed under "Replacing"; the finished video never gets it.
+    replace = ["-y"] if video_only in existing else []
+    concat = ["-f", "concat", "-safe", "0", "-i", list_path, "-c", "copy", video_only]
+    ffmpeg.run("ffmpeg", ffmpeg.QUIET + replace + concat, "joining the segments", partial=video_only)
     print(f"Segments joined to {video_only}", flush=True)
     os.makedirs(os.path.dirname(os.path.abspath(out_file)), exist_ok=True)
     mux = ["-i", video_only, "-i", narration_path, "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000",

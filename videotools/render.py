@@ -44,10 +44,10 @@ def segment_name(scene, first):
     return f"{scene['key']}_{first:05d}.mp4"
 
 
-def encode(video, scene, tl, first, last, path):
+def encode(video, scene, tl, first, last, path, replace=False):
     """Draw frames first..last-1 of the scene into ffmpeg; returns (frames, seconds taken)."""
     st, lay = video.settings, video.layout
-    args = [ffmpeg.require("ffmpeg")] + ffmpeg.QUIET + [
+    args = [ffmpeg.require("ffmpeg")] + ffmpeg.QUIET + (["-y"] if replace else []) + [
         "-f", "rawvideo", "-pix_fmt", "bgra", "-s", f"{lay.width}x{lay.height}", "-r", str(st["fps"]), "-i", "-",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", str(st["quality"]), "-pix_fmt", "yuv420p",
         "-r", str(st["fps"]), path]
@@ -114,7 +114,7 @@ def _run(args):
     os.makedirs(folder, exist_ok=True)
     for scene, tl, first, last, path in jobs:
         print(f"{scene['key']}  {tl.total:.3f} s  {tl.frames} frames", flush=True)
-        n, seconds = encode(video, scene, tl, first, last, path)
+        n, seconds = encode(video, scene, tl, first, last, path, replace=path in existing)
         counted = ffmpeg.count_frames(path)
         if counted != n:
             raise cli.Failure(f"{path} holds {counted} frames, not the {n} rendered; it is left for inspection",

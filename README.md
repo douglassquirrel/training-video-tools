@@ -258,7 +258,8 @@ Draws every frame of each scene (all, or `--scenes`) and pipes them to ffmpeg as
 (`libx264`, the script's `quality` as CRF, `veryfast`, `yuv420p`, the script's `fps`) into
 `work/segments/<scene>_<first frame>.mp4`. `--frames 100-130` renders that range of the one
 scene named, into `<scene>_00100.mp4`. Refuses without a complete `timing.json` (timings are
-never estimated for a render), and an existing segment unless `--replace` (listed first).
+never estimated for a render), and an existing segment unless `--replace` (listed first; ffmpeg
+is then allowed to write over those segments only).
 After each segment, ffmpeg's exit status is checked and the segment's frames counted; a
 failure names the partial file and leaves it (exit 4). Prints each scene's progress and the
 frames a second achieved. `--dry-run` lists the scenes, lengths, frame counts and segment
@@ -295,7 +296,8 @@ cue's start plus 50 ms (resampled to 48 kHz, the mix peak-normalised to 0.89,
 `output` under the video's folder, or `--out`. Before writing anything it checks, and refuses
 naming each: a scene with no segment, segments whose counted frames do not add up to the
 scene's or do not chain from frame 0, a cue with no clip, a missing `timing.json`, an existing
-output (never replaced), and existing intermediates in `work/assemble/` unless `--replace`.
+output (never replaced), and existing intermediates in `work/assemble/` unless `--replace`,
+which lets ffmpeg write over the intermediates it listed and nothing else.
 ffmpeg's exit status is checked at both steps; on failure the partial file is named and left.
 Ends by printing the length, size and SHA-256 of the output, for the diary.
 
@@ -391,6 +393,9 @@ with ffmpeg 4.4.
   its frame instead of over its corner. `VIDEO_TOOLS_PYTHON` names the Python the commands run
   under (for the Linux device shell, above). `videotools.camera` gains the prototype's `ripple`
   (a wavy edge) and `clip` (a polygon cut to one side of a line) for cloth and paper.
+- 9 October 2026 (later): `assemble --replace` and `render --replace` now work with the real
+  ffmpeg (it was asked to write over the listed files without `-y`, and gave up); every ffmpeg
+  call carries `-nostdin`, so it can never stop to ask.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

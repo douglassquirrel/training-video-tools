@@ -49,7 +49,7 @@ def test_a_scene_is_piped_frame_by_frame_to_ffmpeg_with_the_scripts_settings(pre
     path = os.path.join(segments(prepared), "B2_00000.mp4")
     assert fake(path)["frames"] == "159" and fake(path)["bytes"] == str(159 * FRAME_BYTES)
     calls = ff_calls(ffstub)
-    assert calls[0]["ffmpeg"] == ["-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgra", "-s", "1920x1080",
+    assert calls[0]["ffmpeg"] == ["-hide_banner", "-loglevel", "error", "-nostdin", "-f", "rawvideo", "-pix_fmt", "bgra", "-s", "1920x1080",
                                   "-r", "30", "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
                                   "-pix_fmt", "yuv420p", "-r", "30", path]
     assert "-y" not in calls[0]["ffmpeg"]
@@ -110,6 +110,8 @@ def test_an_existing_segment_is_refused_unless_replace(prepared, ffstub):
     assert open(path).read() == before and not os.path.exists(os.path.join(segments(prepared), "title_00000.mp4"))
     code, out, err = run("render", prepared, "--scenes", "end", "--replace", env=ffstub)
     assert code == 0 and out.startswith(f"Replacing:\n  {path}\n")
+    last = [c["ffmpeg"] for c in ff_calls(ffstub) if "ffmpeg" in c][-1]
+    assert "-y" in last and "-nostdin" in last and last[-1] == path
 
 
 def test_ffmpeg_failing_names_the_partial_segment_and_exits_4(prepared, ffstub):

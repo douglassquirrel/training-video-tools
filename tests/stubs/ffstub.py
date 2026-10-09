@@ -4,7 +4,8 @@ Media files are fake: text files of `key=value` lines (`frames=90`, `duration=3.
 `max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`). Every call is appended as a
 JSON line to FFSTUB_LOG. FFSTUB_FAIL names a job (`concat`, `mux`, `render`, `probe`, `volume`,
 `silence`, `frame`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
-render stop reading stdin part-way. Nothing here is real ffmpeg output beyond its format.
+render stop reading stdin part-way. An existing output is refused unless `-y` is given, as
+ffmpeg does. Nothing here is real ffmpeg output beyond its format.
 """
 
 import json
@@ -84,6 +85,10 @@ def ffprobe(args):
 def ffmpeg(args):
     output = args[-1]
     af = arg_after(args, "-af", "")
+    if output != "-" and os.path.exists(output) and "-y" not in args:
+        # As ffmpeg does: it asks on a terminal, and with -nostdin (or no terminal) gives up.
+        sys.stderr.write(f"File '{output}' already exists. Overwrite? [y/N] Not overwriting - exiting\n")
+        return 1
     if "-f" in args and arg_after(args, "-f") == "concat":
         inputs = []
         with open(arg_after(args, "-i"), encoding="utf-8") as f:

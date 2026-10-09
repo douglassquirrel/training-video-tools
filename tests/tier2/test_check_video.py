@@ -130,8 +130,8 @@ def test_sheet_pastes_one_frame_from_the_middle_of_each_scene(ready, ffstub, tmp
     assert im.getpixel((320 + 640, 360 * 2 + 300))[:3] != (200, 40, 40)       # the empty eighth cell
     frames = [c["ffmpeg"] for c in ff_calls(ffstub) if "ffmpeg" in c and "-frames:v" in c["ffmpeg"]]
     assert len(frames) == 7
-    assert frames[0][:4] == ["-hide_banner", "-loglevel", "error", "-ss"] and float(frames[0][4]) == pytest.approx(249 / 30 / 2, abs=0.001)
-    assert float(frames[1][4]) == pytest.approx(249 / 30 + 261 / 30 / 2, abs=0.001)
+    assert frames[0][:5] == ["-hide_banner", "-loglevel", "error", "-nostdin", "-ss"] and float(frames[0][5]) == pytest.approx(249 / 30 / 2, abs=0.001)
+    assert float(frames[1][5]) == pytest.approx(249 / 30 + 261 / 30 / 2, abs=0.001)
 
 
 def test_an_existing_sheet_is_refused_before_any_check(ready, ffstub, tmp_path):
