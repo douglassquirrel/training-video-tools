@@ -436,3 +436,30 @@ colours table supplies them.
 
 **State.** Green: 130 tests. Next: `crop-insets` and `font-weights` (item 9), then `assemble`
 and `check-video` against stub ffmpeg/ffprobe; chrome and `stills` when the interface is settled.
+
+### 9 October 2026 — `crop-insets` and `font-weights`
+
+**Goal.** Item 9: every Insets box cut from `source-image` and sized for the column (388 wide,
+330 tall, 360 for a tall box), the page at 750 tall for the title card, into `work/insets/`;
+static instances of a variable font per weight under `PREFIX <Weight>` names.
+
+**Test.** `tests/tier2/test_crop_insets.py` (nine) on the example; `tests/tier2/test_font_weights.py`
+(eight) on a tiny invented variable font built by `tests/tier2/fontfixture.py` with fontTools
+(two glyphs, a `wght` axis 300–800, the A's width varying), including an italic one.
+
+**Red.** crop-insets `NotImplementedError`/exit 1 against each expectation. font-weights first
+failed in the fixture (`KeyError: 'wwsFamily'`: fontBuilder's name-table keys), the wrong
+reason; with the fixture fixed, `7 failed, 1 passed`. The two "never modified" tests were proved
+by breaking each command to append to its input: `1 failed` each.
+
+**Green.** `17 passed` first run after implementing; the suite `147 passed`, coverage 96%
+(`draw.py` at 85% pulls it down: its untested branches are listed for the coverage pass).
+
+**Decision / surprise.** The whole page's file is `title-page.png` and an inset of that name is
+refused. `crop-insets` has `--dry-run` like every other command though the request did not ask
+for it. A weight is one of 100–900 in hundreds (argparse refuses anything else, exit 2); the
+axis range is checked against the font (exit 3). An italic font is known by OS/2 fsSelection,
+head macStyle or its subfamily name.
+
+**State.** Green: 147 tests. Next: Tier 3 for both, then `assemble` and `check-video` against
+stub ffmpeg/ffprobe.
