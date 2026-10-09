@@ -375,7 +375,8 @@ def draw_frame(ctx, video, scene, tl, t):
         ctx.rectangle(*lay.card)
         ctx.clip()
         title_card(ctx, video, scene, tl, t)
-        video.module(scene).draw(frame)
+        if video.module(scene):
+            video.module(scene).draw(frame)
         ctx.restore()
         caption(ctx, video, scene, tl, t)
     elif kind == "end":
@@ -383,7 +384,8 @@ def draw_frame(ctx, video, scene, tl, t):
         ctx.rectangle(0, 0, lay.width, lay.height)
         ctx.clip()
         end_card(ctx, video, scene, tl, t)
-        video.module(scene).draw(frame)
+        if video.module(scene):
+            video.module(scene).draw(frame)
         ctx.restore()
     else:
         header(ctx, video, scene)

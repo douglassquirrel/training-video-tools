@@ -58,7 +58,6 @@ label, each kind of side panel, `say:`, `min:`, `mistake:`, `step:`, `added:`, o
 | Key | Value | Notes |
 |---|---|---|
 | kind | title | |
-| code | title_card | |
 
 ### Narration
 
@@ -257,7 +256,6 @@ The boat on a strip of water, slowly zooming in; the checklist ticks off during 
 |---|---|---|
 | kind | end | |
 | extra | 4.0 | No narration; held for 4 s plus the tail. |
-| code | end_card | |
 
 ### Narration
 

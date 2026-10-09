@@ -1,8 +1,9 @@
 """A video's own drawing code: one module per scene, and the frame object it draws with.
 
 The script's `scene-code` folder holds one Python module per scene, named by the scene's
-`code` property. A module defines `draw(frame)`; `mistake(frame, rect)` and `right_way(frame,
-rect)` when the scene has a mistake cue; `panel(frame, rect)` when its side panel is custom.
+`code` property (optional for a title or end card, which the chrome draws whole). A module
+defines `draw(frame)`; `mistake(frame, rect)` and `right_way(frame, rect)` when the scene has a
+mistake cue; `panel(frame, rect)` when its side panel is custom.
 Standard library only.
 """
 
@@ -37,6 +38,8 @@ def load(folder, scene):
     """The scene's module from `folder`, checked for the functions the scene needs."""
     code = scene["props"].get("code")
     if not code:
+        if script.kind(scene) in ("title", "end"):
+            return None                     # the chrome draws the whole card; nothing to add
         raise cli.Failure(f"scene {scene['key']} has no 'code' property, so no scene code can be found for it")
     path = os.path.join(folder, code + ".py")
     if not os.path.isfile(path):

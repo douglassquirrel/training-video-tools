@@ -269,7 +269,9 @@ names and writes nothing.
 
 A video's own drawing lives in the folder its script's `scene-code` names, one Python module
 per scene, named by the scene's `code` property (`examples/videos/paper-boat/scenes/` is the
-worked example; its README has the details). A module defines:
+worked example; its README has the details). A title or end card needs none: the chrome draws
+the whole card, and a card that names a `code` has that module's `draw` add to it. A module
+defines:
 
 - `draw(frame)`: the animation area, every scene;
 - `mistake(frame, rect)` and `right_way(frame, rect)`: the two panel bodies, for a scene whose
@@ -412,6 +414,8 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
+  card modules are gone.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

@@ -47,7 +47,7 @@ def test_a_malformed_script_prints_the_summary_then_the_problems_and_exits_1(exa
     code, out, err = run("check-script", example)
     assert (code, err) == (1, "")
     assert out.endswith("\n2 problems:\n  - Settings: 'voice' is missing\n"
-                        "  - line 100: scene A cue 2: mistake needs '<wrong> / <right>'\n")
+                        "  - line 99: scene A cue 2: mistake needs '<wrong> / <right>'\n")
     assert out.startswith("Folding a Paper Boat: 7 scenes, 11 cues")
 
 

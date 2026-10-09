@@ -1014,3 +1014,25 @@ exported: `264 passed`, 98%; `test_frame.py` in order `20 passed`; lint clean.
 **Decision / surprise.** The request named two tests; the fixtures were the bigger leak, found
 only by running the whole suite the way a device-shell user would. The README's Testing section
 says the tests clean the environment.
+
+### 9 October 2026 — Request 6, item 2: no code for title and end cards
+
+**Goal.** A title or end scene without `code` loads no module and the chrome draws the card; a
+step scene without one is still refused by name.
+
+**Test.** `tests/tier1/test_scenes.py::a_title_or_end_scene_without_code_has_no_module_and_a_step_scene_still_must`,
+and the example itself: its two `code` lines removed and `title_card.py`, `end_card.py` deleted,
+so the stored-image tests for the two cards must still pass.
+
+**Red.** `4 failed`: the loader's `scene title has no 'code' property…` for the tier 1 case and
+for the title and end frames of the example.
+
+**Green.** `scenes.load` returns `None` for a title or end scene without `code`;
+`frame.draw_frame` draws the module only when there is one. Stored images unchanged.
+`29 passed` for the two files; suite below.
+
+**Decision / surprise.** Dropping the title card's `code` line moved the example's mistake
+cue from line 100 to 99, and the check-script test names that line: changed to 99 (the test
+pinned a position in the example, not a behaviour).
+
+**State.** Request 5 and request 6 item 2 done. Next: item 1, the brand-aware frame methods.

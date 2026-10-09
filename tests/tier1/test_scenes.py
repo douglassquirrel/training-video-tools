@@ -75,3 +75,11 @@ def test_loading_twice_gives_the_same_module_and_the_folder_is_not_left_on_sys_p
     a = scenes.load(folder, SCENE)
     b = scenes.load(folder, SCENE)
     assert a is b and folder not in sys.path
+
+
+def test_a_title_or_end_scene_without_code_has_no_module_and_a_step_scene_still_must(tmp_path):
+    assert scenes.load(str(tmp_path), dict(SCENE, props={"kind": "title"})) is None
+    assert scenes.load(str(tmp_path), dict(SCENE, props={"kind": "end"})) is None
+    with pytest.raises(cli.Failure) as e:
+        scenes.load(str(tmp_path), dict(SCENE, props={"kind": "step"}))
+    assert str(e.value) == "scene A has no 'code' property, so no scene code can be found for it"

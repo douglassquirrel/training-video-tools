@@ -1,6 +1,7 @@
 # scenes/ — the example video's own drawing code
 
-One module per scene, named by the scene's `code` property in `script.md`. Each defines
+One module per scene, named by the scene's `code` property in `script.md` (the title and end
+cards have none: the chrome draws them whole, and a card with a `code` can add to it). Each defines
 `draw(frame)`; a scene with a mistake cue also `mistake(frame, rect)` and `right_way(frame,
 rect)`; a scene with a `custom` side panel also `panel(frame, rect)`. `frame` carries the cairo
 context (clipped to the area), `t`, `timeline`, `scene`, `colours`, `brand`, `area` and
