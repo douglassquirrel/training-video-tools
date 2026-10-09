@@ -228,7 +228,8 @@ fonts/EBG-Bold.ttf  EBG Bold  (wght 700)
 
 Draws the frames at the given times (a negative time counts back from the scene's end) onto
 one 1920×1080 sheet, `--grid` columns by rows (default `2x2`; more frames than cells is
-refused), each labelled with its scene, time and cue. This is how a scene's layout is checked
+refused), each with its scene, time and cue in a grey strip under the frame, so no part of the
+frame (the header above all) is covered. This is how a scene's layout is checked
 before rendering. It needs the insets (`crop-insets`) and, for exact times, the narration; with
 no clips it estimates the timing at 2.6 words a second and says so on stderr. Refuses an
 existing sheet and a time past the scene's end.
@@ -365,7 +366,8 @@ tried there.
 - 9 October 2026 (evening): a brand kit's `BRAND.md` may hold other tables under the read
   headings (a contrast table under Colours, say): only a table whose header row begins
   `| Key | Value |` is read. `check-script` now checks the brand kit too. A malformed kit is
-  reported in words with exit 3 by every command.
+  reported in words with exit 3 by every command. `stills` puts each label in a strip under
+  its frame instead of over its corner.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

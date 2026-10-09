@@ -743,3 +743,35 @@ suite `244 passed`, 98%. Still Python 3.9: `videotools.check_script.main` run un
 `/usr/bin/python3` (3.9.6) on the example prints "No problems found."
 
 **State.** Items 1–3 done. Next: README for the three, commit; then item 4.
+
+### 9 October 2026 — Request 2, item 4: the sheet's label under the frame
+
+**Goal.** `stills` covers no pixel of a frame: the frame is scaled to fit the cell above a
+36 px strip that holds the label.
+
+**Test.** `tests/tier2/test_stills.py::the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it`:
+the frame region of a cell equals the same frame drawn alone and scaled (`ImageChops.difference`
+empty), the header's corner is the frame's background, the strip has its fill and white text.
+
+**Red.** First `AttributeError: … no attribute 'frame_size'`; with that function alone,
+the right failure: `assert (0, 8, 896, 504) is None` (the label box from row 8 down differed).
+
+**Green.** The frame goes into `frame_size(cell)` (896×504 in a 960×540 cell; 1856×1044 at
+1x1) and the label into the strip beneath. Three pixel probes in the two older tests moved,
+predictably: one had landed on the tracker's roundels once the frame shrank, and the band
+probes sit 36 px higher. The first real sheet showed the strip in the band's own grey, so the
+two read as one; the strip is `#555555` now (test changed to match before the code).
+`9 passed`.
+
+### 9 October 2026 — Request 2, item 5: the CoreText test skipped off macOS
+
+**Goal.** `test_loading_twice_registers_each_file_once` (the only test calling `fonts.load`
+with `platform="darwin"`) is skipped where there is no CoreText.
+
+**Test / check.** No red-green: it is a `skipif` marker, not behaviour. Its failure on Linux
+is the training-video project's report (`undefined symbol: CFURLCreateFromFileSystemRepresentation`),
+not reproduced here. Checked that the marker fires: with `sys.platform` set to `linux` in the
+test process, `1 skipped … registers fonts with CoreText, which only macOS has`; on this Mac
+`3 passed`. The Linux Tier 3 results are in PLAN.md "Things checked" 5, marked as reported.
+
+**State.** Items 1–5 done. Next: item 6, `VIDEO_TOOLS_PYTHON`.

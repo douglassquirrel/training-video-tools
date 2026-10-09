@@ -4,6 +4,8 @@ import os
 import subprocess
 import sys
 
+import pytest
+
 from videotools import brand, fonts
 
 EXAMPLE = os.path.join(os.path.dirname(__file__), "..", "..", "examples", "brands", "paperboat")
@@ -48,6 +50,7 @@ def test_on_other_platforms_a_private_fontconfig_file_is_written_and_named(tmp_p
     assert sorted(os.path.basename(f) for f in loaded) == ["PBS-Italic.ttf", "PBS-Regular.ttf", "PBS-SemiBold.ttf"]
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="registers fonts with CoreText, which only macOS has")
 def test_loading_twice_registers_each_file_once(tmp_path):
     kit = brand.read(EXAMPLE)
     first = fonts.load(kit, str(tmp_path / "work"), platform="darwin")

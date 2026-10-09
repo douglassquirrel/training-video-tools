@@ -30,9 +30,10 @@ def test_four_frames_make_a_2x2_sheet_each_labelled(prepared, tmp_path):
     assert (code, err) == (0, "")
     im = Image.open(sheet)
     assert im.size == (1920, 1080)
-    assert im.getpixel((600 + 960, 20))[:3] == (0xF7, 0xF3, 0xEA)       # frame 2's background, top right
-    assert im.getpixel((100, 540 + 530))[:3] == (0x2B, 0x2B, 0x2B)       # frame 3's caption band, bottom left
-    assert im.getpixel((100 + 960, 540 + 530))[:3] == (0xF7, 0xF3, 0xEA)  # the end card has no band
+    # Frames are 896x504 in a 960x540 cell, the label strip under each (test below).
+    assert im.getpixel((960 + 16, 20))[:3] == (0xF7, 0xF3, 0xEA)        # frame 2's background, top left
+    assert im.getpixel((100, 540 + 490))[:3] == (0x2B, 0x2B, 0x2B)       # frame 3's caption band, bottom left
+    assert im.getpixel((100 + 960, 540 + 490))[:3] == (0xF7, 0xF3, 0xEA)  # the end card has no band
     assert out.splitlines() == ["A at 1.500 s (of 8.700 s, cue 1)", "A at 5.000 s (of 8.700 s, cue 2)",
                                 "B at 3.500 s (of 7.900 s, cue 2)", "end at 1.500 s (of 5.700 s, no cue)",
                                 f"Wrote {sheet}: 4 frames, 2x2"]
@@ -45,7 +46,8 @@ def test_a_negative_time_counts_back_from_the_scenes_end_and_grids_can_differ(pr
     assert (code, err) == (0, "")
     assert out.splitlines()[0] == "A at 7.700 s (of 8.700 s, cue 2)"
     assert Image.open(sheet).size == (1920, 1080)
-    assert Image.open(sheet).getpixel((100, 1060))[:3] == (0x2B, 0x2B, 0x2B)   # full size: the band is at the bottom
+    assert Image.open(sheet).getpixel((100, 1030))[:3] == (0x2B, 0x2B, 0x2B)   # 1856x1044: the band is at the bottom
+    assert Image.open(sheet).getpixel((1900, 500))[:3] == (255, 255, 255)        # beside the frame: the sheet's white
     code, out, err = run("stills", prepared, "A:1,B:1,C:1,R:1,B2:1,title:1", "--out", tmp_path / "six.png", "--grid", "3x2")
     assert code == 0 and out.splitlines()[-1].endswith("6 frames, 3x2")
 
@@ -94,3 +96,30 @@ def test_a_malformed_brand_kit_is_refused_in_words_with_exit_3_not_a_traceback(p
     assert "Traceback" not in err
     assert err == f"stills: {os.path.dirname(kit)}: Identity: 'website' is missing\n"
     assert not os.path.exists(tmp_path / "s.png")
+
+
+def test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it(prepared, tmp_path):
+    import cairo
+    from PIL import ImageChops
+
+    from videotools import frame, stills
+
+    narrated(prepared)
+    sheet = tmp_path / "sheet.png"
+    code, out, err = run("stills", prepared, "A:1.5", "--out", sheet)
+    assert (code, err) == (0, "")
+    im = Image.open(sheet).convert("RGB")
+    # The same frame drawn alone and scaled as the cell scales it.
+    video = frame.Video(prepared)
+    scene = video.scene("A")
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1920, 1080)
+    frame.draw_frame(cairo.Context(surface), video, scene, video.timeline(scene), 1.5)
+    surface.flush()
+    w, h = stills.frame_size((960, 540))
+    assert (w, h) == (896, 504)                                          # 16:9 in the cell above the strip
+    alone = stills.to_image(surface).resize((w, h), Image.LANCZOS)
+    assert ImageChops.difference(im.crop((0, 0, w, h)), alone).getbbox() is None
+    assert im.getpixel((16, 20)) == (0xF7, 0xF3, 0xEA)                   # the header's corner is the frame's background
+    strip = im.crop((0, h, w, 540))
+    assert strip.getpixel((4, 4)) == (0x55, 0x55, 0x55)                  # the strip's fill, apart from the band
+    assert strip.getcolors(10000) and any(c == (255, 255, 255) for _, c in strip.getcolors(10000))  # its white text

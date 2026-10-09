@@ -1,7 +1,8 @@
 """stills: frames at chosen times on one sheet, for looking before rendering.
 
 `stills SCRIPT.md SCENE:SECONDS[,…] --out SHEET.png [--grid CxR]`: each frame drawn at full
-size, scaled into a cell of a 1920x1080 sheet and labelled with its scene and time; a negative
+size, scaled into a cell of a 1920x1080 sheet with its scene, time and cue in a strip under it
+(never over it); a negative
 time counts back from the scene's end. Works on estimated timings, with a warning. Needs
 pycairo and Pillow.
 """
@@ -15,6 +16,14 @@ from videotools import brand, cli, frame, script
 
 PROG = "stills"
 SHEET = (1920, 1080)
+STRIP = 36            # the label's strip under each frame, in pixels; never over the frame
+
+
+def frame_size(cell, size=(1920, 1080)):
+    """The largest frame of the video's proportions that fits the cell above its label strip."""
+    cw, ch = cell[0], cell[1] - STRIP
+    w = min(cw, ch * size[0] // size[1])
+    return w, w * size[1] // size[0]
 
 
 def parser():
@@ -92,17 +101,19 @@ def _run(args):
     cell = (SHEET[0] // columns, SHEET[1] // rows)
     font = ImageFont.truetype(video.brand["font_files"]["display"], 22)
     lay = video.layout
+    size = frame_size(cell, (lay.width, lay.height))
     for i, (scene, tl, t) in enumerate(jobs):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, lay.width, lay.height)
         frame.draw_frame(cairo.Context(surface), video, scene, tl, t)
         surface.flush()
-        img = to_image(surface).resize(cell, Image.LANCZOS)
+        img = to_image(surface).resize(size, Image.LANCZOS)
         x, y = (i % columns) * cell[0], (i // columns) * cell[1]
         sheet.paste(img, (x, y))
         cue = tl.cue(t)
         label = f"{scene['key']} @ {t:.2f} s" + (f"  cue {cue}" if cue else "")
-        draw.rectangle([x + 8, y + 8, x + 24 + draw.textlength(label, font=font), y + 40], fill=(43, 43, 43))
-        draw.text((x + 16, y + 12), label, font=font, fill=(255, 255, 255))
+        # The label in a strip under the frame: no pixel of the frame is covered.
+        draw.rectangle([x, y + size[1], x + size[0] - 1, y + size[1] + STRIP - 1], fill=(0x55, 0x55, 0x55))
+        draw.text((x + 8, y + size[1] + 4), label, font=font, fill=(255, 255, 255))
         print(f"{scene['key']} at {t:.3f} s (of {tl.total:.3f} s, {f'cue {cue}' if cue else 'no cue'})")
     sheet.save(args.out)
     print(f"Wrote {args.out}: {len(jobs)} frames, {columns}x{rows}")
