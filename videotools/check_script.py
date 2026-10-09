@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 
-from videotools import brand, cli, script
+from videotools import brand, cli, scenes, script
 
 PROG = "check-script"
 WORDS_PER_SECOND = 2.6
@@ -53,6 +53,14 @@ def brand_problems(data, script_path, script_problems):
     return []
 
 
+def code_problems(data, script_path):
+    """The scene code's problems (scenes.check_code), once the script names a scene-code folder."""
+    folder = data["settings"].get("scene-code")
+    if not folder:
+        return []
+    return scenes.check_code(os.path.join(os.path.dirname(os.path.abspath(script_path)), folder), data)
+
+
 def parser():
     p = argparse.ArgumentParser(prog=PROG, description="Read a video's script.md, check it against "
                                 "the script format, and list what needs approval and checking.")
@@ -74,6 +82,7 @@ def main(argv=None):
         data, problems = script.parse(f.read())
     problems += script.check(data, args.SCRIPT)
     problems += brand_problems(data, args.SCRIPT, problems)
+    problems += code_problems(data, args.SCRIPT)
     print(summary(data))
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:

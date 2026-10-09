@@ -7,6 +7,7 @@ mistake cue; `panel(frame, rect)` when its side panel is custom.
 Standard library only.
 """
 
+import ast
 import importlib.util
 import os
 import sys
@@ -111,6 +112,51 @@ class Frame:
 HAND_DEFAULTS = {"skin": (0.93, 0.80, 0.66), "skin-dark": (0.45, 0.33, 0.25), "sleeve": (0.30, 0.33, 0.38)}
 
 
+def needed(scene):
+    """The functions a scene's module must define: [(name, signature, why)]."""
+    out = [("draw", "(frame)", "")]
+    mistake_cue = next((cue for cue in scene["cues"] if "mistake" in cue), None)
+    if mistake_cue:
+        why = f", and cue {mistake_cue['n']} is a mistake"
+        out += [("mistake", "(frame, rect)", why), ("right_way", "(frame, rect)", why)]
+    if script.side_panel(scene)[0] == "custom":
+        out.append(("panel", "(frame, rect)", f", and its side-panel is '{scene['props']['side-panel']}'"))
+    return out
+
+
+def check_code(folder, data):
+    """Every problem with a script's scene code, found without running any of it (check-script):
+    a step scene with no `code`, a module that is missing, one that does not parse, one without a
+    function the scene needs (a top-level `def`; a function made any other way is not seen).
+    Standard library only."""
+    if not os.path.isdir(folder):
+        return [f"line {data['lines'][('settings', 'scene-code')]}: Settings: scene-code folder not found: {folder}"]
+    problems = []
+    for scene in data["scenes"]:
+        key, code = scene["key"], scene["props"].get("code")
+        if not code:
+            if script.kind(scene) not in ("title", "end"):
+                problems.append(f"line {scene['line']}: scene {key}: no 'code' property, so no scene code can be "
+                                "found for it")
+            continue
+        where = f"line {data['lines'][(key, 'code')]}: scene {key}"
+        path = os.path.join(folder, code + ".py")
+        if not os.path.isfile(path):
+            problems.append(f"{where}: no scene code {path} (the scene's 'code' is '{code}')")
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                tree = ast.parse(f.read(), path)
+        except SyntaxError as e:
+            problems.append(f"{where}: {path} could not be parsed: line {e.lineno}: {e.msg}")
+            continue
+        defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+        for name, signature, why in needed(scene):
+            if name not in defined:
+                problems.append(f"{where}: {path} has no {name}{signature} function{why}")
+    return problems
+
+
 _loaded = {}
 
 
@@ -136,14 +182,7 @@ def load(folder, scene):
             sys.path.remove(folder)
         _loaded[path] = module
     module = _loaded[path]
-    needed = [("draw", "(frame)", "")]
-    mistake_cue = next((cue for cue in scene["cues"] if "mistake" in cue), None)
-    if mistake_cue:
-        why = f", and cue {mistake_cue['n']} is a mistake"
-        needed += [("mistake", "(frame, rect)", why), ("right_way", "(frame, rect)", why)]
-    if script.side_panel(scene)[0] == "custom":
-        needed.append(("panel", "(frame, rect)", f", and its side-panel is '{scene['props']['side-panel']}'"))
-    for name, signature, why in needed:
+    for name, signature, why in needed(scene):
         if not callable(getattr(module, name, None)):
             raise cli.Failure(f"scene {scene['key']}: {path} has no {name}{signature} function{why}")
     return module

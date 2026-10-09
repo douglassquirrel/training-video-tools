@@ -127,7 +127,11 @@ mistake; every `added:` line with where it comes from), then the problems if any
 are problems, 0 otherwise, 2 on usage. It also reads the brand kit the script names with
 `brand.read` (standard library, so still Python 3.9) and lists the kit's problems after the
 script's, each prefixed with the BRAND.md path, so a kit `render` would refuse is found here first
-(request 2, item 3). `--json` writes the parsed script as JSON and refuses an
+(request 2, item 3). And it checks the scene code without running it (`scenes.check_code`, `ast`,
+standard library; request 7; Squirrel, 9 October 2026, 20:52): a scene other than `title` or `end`
+with no `code`, a `code` whose module is missing, a module that does not parse (its line), and a
+module without a top-level `def` of a function the scene needs (the same list the loader uses,
+`scenes.needed`), each by the script line; a missing `scene-code` folder is one problem. `--json` writes the parsed script as JSON and refuses an
 existing file (exit 3).
 
 ## 2. `narrate`: the voice
@@ -460,6 +464,8 @@ remote ("Settled" 7).
    handed its child the test process's `FONTCONFIG_FILE`, and the test runner handed commands an
    exported `VIDEO_TOOLS_PYTHON`; both environments are now cleaned. Request 6: the brand-aware
    frame methods and the optional `code` for cards (item 4), so a video needs no glue module.
+   Request 7 (their verification of 5 and 6, all passed on Linux): `check-script` checks scene
+   code statically (item 1), closing for scene code the gap request 2 closed for brand kits.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -543,3 +549,5 @@ None.
 17. The fifth and sixth requests (`inbox/done/request-from-training-video-2026-10-09-5.md`,
     `…-6.md`), in full, request 5 first (Squirrel, 9 October 2026, 20:14: "go ahead"). The hand's
     neutral default colours are Claude's choice, recorded in the README.
+18. The seventh request (`inbox/done/request-from-training-video-2026-10-09-7.md`): `check-script`
+    checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").

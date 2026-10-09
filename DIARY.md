@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-9 October 2026, 20:29 (from the clock). **Requests 1 to 6 are built in full, and the bed video
+9 October 2026, 20:55 (from the clock). **Requests 1 to 7 are built in full, and the bed video
 is accepted.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
@@ -12,9 +12,12 @@ command and child a clean environment), and request 6 is in: the frame object's 
 methods (`colour`, `text`, `tag`, `callout`, `dimension`, `badge`, `hand`: README, "Writing a
 video's scene code"), and `code` optional for title and end scenes, so `_kit.py`, `title_card.py`
 and `end_card.py` can go. The script format's wording for the optional `code` is in PLAN.md
-item 4. Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not done.
+item 4. Request 7: `check-script` checks the scene code without running it (a step scene with no
+`code`, a missing or unparsable module, a missing top-level `def` the scene needs), so what
+`stills` and `render` would refuse is found first. Request 4's item 2 (the "+ Pillows" roundel
+and icon) was not asked for and is not done.
 
-Green: 272 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 279 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -1067,3 +1070,36 @@ default skin came back one unit off my `round()` (cairo's own 8-bit rounding; co
 script could shadow a role name; the refusal lists both so a typo is caught. `callout`'s pill
 fill defaults to `surface` (the request left it open). The hand defaults (a neutral skin
 `(0.93, 0.80, 0.66)`, its outline, a slate sleeve) are mine, named in the README.
+
+### 9 October 2026 — Request 7: `check-script` checks the scene code without running it
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-09-7.md` (20:34–20:37):
+requests 5 and 6 verified on Linux (the suite with the variables exported and in both tier
+orders; twelve drawing cases pixel-identical between their glue module and the frame methods;
+the cards identical without their modules). One ask: `check-script` passed a script whose step
+scene had no `code`, which `stills` then refused. Reported 20:40; Squirrel (20:52): "go ahead".
+PLAN.md "Settled" 18; the item moved to `inbox/done/`.
+
+**Goal.** `check-script` reports, by script line: a step scene with no `code`; a `code` whose
+module is missing (path named); a module that does not parse (its line); a module without a
+top-level `def` of a function the scene needs; a missing `scene-code` folder. Standard library
+(`ast`), nothing run, Python 3.9.
+
+**Test.** `tests/tier1/test_scene_code_check.py`, six tests on the two-scene script with modules
+written into a `scenes/` folder (one of them a module with a syntax error on line 3 after an
+`os.remove` call that must never run); `tests/tier2/test_check_script.py::a_step_scene_without_code_or_with_a_module_lacking_a_function_is_listed`
+on the example.
+
+**Red.** `NotImplementedError` ×6 and, for `check-script`, `assert (0, '') == (1, '')`: it said
+"No problems found." with scene A's `code` removed. One wrong guess of mine in the tier 2
+expectation (the heading's line, 85 not 93) corrected before the green; a muddled line in that
+test (appending `del mistake` to a module) removed.
+
+**Green.** The loader's list of needed functions is now `scenes.needed(scene)`, used by both
+`load` and the new `scenes.check_code(folder, data)`; `check_script.code_problems` calls it.
+`27 passed` for the three files; the suite and the 3.9 run below.
+
+**Decision / surprise.** The check sees only top-level `def`s: a function a module gets by
+import or assignment is reported missing. The README says so; the bed's modules define theirs.
+The loader's own runtime refusals are unchanged, so a module that parses but fails on import is
+still caught by `stills`/`render`, with the error named.

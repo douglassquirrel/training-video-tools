@@ -183,8 +183,12 @@ Reads a video's `script.md` (the format is the training-video project's
 of the speech, the tracker's letters, every mistake, and every line marked `added:` (what goes
 beyond the source, for approval). Then either `No problems found.` or the problems, one per line,
 each naming its line in the script where there is one. It also reads the brand kit the script
-names and lists the kit's problems, each prefixed with the `BRAND.md` path, so a kit `stills` or
-`render` would refuse is found here first. `--json OUT` also writes the parsed
+names and lists the kit's problems, each prefixed with the `BRAND.md` path, and checks the scene
+code without running it: a step scene with no `code`, a module that is missing or does not
+parse, and a module without a top-level `def` of a function the scene needs (`draw`; `mistake`
+and `right_way` for a mistake cue; `panel` for a custom side panel). So anything `stills` or
+`render` would refuse is found here first. (A function a module gets any other way than its own
+`def`, say by import, is reported as missing.) `--json OUT` also writes the parsed
 script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
 
@@ -384,7 +388,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(272 tests, lint clean).
+(279 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -434,7 +438,8 @@ with ffmpeg 4.4.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module
-  for fonts, sizes, rule 3 and label checks.
+  for fonts, sizes, rule 3 and label checks. `check-script` now checks the scene code too
+  (missing `code`, module, or function), without running it.
 - 9 October 2026: `stills` and `render` added; scene code moves to one module per scene with
   the functions above (the prototype's `d_A`/`mA` pairs become `draw`, `mistake`, `right_way`),
   and a label drawn on screen must be in the script's "On screen" list. The caption band's text

@@ -109,3 +109,11 @@ def test_a_missing_brand_kit_is_one_problem_not_two(example):
     assert (code, err) == (1, "")
     assert "\n1 problem:\n" in out
     assert out.splitlines()[-1].startswith("  - line 17: Settings: brand 'nokit' has no brands/nokit/BRAND.md under ")
+
+
+def test_a_step_scene_without_code_or_with_a_module_lacking_a_function_is_listed(example):
+    text = open(example, encoding="utf-8").read().replace("| code | fold_in_half | |\n", "")
+    open(example, "w", encoding="utf-8").write(text)
+    code, out, err = run("check-script", example)
+    assert (code, err) == (1, "")
+    assert out.endswith("\n1 problem:\n  - line 85: scene A: no 'code' property, so no scene code can be found for it\n")
