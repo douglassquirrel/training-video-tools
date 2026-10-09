@@ -188,8 +188,8 @@ def check(data, script_path):
     return problems
 
 
-def side_panel(scene):
-    """The scene's side-panel setting, with the format's default."""
+def _side_panel_text(scene):
+    """The scene's side-panel setting as written, with the format's default."""
     return scene["props"].get("side-panel", "key-points" if scene["side"] else "none")
 
 
@@ -215,7 +215,7 @@ def _check_scene(data, scene, seen):
         problems.append("%s: inset '%s' is not in Insets" % (at("inset"), props["inset"]))
     if "extra" in props and not NUMBER.match(props["extra"]):
         problems.append("%s: extra should be a number of seconds, not '%s'" % (at("extra"), props["extra"]))
-    panel = side_panel(scene)
+    panel = _side_panel_text(scene)
     panel_where = at("side-panel") if "side-panel" in props else where
     m = SIDE_PANEL.match(panel)
     if not m:
@@ -257,3 +257,96 @@ def _check_scene(data, scene, seen):
             if "added" in item and not item["added"]:
                 problems.append("line %d: scene %s, %s: 'added:' must say where it comes from" % (item["line"], key, name))
     return problems
+
+
+class ScriptError(Exception):
+    """A script that cannot be used, with every problem found."""
+
+    def __init__(self, path, problems):
+        self.path, self.problems = path, list(problems)
+        n = len(self.problems)
+        super().__init__("%s: %d problem%s:\n%s" % (path, n, "" if n == 1 else "s",
+                                                   "\n".join("  - " + p for p in self.problems)))
+
+
+def read(path):
+    """The data of the script at `path`, or ScriptError with every problem."""
+    if not os.path.isfile(path):
+        raise ScriptError(path, ["no such file: %s" % path])
+    with open(path, encoding="utf-8") as f:
+        data, problems = parse(f.read())
+    problems += check(data, path)
+    if problems:
+        raise ScriptError(path, problems)
+    return data
+
+
+def folder(path):
+    """The video's folder: the script's own."""
+    return os.path.dirname(os.path.abspath(path))
+
+
+DEFAULTS = {"quality": "18", "lead": "0.7", "cue-gap": "0.55", "tail": "1.0", "fade": "0.45 0.4"}
+TEXT_SETTINGS = ("title", "subtitle", "eyebrow", "brand", "voice", "language", "speech-model",
+                 "source", "source-image", "source-label", "title-image-caption", "credit",
+                 "output", "scene-code")
+
+
+def settings(data):
+    """The Settings table with the format's defaults filled in and values typed.
+
+    Text settings are strings ('' when absent); `speed`, `lead`, `cue-gap`, `tail` floats;
+    `fps`, `quality` ints; `size` (width, height); `fade` (in, out) seconds.
+    """
+    st = dict(DEFAULTS)
+    st.update({k: v for k, v in data["settings"].items() if v})
+    out = {k: st.get(k, "") for k in TEXT_SETTINGS}
+    out["speed"] = float(st["speed"])
+    out["fps"] = int(st["fps"])
+    out["quality"] = int(st["quality"])
+    for k in ("lead", "cue-gap", "tail"):
+        out[k] = float(st[k])
+    w, h = st["size"].split("x")
+    out["size"] = (int(w), int(h))
+    fade_in, fade_out = st["fade"].split()
+    out["fade"] = (float(fade_in), float(fade_out))
+    return out
+
+
+def kind(scene):
+    """'title', 'step' or 'end'."""
+    return scene["props"].get("kind", "step")
+
+
+def extra(scene):
+    """Seconds the scene holds after its last cue (or, with no cues, its whole length)."""
+    return float(scene["props"].get("extra", "0"))
+
+
+def side_panel(scene):
+    """(kind, name, cue): kind is key-points, steps, checklist, custom or none; name only for
+    custom; cue only for checklist and custom."""
+    m = SIDE_PANEL.match(_side_panel_text(scene))
+    if m.group(1):
+        return m.group(1), None, None
+    if m.group(2):
+        return "checklist", None, int(m.group(2))
+    return "custom", m.group(3), int(m.group(4))
+
+
+def spoken(cue):
+    """What the voice says: `say:` if given, else the caption."""
+    return cue.get("say") or cue["text"]
+
+
+def minimum(cue):
+    """The cue's `min:` in seconds, 0 when none."""
+    return float(cue.get("min", "0"))
+
+
+def mistake(cue):
+    """(wrong, right) for the scene's mistake cue, or None."""
+    if "mistake" not in cue:
+        return None
+    wrong, right = cue["mistake"].split(" / ", 1)
+    return wrong.strip(), right.strip()

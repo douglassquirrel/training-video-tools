@@ -221,3 +221,22 @@ print of the fixture before the test is run, not counted by eye.
 
 **State.** Green: 39 tests. Next: `script.read` (refusal as an exception), typed settings with
 defaults, then the `check-script` command.
+
+### 9 October 2026 — Script reader: `read`, `ScriptError`, typed settings and accessors
+
+**Goal.** `script.read(path)` returns the data or raises `ScriptError` listing every problem
+(a missing file too); `settings(data)` types the Settings table with the format's defaults;
+`kind`, `extra`, `side_panel`, `spoken`, `minimum`, `mistake`, `folder`; the example script
+reads clean.
+
+**Test.** `tests/tier1/test_script_read_and_settings.py`, ten tests.
+
+**Red.** `AttributeError … has no attribute 'read'` (5), `'ScriptError'` (3), `'settings'`,
+`'folder'`: `10 failed`.
+
+**Green.** `49 passed in 0.08s`, first run after implementing.
+
+**Decision / surprise.** The public `side_panel(scene)` returns a typed `(kind, name, cue)`; the
+string form the checker uses became `_side_panel_text`.
+
+**State.** Green: 49 tests. Next: the `check-script` command, Tier 2.
