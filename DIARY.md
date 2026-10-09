@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-9 October 2026, 21:38 (from the clock), after the Tier 3 check of `assemble --replace`.
+9 October 2026, 21:34 (from the clock), after the Tier 3 check of `assemble --replace`.
 **Requests 1 to 8 are built in full, and the bed video is accepted and rebuilt on the frame
 methods.** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
 (empty at 21:22; anything at its top level other than README.md is new and is reported to
@@ -42,7 +42,7 @@ not from here. A real `assemble --replace` against the real ffmpeg on this Mac w
 intermediates rewritten, the finished video untouched, the new output the same SHA-256. Clips at
 a rate other than 24 kHz are not worth a check here: `narrate` always writes Kokoro's 24 kHz, so
 another rate arises only from another model or a hand-made clip, and the Linux report covered
-22,050 Hz (Squirrel, 9 October 2026, 21:30).
+22,050 Hz (Squirrel, 9 October 2026, between 21:25 and 21:34).
 
 Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
 fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
