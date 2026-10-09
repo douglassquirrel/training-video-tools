@@ -270,3 +270,23 @@ every command shares: the exit codes, `Failure`, `report`, `refuse_existing`.
 
 **State.** Green: 58 tests, coverage 99%. `check-script` works on the example. Next: the
 timeline (item 3).
+
+### 9 October 2026 — The timeline
+
+**Goal.** `timeline.build(settings, scene, clips, estimate)`: cue starts and lengths from clip
+lengths, gap, minimum, lead, tail and extra, rounded to frames; `cue(t)` and `p(t, cue, a, b)`;
+a missing clip refused for rendering, estimated (and listed) for stills; `clips_for(timing,
+scene)`; the easing helpers.
+
+**Test.** `tests/tier1/test_timeline.py`, eleven tests with hand-written clip lengths.
+
+**Red.** `NotImplementedError` ×10 and `no attribute 'clips_for'`: `11 failed`.
+
+**Green.** `69 passed`, coverage 99%, first run after implementing.
+
+**Decision / surprise.** One rule for "now": the cue whose start is at or before `t`, with a
+nanosecond of floating-point slack (`0.7 + 1.55` is not exactly `2.25` in binary); the prototype's
+50 ms early switch is gone. Rounding to frames uses Python's `round` (half to even), pinned by a
+test at 157.5 frames.
+
+**State.** Green: 69 tests. Next: the brand-kit and config readers (the rest of item 1).
