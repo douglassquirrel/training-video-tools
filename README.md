@@ -355,6 +355,10 @@ give pytest a fresh temporary folder that has no `brands/` folder above it:
 `pytest --basetemp=/tmp/work-$(id -u)/pytest-$(date +%s)`.
 ```
 
+The tests hand every command a clean environment: `VIDEO_TOOLS_PYTHON`, `VIDEO_TOOLS_CONF` and
+`FONTCONFIG_FILE` are dropped unless a test sets them on purpose, so the suite passes with the
+device-shell settings exported.
+
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
 primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
 as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and `ffstub.py`

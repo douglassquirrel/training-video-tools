@@ -1,19 +1,17 @@
 """render: every frame of a scene piped to (stub) ffmpeg as raw BGRA; checks; refusals."""
 
 import os
-import subprocess
-import sys
 
 import pytest
 
-from tests.tier2.conftest import EXAMPLE_FRAMES, REPO, ff_calls, narrated, run
+from tests.tier2.conftest import EXAMPLE_FRAMES, cropped, ff_calls, narrated, run
 
 FRAME_BYTES = 1920 * 1080 * 4
 
 
 @pytest.fixture
 def prepared(example, ffstub):
-    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    cropped(example)
     narrated(example)
     return example
 

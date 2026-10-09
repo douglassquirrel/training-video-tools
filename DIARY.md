@@ -978,3 +978,39 @@ nothing moves without the property. `20 passed`, `20 passed`; suite below.
 its checklist starts at the column's top and the "first green row at 153" that looked like a
 header pixel was the tick itself. The script-format wording for the property is proposed in
 PLAN.md item 4; the format file is the training-video project's to change.
+
+### 9 October 2026 — Requests 5 and 6 arrive and are OK'd
+
+**Decision / surprise.** Request 5 (19:56–20:01): request 4 verified; two Linux test faults,
+both confirmed by reading: `fresh_frame` hands its child the whole environment, so a
+`FONTCONFIG_FILE` set by an earlier in-process frame gives the "without fonts" child the fonts;
+and `conftest.run()` hands commands an exported `VIDEO_TOOLS_PYTHON`, so the wrappers re-run
+under it. Request 6 (20:09): brand-aware methods on the frame object (colour, text, tag,
+callout, dimension, badge, hand) so a video's glue module can go, and `code` optional for
+title and end cards. Reported at 20:12 with the plan; Squirrel (20:14): "go ahead". PLAN.md
+"Settled" 17, item 4 rewritten; both items moved to `inbox/done/`.
+
+**State.** Next: request 5, item 2 first (it can be made red here), then item 1.
+
+### 9 October 2026 — Request 5: the tests' environments cleaned
+
+**Goal.** The suite passes with `VIDEO_TOOLS_PYTHON` (and `VIDEO_TOOLS_CONF`) exported, as the
+README tells device-shell users; a child process drawing "without fonts" does not inherit a
+`FONTCONFIG_FILE` an earlier in-process frame set.
+
+**Test.** Item 2: the two tests they named, run with the variable exported. Item 1: no test of
+its own (the leak is Linux-only); `test_frame.py` in file order and the suite with tier 2 first.
+
+**Red.** Item 2, on this Mac with `VIDEO_TOOLS_PYTHON=/usr/bin/python3`: `2 failed` (`assert
+False`: the wrappers re-ran under that Python). Then, with the runner fixed, the full suite the
+same way: `1 failed, 216 passed, 47 errors`: every fixture that ran `crop-insets` through
+`subprocess.run` directly inherited the variable too (exit 4, no Pillow in that Python).
+
+**Green.** `conftest.clean_env()` drops `VIDEO_TOOLS_PYTHON`, `VIDEO_TOOLS_CONF` and
+`FONTCONFIG_FILE`; `run()`, the wrapper tests and the two fresh-process children use it; the
+five direct `crop-insets` calls became `cropped(example)` through `run()`. With both variables
+exported: `264 passed`, 98%; `test_frame.py` in order `20 passed`; lint clean.
+
+**Decision / surprise.** The request named two tests; the fixtures were the bigger leak, found
+only by running the whole suite the way a device-shell user would. The README's Testing section
+says the tests clean the environment.

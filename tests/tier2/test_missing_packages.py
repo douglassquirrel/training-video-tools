@@ -1,12 +1,11 @@
 """A package a command needs but this Python lacks is one line naming it and the install, exit 4."""
 
 import os
-import subprocess
 import sys
 
 import pytest
 
-from tests.tier2.conftest import REPO, fake_media, narrated, rendered, run
+from tests.tier2.conftest import cropped, fake_media, narrated, rendered, run
 
 HINT = ('; from the Linux device shell, set VIDEO_TOOLS_PYTHON to a Python that has it '
         '(README, "Running from the Linux device shell")')
@@ -27,7 +26,7 @@ def message(prog, pip):
 
 @pytest.fixture
 def prepared(example, ffstub):
-    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    cropped(example)
     narrated(example)
     rendered(example)
     fake_media(os.path.join(os.path.dirname(example), "out", "Folding a Paper Boat.mp4"), frames=1587, duration="52.9")

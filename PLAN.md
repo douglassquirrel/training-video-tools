@@ -6,7 +6,7 @@ first request, `inbox/done/request-from-training-video-2026-10-09.md`, after Squ
 `inbox/done/request-from-training-video-2026-10-09-2.md` ("Settled" 14) and (19:31) from the
 third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15), and (19:50) from
 the fourth, `inbox/done/request-from-training-video-2026-10-09-4.md` ("Settled" 16): the bed
-video re-made and accepted. CLAUDE.md says how the work is done; this file says what
+video re-made and accepted; and (20:14) from the fifth and sixth ("Settled" 17). CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -244,6 +244,10 @@ def right_way(frame, rect):      # the "Right way" panel body: likewise
 def panel(frame, rect):          # the side panel: only for side-panel `custom <name> N`
 ```
 
+A scene of kind `title` or `end` may have no `code`: the chrome draws the whole card and no
+module is loaded; with one, its `draw` adds to the card (request 6, item 2). A step scene
+without `code` is refused by name.
+
 `frame` carries: `ctx` (the cairo context, clipped to the area), `t` (seconds into the scene),
 `timeline` (item 3), `scene` (the scene's data from the script: `key`, `props`, `cues`, …),
 `colours` (the script's Colours as `(r, g, b)`), `brand` (the brand kit, for its colours and
@@ -251,7 +255,24 @@ fonts), `area` (the animation area's rect), and `label(text)`, which returns `te
 checking it is in the scene's "On screen" list and raises a useful error (exit 3) if not, so a
 label that is drawn but not in the script is caught, and a typo on either side. `rect` is `(x, y,
 w, h)` in frame pixels. A missing function is a useful error naming the module and function.
-Scene code never imports `cairo` for text: it draws through `videotools.draw`.
+Scene code never imports `cairo` for text: it draws through `videotools.draw`, or through the
+frame's brand-aware methods (request 6, item 1; Squirrel, 9 October 2026, 20:14), each a thin
+layer over `videotools.draw` filling in what the brand and script say: `frame.colour(name)` (the
+script's Colours, else the brand's roles, else a refusal listing both); `frame.text(s, x, y,
+size, role="body", colour="ink", anchor="l", alpha=1.0, track=0, check=False)` (font by role,
+size × `font-size-scale`, rule 3 on the colour at the scaled size, `check` runs `label`);
+`frame.tag(s, x, y, size=22, fill="ink", colour="on-accent", role="display", anchor="l",
+alpha=1.0, padx=14, pady=9, border=None)`, `frame.callout(s, target, at, size=22,
+leader="ink", fill=None, colour="ink", role="display", anchor="l", alpha=1.0)` and
+`frame.dimension(p0, p1, s, size=24, colour="accent", text_colour=None, side=1, alpha=1.0)`
+(text through `label`, sizes scaled, colours by name, rule 3 on a pill's fill when its text is
+small); `frame.badge(x, y, ok, r=24, alpha=1.0)` (`correct`/`mistake` fill, `on-accent` mark);
+`frame.hand(x, y, angle, scale, alpha=1.0, mirror=False, label=None)` (skin, outline and
+sleeve from the script's Colours `skin`, `skin-dark`, `sleeve` when present, else neutral
+defaults named in the README; the label in the display font on an accent roundel at 28 ×
+scale). Everything else (`poly`, `line`, `circle`, `arrow`, `bezier`, the camera) stays in
+`videotools.draw` and `videotools.camera` with explicit colour triples, which `frame.colour`
+supplies.
 
 ## 5. `stills`: looking before rendering
 
@@ -434,7 +455,11 @@ remote ("Settled" 7).
    differences seen; two asked for and built: item 1, a `side-panel-heading` scene property
    (the prototype's "CHECK BEFORE YOU LEAVE IT" over the checklist); item 3, the hand label's
    size (it was fixed at 28 px, so `font-size-scale` did not reach it). Item 2 (the prototype's
-   "+ Pillows" roundel and pillow icon) is not asked for and not done.
+   "+ Pillows" roundel and pillow icon) is not asked for and not done. Request 5 (their
+   verification of request 4) found two test faults on Linux: the fresh-process font test
+   handed its child the test process's `FONTCONFIG_FILE`, and the test runner handed commands an
+   exported `VIDEO_TOOLS_PYTHON`; both environments are now cleaned. Request 6: the brand-aware
+   frame methods and the optional `code` for cards (item 4), so a video needs no glue module.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -515,3 +540,6 @@ None.
 16. The fourth request (`inbox/done/request-from-training-video-2026-10-09-4.md`): item 1 with a
     new `side-panel-heading` scene property, and item 3; not item 2 (Squirrel, 9 October 2026,
     19:50: "Do 1 (with the new property) and 3.").
+17. The fifth and sixth requests (`inbox/done/request-from-training-video-2026-10-09-5.md`,
+    `…-6.md`), in full, request 5 first (Squirrel, 9 October 2026, 20:14: "go ahead"). The hand's
+    neutral default colours are Claude's choice, recorded in the README.

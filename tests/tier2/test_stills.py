@@ -7,12 +7,12 @@ import sys
 import pytest
 from PIL import Image
 
-from tests.tier2.conftest import REPO, narrated, run
+from tests.tier2.conftest import REPO, clean_env, cropped, narrated, run
 
 
 @pytest.fixture
 def prepared(example):
-    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    cropped(example)
     return example
 
 
@@ -130,7 +130,7 @@ def test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it(pre
     # earlier test's text would leave this process with other fonts than the command's.
     alone_path = tmp_path / "alone.png"
     code = FRAME_ALONE.format(repo=REPO, script=prepared, size=(w, h), out=str(alone_path))
-    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, env=clean_env(PYTHONDONTWRITEBYTECODE="1"))
     alone = Image.open(alone_path).convert("RGB")
     assert ImageChops.difference(im.crop((0, 0, w, h)), alone).getbbox() is None
     assert im.getpixel((16, 20)) == (0xF7, 0xF3, 0xEA)                   # the header's corner is the frame's background

@@ -12,7 +12,7 @@ import cairo
 import pytest
 from PIL import Image, ImageChops, ImageStat
 
-from tests.tier2.conftest import REPO, narrated
+from tests.tier2.conftest import REPO, clean_env, cropped, narrated
 from videotools import cli, frame
 
 FRAMES = os.path.join(os.path.dirname(__file__), "frames")
@@ -22,7 +22,7 @@ TOLERANCE = 6.0          # mean absolute difference per channel, 0–255, at 192
 @pytest.fixture
 def video(example):
     """The example copy with insets cut and narration faked, loaded."""
-    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    cropped(example)
     narrated(example)
     return frame.Video(example)
 
@@ -154,8 +154,10 @@ Image.frombuffer("RGBA", (1920, 1080), bytes(s.get_data()), "raw", "BGRA", s.get
 def fresh_frame(example, out, without_fonts):
     """Frame A at 5.0 s drawn in a new process, as a command draws it, with or without the fonts."""
     code = FRESH_FRAME.format(repo=REPO, script=example, out=str(out), without_fonts=without_fonts)
+    # clean_env: without the FONTCONFIG_FILE an earlier in-process frame set (Linux), or the child
+    # "without fonts" would find the brand's fonts through it (request 5, item 1).
     subprocess.run([sys.executable, "-c", code], check=True, capture_output=True,
-                   env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+                   env=clean_env(PYTHONDONTWRITEBYTECODE="1"))
     return Image.open(out).convert("RGB")
 
 
@@ -163,7 +165,7 @@ def test_a_frame_drawn_in_a_fresh_process_uses_the_brands_fonts(example, tmp_pat
     """The stored-image tolerance above does not see fonts (with fallback fonts, six of the eight
     frames differ by under 2 of 6: DIARY.md, request 3 item 3), so this pins them: the text in a
     frame changes when the brand's fonts are not loaded, in a process that drew nothing before."""
-    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    cropped(example)
     narrated(example)
     with_fonts = fresh_frame(example, tmp_path / "with.png", without_fonts=False)
     without = fresh_frame(example, tmp_path / "without.png", without_fonts=True)

@@ -12,9 +12,22 @@ EXAMPLES = os.path.join(REPO, "examples")
 STUBS = os.path.join(REPO, "tests", "stubs")
 
 
+# Settings the user's shell may export (the README tells device-shell users to export
+# VIDEO_TOOLS_PYTHON) that would change what a command under test does: a test sets them on purpose
+# or not at all. FONTCONFIG_FILE: set in-process by fonts.load on Linux; a child must set its own.
+USER_SETTINGS = ("VIDEO_TOOLS_PYTHON", "VIDEO_TOOLS_CONF", "FONTCONFIG_FILE")
+
+
+def clean_env(**overrides):
+    """A copy of the environment without the user's own video-tools settings, plus `overrides`."""
+    env = {k: v for k, v in os.environ.items() if k not in USER_SETTINGS}
+    env.update(overrides)
+    return env
+
+
 def run(command, *args, cwd=None, env=None):
     """Run a top-level command script with the venv's Python; (exit code, stdout, stderr)."""
-    full_env = dict(os.environ)
+    full_env = clean_env()
     full_env["PYTHONDONTWRITEBYTECODE"] = "1"
     # Let coverage.py measure the subprocess too (pyproject.toml: parallel = true).
     full_env.setdefault("COVERAGE_PROCESS_START", os.path.join(REPO, "pyproject.toml"))
@@ -86,6 +99,13 @@ def example(tmp_path):
     """A copy of examples/ in a temporary folder; returns the copied video's script path."""
     shutil.copytree(EXAMPLES, tmp_path / "examples")
     return str(tmp_path / "examples" / "videos" / "paper-boat" / "script.md")
+
+
+def cropped(example):
+    """The example copy with its insets cut (crop-insets run through the clean environment)."""
+    code, out, err = run("crop-insets", example)
+    assert code == 0, err
+    return example
 
 
 # The example's scenes with every clip 1.0 s long: cue lengths are the minimums, so the scene
