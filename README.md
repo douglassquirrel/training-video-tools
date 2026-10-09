@@ -347,6 +347,10 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 ```bash
 .venv/bin/pytest          # the whole suite: no external programs, no network, no real data
 .venv/bin/ruff check .    # lint
+
+In the Linux device shell, where deleting is off and old `pytest-of-…` folders cannot be cleared,
+give pytest a fresh temporary folder that has no `brands/` folder above it:
+`pytest --basetemp=/tmp/work-$(id -u)/pytest-$(date +%s)`.
 ```
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
@@ -355,7 +359,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(249 tests, lint clean).
+(260 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must

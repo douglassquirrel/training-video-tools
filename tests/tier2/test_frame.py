@@ -132,3 +132,45 @@ def test_frames_match_the_stored_images_within_the_tolerance(video, key, t):
     stored = Image.open(path).convert("RGB")
     diff = ImageStat.Stat(ImageChops.difference(drawn, stored)).mean
     assert max(diff) < TOLERANCE, f"{key} at {t} s differs from the stored image by {diff}"
+
+
+FRESH_FRAME = """
+import sys
+sys.path.insert(0, {repo!r})
+import cairo
+from PIL import Image
+from videotools import fonts, frame
+if {without_fonts!r}:
+    fonts.load = lambda kit, work, platform=None: []       # the brand's fonts never reach cairo
+video = frame.Video({script!r})
+scene = video.scene("A")
+s = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1920, 1080)
+frame.draw_frame(cairo.Context(s), video, scene, video.timeline(scene), 5.0)
+s.flush()
+Image.frombuffer("RGBA", (1920, 1080), bytes(s.get_data()), "raw", "BGRA", s.get_stride(), 1).convert("RGB").save({out!r})
+"""
+
+
+def fresh_frame(example, out, without_fonts):
+    """Frame A at 5.0 s drawn in a new process, as a command draws it, with or without the fonts."""
+    code = FRESH_FRAME.format(repo=REPO, script=example, out=str(out), without_fonts=without_fonts)
+    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True,
+                   env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+    return Image.open(out).convert("RGB")
+
+
+def test_a_frame_drawn_in_a_fresh_process_uses_the_brands_fonts(example, tmp_path):
+    """The stored-image tolerance above does not see fonts (with fallback fonts, six of the eight
+    frames differ by under 2 of 6: DIARY.md, request 3 item 3), so this pins them: the text in a
+    frame changes when the brand's fonts are not loaded, in a process that drew nothing before."""
+    subprocess.run([sys.executable, os.path.join(REPO, "crop-insets"), example], check=True, capture_output=True)
+    narrated(example)
+    with_fonts = fresh_frame(example, tmp_path / "with.png", without_fonts=False)
+    without = fresh_frame(example, tmp_path / "without.png", without_fonts=True)
+    changed = ImageChops.difference(with_fonts, without).convert("L").point(lambda v: 255 if v else 0)
+    pixels = changed.histogram()[255]
+    print(f"pixels changed without the brand's fonts: {pixels}")
+    assert pixels > 20_000, f"only {pixels} pixels change without the brand's fonts"   # 58,956 on macOS: text all over
+    # And a second fresh process with the fonts draws the same frame exactly: the route is deterministic.
+    again = fresh_frame(example, tmp_path / "again.png", without_fonts=False)
+    assert ImageChops.difference(with_fonts, again).getbbox() is None

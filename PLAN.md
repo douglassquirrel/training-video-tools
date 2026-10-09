@@ -436,7 +436,11 @@ the bytes they were sent, failing or dying on demand) and a stub speech model (a
 `kokoro_onnx` module on `sys.path` returning a known waveform), a config file named by
 `VIDEO_TOOLS_CONF`, and the example video copied into a temporary folder. Frame tests draw a
 frame of the example and compare it, reduced to 192×108, with a stored image within a tolerance
-("Settled" 11); they need pycairo, which the venv has, and no external program. Tier 3 (manual,
+("Settled" 11); they need pycairo, which the venv has, and no external program. The tolerance
+pins layout, not fonts (with fallback fonts six of eight frames are within it: request 3, item
+3), so fonts are pinned by a frame drawn in a fresh process, with and without the brand's
+fonts loaded; any test that compares a frame with a command's output draws its reference in a
+fresh process too, because fontconfig (Linux) fixes a process's fonts at its first text call. Tier 3 (manual,
 README): each command for real on the example video.
 
 ## Not doing

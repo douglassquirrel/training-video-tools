@@ -98,26 +98,40 @@ def test_a_malformed_brand_kit_is_refused_in_words_with_exit_3_not_a_traceback(p
     assert not os.path.exists(tmp_path / "s.png")
 
 
+FRAME_ALONE = """
+import sys
+sys.path.insert(0, {repo!r})
+import cairo
+from videotools import frame, stills
+video = frame.Video({script!r})
+scene = video.scene("A")
+surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1920, 1080)
+frame.draw_frame(cairo.Context(surface), video, scene, video.timeline(scene), 1.5)
+surface.flush()
+from PIL import Image
+stills.to_image(surface).resize({size!r}, Image.LANCZOS).save({out!r})
+"""
+
+
 def test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it(prepared, tmp_path):
-    import cairo
     from PIL import ImageChops
 
-    from videotools import frame, stills
+    from videotools import stills
 
     narrated(prepared)
     sheet = tmp_path / "sheet.png"
     code, out, err = run("stills", prepared, "A:1.5", "--out", sheet)
     assert (code, err) == (0, "")
     im = Image.open(sheet).convert("RGB")
-    # The same frame drawn alone and scaled as the cell scales it.
-    video = frame.Video(prepared)
-    scene = video.scene("A")
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1920, 1080)
-    frame.draw_frame(cairo.Context(surface), video, scene, video.timeline(scene), 1.5)
-    surface.flush()
     w, h = stills.frame_size((960, 540))
     assert (w, h) == (896, 504)                                          # 16:9 in the cell above the strip
-    alone = stills.to_image(surface).resize((w, h), Image.LANCZOS)
+    # The same frame drawn alone and scaled as the cell scales it: in a fresh process, as the command
+    # draws it, because fontconfig (Linux) fixes its font list at a process's first text call and an
+    # earlier test's text would leave this process with other fonts than the command's.
+    alone_path = tmp_path / "alone.png"
+    code = FRAME_ALONE.format(repo=REPO, script=prepared, size=(w, h), out=str(alone_path))
+    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+    alone = Image.open(alone_path).convert("RGB")
     assert ImageChops.difference(im.crop((0, 0, w, h)), alone).getbbox() is None
     assert im.getpixel((16, 20)) == (0xF7, 0xF3, 0xEA)                   # the header's corner is the frame's background
     strip = im.crop((0, h, w, 540))

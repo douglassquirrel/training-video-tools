@@ -2,43 +2,51 @@
 
 ## Where things stand
 
-9 October 2026, 19:13 (from the clock). **The first request is built in full and the second
-request's seven items are in.** All eight commands work (`check-script`, `narrate`,
-`crop-insets`, `stills`, `render`, `assemble`, `check-video`, `font-weights`) on the package
-`videotools/`. Build steps 1–7 and 9 of PLAN.md are done; step 8 is the training-video
-project's: re-make the bed video with these tools and report back through `inbox/`. **For the
-training-video project: request 2's items 1–4 are in** (the real `BRAND.md` reads, with its
-contrast table; a malformed kit is words and exit 3; `check-script` checks the kit; the sheet's
-label is under the frame), and so are 5–7 (`VIDEO_TOOLS_PYTHON` for the device shell, README
-"Running from the Linux device shell"; `camera.ripple` and `camera.clip`).
+9 October 2026, 19:45 (from the clock). **Requests 1, 2 and 3 are built in full.** All eight
+commands work (`check-script`, `narrate`, `crop-insets`, `stills`, `render`, `assemble`,
+`check-video`, `font-weights`) on the package `videotools/`. Build steps 1–7 and 9 of PLAN.md
+are done; step 8 is the training-video project's: re-make the bed video with these tools and
+report back through `inbox/`. **For the training-video project:** request 2's seven items were
+verified by you; request 3's three are in: `assemble --replace` and `render --replace` work
+against real ffmpeg (`-y` for the listed files only, `-nostdin` always), a missing package is
+one line with exit 4 for every command, and the sheet-label test (and a new font test) draw
+their references in a fresh process; the `--basetemp` note is in the README's Testing section.
 
-Green: 249 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 260 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
-`tests/stubs/`. One test is skipped off macOS (CoreText).
+`tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
+One test is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1.
 
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
-video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); after request 2,
-the real brand kit read (counts only), a sheet looked at, and the wrappers run under
-`VIDEO_TOOLS_PYTHON`. Linux was tried by the training-video project (PLAN.md "Things checked"
-5), not from here. Not yet tried: a real `assemble` with clips at a rate other than 24 kHz on
-this Mac (the Linux report covers 22,050 Hz).
+video, which `check-video` passes clean (the entry "Tier 3: the whole chain"); since then the
+real brand kit read (counts only), a sheet looked at, the wrappers run under
+`VIDEO_TOOLS_PYTHON`, and `crop-insets` under the Mac's Python 3.9 without Pillow (the one-line
+message, exit 4). Linux was tried by the training-video project (PLAN.md "Things checked" 5),
+not from here. Not yet tried: a real `assemble --replace` with the real ffmpeg on this Mac
+(the stub now mirrors ffmpeg's refusal, and the Linux report found the fault), and a real
+`assemble` with clips at a rate other than 24 kHz here (the Linux report covers 22,050 Hz).
+
+Known limits worth knowing: the stored-image frame tests pin layout, not fonts (with fallback
+fonts six of eight frames stay within the tolerance; the fresh-process font test pins fonts).
 
 Waiting on Squirrel: nothing. The inbox is empty. The bed video's re-make starts when Squirrel
 tells the training-video project to.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
-passed`. The previous version of this section was dated "21:30"; the session ended at 18:30.
+passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30.
 
 How the tests work: `tests/tier1/` pure functions (pycairo for `test_draw*.py` and
 `test_fonts.py`); `tests/tier2/` runs each command as a subprocess through `conftest.run()`
-under the venv's Python, with `tests/stubs/kokoro_onnx/` (fake speech model, on `PYTHONPATH` by
-the `speech` fixture) and `tests/stubs/ffstub.py` (fake ffmpeg and ffprobe on PATH by the `ffstub`
-fixture: media as `key=value` text files, every call logged, `FFSTUB_FAIL`/`FFSTUB_DIE`/
-`FFSTUB_DROP` to make a job fail). `example` copies `examples/` to a temporary folder;
-`narrated()` and `rendered()` fake the products of `narrate` and `render`; `test_frame.py`
-compares drawn frames with `tests/tier2/frames/` at 192×108 (its README says how to renew them).
-One tier: `.venv/bin/pytest tests/tier1`. Coverage of the subprocesses comes through
+under the venv's Python (a variable given as `None` is unset), with `tests/stubs/kokoro_onnx/`
+(fake speech model, on `PYTHONPATH` by the `speech` fixture) and `tests/stubs/ffstub.py` (fake
+ffmpeg and ffprobe on PATH by the `ffstub` fixture: media as `key=value` text files, every call
+logged, `FFSTUB_FAIL`/`FFSTUB_DIE`/`FFSTUB_DROP` to make a job fail, an existing output refused
+without `-y`). `example` copies `examples/` to a temporary folder; `narrated()` and `rendered()`
+fake the products of `narrate` and `render`; `test_frame.py` compares drawn frames with
+`tests/tier2/frames/` at 192×108 (its README says how to renew them and what the tolerance does
+not see); `test_missing_packages.py` hides a package with a module on `PYTHONPATH`. One tier:
+`.venv/bin/pytest tests/tier1`. Coverage of the subprocesses comes through
 `COVERAGE_PROCESS_START`, which `run()` sets.
 
 ## Log
@@ -883,3 +891,38 @@ The narrate test's expected wording changed to the new one (predicted). Suite `2
 exits 4.
 
 **State.** Items 1 and 2 done. Next: item 3, the label test's reference in a subprocess.
+
+### 9 October 2026 — Request 3, item 3: references drawn in a fresh process; what the tolerance hides
+
+**Goal.** The sheet-label test cannot depend on what ran before it in the process; the suite has
+no other order dependence; the device-shell `--basetemp` note is in the README.
+
+**Test.** `test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it` now draws
+its reference frame in a new interpreter (the same code path as the command), exact comparison
+kept. No red on this Mac: CoreText registration works at any time, so the Linux failure (their
+report: bbox `(7, 14, 866, 487)` after `test_draw.py` ran first) cannot be reproduced here; the
+change removes the cause (fontconfig fixing its font list at a process's first text call).
+The suite run with tier 2 before tier 1: `259 passed`; no other order dependence found on macOS.
+
+**Decision / surprise.** The thing I suspected when reporting: the stored-image tests (tolerance
+6 at 192×108) had passed on Linux, so could they be drawing with fallback fonts and not know?
+Measured on the scratch copy with `fonts.load` stubbed out:
+```
+title 2.0 fallback fonts, mean diff [5.95, 5.89, 5.71]
+A 1.5 fallback fonts, mean diff [1.6, 1.46, 1.39]
+A 5.0 fallback fonts, mean diff [15.85, 16.6, 20.89]
+B 3.5 fallback fonts, mean diff [1.77, 1.67, 1.61]
+B2 3.0 fallback fonts, mean diff [1.66, 1.57, 1.51]
+C 6.0 fallback fonts, mean diff [2.82, 2.4, 2.22]
+R 5.0 fallback fonts, mean diff [1.91, 1.85, 1.82]
+end 1.5 fallback fonts, mean diff [1.43, 1.21, 1.11]
+```
+Six of eight within tolerance: those tests pin layout, not fonts, and say nothing about the
+fonts on Linux. So a new test, `test_a_frame_drawn_in_a_fresh_process_uses_the_brands_fonts`:
+frame A at 5.0 s in a fresh process with the fonts and without; the count of pixels that change
+must exceed 20,000 (58,956 here); and a second fresh draw with fonts is pixel-identical. Checked
+that it can fail: with both draws using the fonts, `0.0 > 5.0` failed, as it must. Recorded in
+`tests/tier2/frames/README.md`, PLAN.md "Testing", and the README's Testing section (with the
+`--basetemp` line).
+
+**State.** Request 3 done. Next: "Where things stand", commit, push.
