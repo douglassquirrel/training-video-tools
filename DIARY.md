@@ -412,3 +412,27 @@ device shell. New code is written with f-strings; the lint pass will convert the
 `%`-formatting (ruff's UP031 flags 98 of them) rather than mixing styles by hand now.
 
 **State.** Green: 121 tests. Next: the drawing primitives.
+
+### 9 October 2026 — The drawing primitives
+
+**Goal.** `videotools.draw`: the prototype's `core.py` primitives with every colour passed in:
+`rgb`, `shade`, `mix`; `text` (anchors, tracking, alpha), `text_width`, `wrap`; `poly`, `line`,
+`rrect`, `fill_rrect`, `circle`, `bezier`, `cut`, `arrow` (drawn on to a fraction); `badge`,
+`tag` (pill), `callout`, `dimension`, `hand`.
+
+**Test.** `tests/tier1/test_draw.py`, nine tests reading pixels back from small surfaces.
+
+**Red.** `AttributeError` for each missing function and `NotImplementedError` for `shade`:
+`9 failed`.
+
+**Green.** `2 failed, 7 passed` after implementing: both the tests' precision, not the code
+(half-alpha black on white is 127 under cairo's rounding, not 128; the pixel in the middle of a
+pill is anti-aliased text). Then `130 passed`, coverage 99%.
+
+**Decision / surprise.** `callout`'s leader-line colour is `leader`, since a parameter named
+`line` would shadow the function. The hand keeps the prototype's geometry (fingertip at the
+origin, sleeve 150 px behind) with its skin, outline and sleeve colours as arguments; a video's
+colours table supplies them.
+
+**State.** Green: 130 tests. Next: `crop-insets` and `font-weights` (item 9), then `assemble`
+and `check-video` against stub ffmpeg/ffprobe; chrome and `stills` when the interface is settled.
