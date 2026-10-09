@@ -11,9 +11,9 @@ uploaded, and no command ever writes over an existing file.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
-`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Two of four checking
-commands are added, `frame-hashes` and `compare-video` (the others, `compare-frames` and
-`brand-preview`, are in PLAN.md item 11 and not built yet).
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Three of four checking
+commands are added, `frame-hashes`, `compare-video` and `compare-frames` (`brand-preview` is in
+PLAN.md item 11 and not built yet).
 
 ## Requirements
 
@@ -404,6 +404,28 @@ sheet of 5 pairs written to compare.png
 (That run: the example re-made with one colour changed in its last step scene; the five largest
 differences are all in that scene, and the sheet shows the colour.)
 
+### `compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …]`
+
+For a remake or a revision: the frame the scene code draws now beside an earlier video's frame
+at the same moment, with a number for how different they are. Times are read as `stills` reads
+them (a negative time counts back from the scene's end; a time past the end is refused, exit 2).
+The old video's moment is the scene's start plus the time, the start being the sum of the
+earlier scenes' lengths from the current `timing.json`; `--offset SCENE=SECONDS` moves one
+scene's start when the old video's differs (repeatable). Each pair goes on a row of the sheet,
+new left, old right, labelled under each frame in the brand's display font with the mean
+absolute RGB difference (0–255), which is printed too. Refuses an existing sheet, a moment past
+the old video's end (by name, before any frame is read), and missing timings as `render` does.
+Needs pycairo, numpy, Pillow and ffmpeg. A pair of the same video differs by about 1 (H.264);
+a changed colour over a sixth of the frame by about 20.
+
+```
+$ ./compare-frames COPY/script.md COPY/out/earlier.mp4 "A:5,R:3,R:-1" --out compare.png
+A           5.00 s  old   13.33 s  mean difference   0.8
+R           3.00 s  old   48.40 s  mean difference  19.5
+R           7.97 s  old   53.37 s  mean difference  19.4
+Wrote compare.png: 3 pairs
+```
+
 ### Configuration: `~/.video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
@@ -422,7 +444,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900. | See `--help`. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end. | See `--help`. |
 | 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
@@ -447,7 +469,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(316 tests, lint clean).
+(330 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -494,11 +516,11 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 9 October 2026 (late): `frame-hashes` and `compare-video` added, the first two of four
-  checking commands requested by the training-video project. `frame-hashes` replaces that
-  project's `tools/frame-hashes.py` with the same record format and output, and exits 1 when
-  frames differ; `compare-video` keeps the comparison that was run by hand for the bed video's
-  acceptance.
+- 9 October 2026 (late): `frame-hashes`, `compare-video` and `compare-frames` added, three of
+  four checking commands requested by the training-video project. `frame-hashes` and
+  `compare-frames` replace that project's `tools/frame-hashes.py` and `tools/compare-frames.py`
+  with the same output; `frame-hashes --compare` exits 1 when frames differ; `compare-video`
+  keeps the comparison that was run by hand for the bed video's acceptance.
 - 9 October 2026 (night): a title or end scene no longer needs a `code`; the example's two empty
   card modules are gone. The frame object has brand-aware drawing (`colour`, `text`, `tag`,
   `callout`, `dimension`, `badge`, `hand`, the table above), so a video needs no glue module

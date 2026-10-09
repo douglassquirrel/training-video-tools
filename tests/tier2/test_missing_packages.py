@@ -41,6 +41,9 @@ def prepared(example, ffstub):
     ("frame-hashes", ["--scenes", "A", "--out", "h.json"], "cairo", "pycairo"),
     ("compare-video", ["SELF"], "numpy", "numpy"),                 # SELF: the first file again
     ("compare-video", ["SELF", "--sheet", "sheet.png"], "PIL", "Pillow"),
+    ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
+    ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "numpy", "numpy"),
+    ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("crop-insets", [], "PIL", "Pillow"),

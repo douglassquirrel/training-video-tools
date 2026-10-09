@@ -2,11 +2,11 @@
 
 ## Where things stand
 
-9 October 2026, 22:03 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
+9 October 2026, 22:10 (from the clock), mid-way through request 9. **Requests 1 to 8 are built in
 full, the bed video is accepted and rebuilt on the frame methods, and request 9 (four checking
-commands, PLAN.md item 11, "Settled" 20) is two commands in: `frame-hashes` and `compare-video`
-are built, green and in the README; `compare-frames` and `brand-preview` are next, in that order
-(build step 10).** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
+commands, PLAN.md item 11, "Settled" 20) is three commands in: `frame-hashes`, `compare-video`
+and `compare-frames` are built, green and in the README; `brand-preview` is next (build step
+10).** A new session starts by reading CLAUDE.md, PLAN.md and this section, then `inbox/`
 (empty at 21:22; anything at its top level other than README.md is new and is reported to
 Squirrel, never acted on without his OK). All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
@@ -23,7 +23,7 @@ item 4. Request 7: `check-script` checks the scene code without running it (a st
 frame in a strip under it, as `stills` does (`videotools.sheet`, shared). Request 4's item 2
 (the "+ Pillows" roundel and icon) was not asked for and is not done.
 
-Green: 316 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 330 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does.
@@ -1314,3 +1314,49 @@ raw output; `audio_samples` and `frame_at` beside it will serve `compare-frames`
 has none.
 
 **State.** Green: 316 tests, 98%, lint clean. Next: `compare-frames`.
+
+### 9 October 2026 — Request 9, `compare-frames`
+
+**Goal.** Item 11's third command: the frame drawn now beside the old video's frame at the
+scene's start (from the current `timing.json`, plus `--offset`) plus the time; one pair a row,
+labelled under each frame with the mean absolute RGB difference, printed too; refusals for a
+time past the scene (exit 2, as `stills`), a moment past the old video (exit 3, by name, before
+any frame is read), an existing sheet, a missing old video, missing timings; missing packages
+one line, exit 4.
+
+**Test.** `tests/tier2/test_compare_frames.py`, eleven tests on the example against stub media
+of one colour (the `colours` field the previous entry added), and three missing-package cases.
+The old video's moments were worked by hand from the example's scene lengths (title 8.3 s, A 8.7,
+B 7.9, B2 5.3): `A:1.5` is 9.8 s, `B2:-1` is 29.2 s, `--offset B2=1.5` makes it 30.7 and
+`--offset A=-0.3` makes 9.5.
+
+**Red.** `11 failed` in the file and the three package cases: `NotImplementedError`.
+
+**Green.** `3 failed, 11 passed` after implementing, all three my tests: argparse wraps the usage
+line (compared with whitespace collapsed, as `render`'s test does); the difference lambda was
+handed the file path instead of the command's output; and I miscounted the padding of the
+printed line (`{key:8} {t:7.2f}` puts ten spaces after `B2`). Then one more mine: I had guessed
+a near-background colour would differ from frame A by under 20, and it is 32.7 (the header,
+inset and text are ink on the background); the bound is now 100, which is what the test is
+for (black against the frame differs far more than a near-background colour). `11 passed`;
+the suite:
+```
+TOTAL                           2421     25    798     30    98%
+330 passed in 119.58s (0:01:59)
+All checks passed!
+```
+
+**Tier 3.** The scratch example's script against its own finished video, five pairs across
+title, A, R and end: differences 0.8–1.0 (H.264's loss); against `red.mp4` (scene R with red
+water): A 0.8, R 19.5 and 19.4; the sheet looked at: the red water left, blue right, the
+labels under each frame in the brand's display font. The README's section shows that run.
+
+**Decision / surprise.** A wrong turn found by `git status`: the `compare-video` commit
+(`65a20b5`) swept in 215 `.coverage.<host>.<pid>.*` fragments that a parallel suite run had
+left on disk at the moment of `git add -A` (coverage.py's `parallel = true` writes one per
+subprocess and combines them at the end of the run). They are deleted from git in this commit
+(never rewriting the pushed one), and `.gitignore` now has `.coverage.*`. Lesson: never
+`git add -A` while a suite is running; look at `git status` first. The `--offset` parser
+checks the scene exists (usage error naming the scenes) so a typo cannot silently do nothing.
+
+**State.** Green: 330 tests, 98%, lint clean. Next: `brand-preview`, the last of the four.
