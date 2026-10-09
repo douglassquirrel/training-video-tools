@@ -160,3 +160,19 @@ The tests for its other behaviours (next entry) are therefore characterisation t
 checked by breaking the code and seeing it fail before it is trusted.
 
 **State.** Green: 3 tests. Next: the skipped sections, Unicode, and the structural problems.
+
+### 9 October 2026 — Script reader: skipped sections, Unicode, structural problems
+
+**Goal.** Notes sections (with tables) and prose are skipped; Unicode and `·` pass through;
+a `###` outside a scene, junk in narration, junk in a list and a sub-bullet before any cue are
+problems naming their line.
+
+**Test.** `tests/tier1/test_script_skips_and_structure.py`, seven tests.
+
+**Red / Green.** Characterisation (previous entry): all seven passed at once (`7 passed`). Then
+the code was broken five ways in turn, each restored with `git checkout`, and each break made
+the right test fail: notes read as settings `1 failed, 6 passed`; no problem for a `###` outside
+a scene `1 failed`; narration junk ignored `2 failed` (the stray-line and the sub-bullet-first
+tests); list junk ignored `1 failed`; non-ASCII stripped `1 failed`.
+
+**State.** Green: 10 tests. Next: `script.check`, the validation rules, in groups.
