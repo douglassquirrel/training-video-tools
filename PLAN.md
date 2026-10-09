@@ -212,7 +212,7 @@ pills (tags), callouts with leader lines, dimension lines, ✓/✗ badges, mitte
 direction, kx, ky)` with `point(x, y, z)`, interpolation between two cameras, and points on a
 plane (`front`, `top`, `end`), generalised from the prototype's box.
 
-### The scene-code interface (proposed; open question 2)
+### The scene-code interface ("Settled" 13)
 
 The script's `scene-code` folder holds one Python module per scene, named by the scene's
 `code` property (`bottom_sheet.py`). The tools import it from that folder and call:
@@ -411,17 +411,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **Python 3.12, not 3.13.** The request suggested a venv from Homebrew Python 3.13; this Mac has
-   3.12 (and 3.11, 3.14) but not 3.13, and 3.12 is inside the range the speech packages need, so
-   the venv is made from `python3.12` and the README says so. Assumed on 9 October 2026 to keep
-   going; a `brew install python@3.13` would work equally.
-2. **The scene-code interface** in item 4 is a proposal; Squirrel decides before any chrome code
-   is written (Squirrel, 9 October 2026, 17:15: put it to him first).
-3. **Where `timing.json` lives:** `work/narration/timing.json`, beside the clips (the request says
-   "`work/narration/<scene>_<NN>.wav` and `timing.json`"). Cue files are numbered as the script
-   numbers cues, from 01, not from 00 as the prototype did.
-4. **`assemble --replace`** covers only its intermediates under `work/assemble/`, never the
-   finished video; without it an existing intermediate is refused like any other output.
+None.
 
 ## Settled
 
@@ -450,3 +440,8 @@ README): each command for real on the example video.
     (Squirrel, 9 October 2026, 17:01).
 12. One venv for dev tooling and the commands; PLAN.md names which commands still run on the
     Mac's Python 3.9 (Squirrel, 9 October 2026, 17:15: "both of your proposals").
+13. The scene-code interface as item 4 describes it, and four assumptions: the venv from
+    Homebrew Python 3.12 (this Mac has no 3.13); `work/narration/timing.json` beside the clips,
+    cues numbered from 01; `assemble --replace` covers its intermediates only, never the finished
+    video; items 7, 8 and 9 built before 4 and 5 (Squirrel, 9 October 2026, 19:45: "assumptions
+    all ok, please continue").
