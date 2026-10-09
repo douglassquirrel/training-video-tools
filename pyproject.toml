@@ -2,7 +2,7 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "--cov=video_tools --cov-report=term-missing"
+addopts = "--cov=videotools --cov-report=term-missing"
 
 [tool.coverage.run]
 branch = true

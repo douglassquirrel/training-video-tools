@@ -3,4 +3,5 @@
 # optional quotes, and a leading ~ in a path means your home folder. Only what belongs to this
 # machine goes here; nothing secret. Settings are provisional until PLAN.md specifies them.
 #SPEECH_MODEL_DIR=~/models/kokoro
-#VOICE=af_heart
+#VOICE=af_heart          # a default only: each video's settings choose its own voice
+#SPEED=0.98

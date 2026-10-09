@@ -42,7 +42,7 @@ Names and boundaries are guesses for orientation only; the request decides.
 
 | Command | Job |
 |---|---|
-| `narrate` | Script cues to one narration clip each and a timing file, with a local speech model. |
+| `narrate` | Script cues to one narration clip each and a timing file, with a local speech model, in the voice, speed and model the video's settings name ("Settled" 6). |
 | `timeline` | Cue and scene timings from clip lengths, gaps and minimums (possibly part of a library rather than a command). |
 | `stills` | Frames at given times, and four-up contact sheets, from a video's scene code. |
 | `render` | One scene, or a frame range of it, to a video segment. |
@@ -50,7 +50,7 @@ Names and boundaries are guesses for orientation only; the request decides.
 | `crop-insets` | Panels cropped from a source figure at named boxes, sized for the reference column. |
 | `font-weights` | Static, uniquely named weights from a variable font, so the drawing library can choose a weight. |
 
-And a library that a video's scene code imports: the chrome, the drawing primitives (text with
+And the shared package `videotools/`, which the commands and a video's scene code import: the chrome, the drawing primitives (text with
 tracking and wrapping, pills, callouts, arrows, dimension lines, badges, hands), easing, an
 oblique 3D camera, and the brand kit reader.
 
@@ -77,8 +77,9 @@ Allowed (Squirrel, 9 October 2026, 16:16), installed in one documented step. The
 ## Configuration (until the request)
 
 `~/.video-tools.conf` (`video-tools.conf.example` is committed): the speech model's folder and
-the default voice. Everything particular to a video or a brand lives in that video's script and
-the brand kit file, not here.
+the default voice and speed. Each video's own settings override those defaults (its voice above
+all: "Settled" 6), and a flag overrides both. Everything particular to a video or a brand lives
+in that video's script and the brand kit file, not here.
 
 ## Things to be checked against the real thing before code depends on them
 
@@ -119,12 +120,7 @@ suite, a commit and a push, all on `main`.
 
 ## Open questions
 
-Assumptions made to keep working, each with the default chosen.
-
-1. **One package with several commands, or separate scripts?** Default: one Python package
-   `video_tools/` with a thin script per command in `bin/`, like `book-tools`.
-2. **The GitHub repository.** The local repository has no remote. Default: Squirrel creates
-   `douglassquirrel/video-tools` (private) and pushes, since the device shell has no key.
+None.
 
 ## Settled
 
@@ -135,3 +131,11 @@ Assumptions made to keep working, each with the default chosen.
 3. The dependencies listed under "Dependencies" are allowed, with every command importing only
    what it needs and everything else standard-library (Squirrel, 9 October 2026, 16:16).
 4. Private for now: CLAUDE.md, PLAN.md and DIARY.md stay committed here (Squirrel, 9 October 2026, 16:16).
+5. Separate scripts, like `book-tools`: one executable script per command at the top of the
+   repository (`narrate`, `render`, …), each a thin wrapper that imports its `main()` from a
+   shared package, `videotools/` (Squirrel, 9 October 2026, 16:22).
+6. The narration voice is configurable for each video: `narrate` takes the voice, speed and
+   model from the video's own settings, with defaults in `~/.video-tools.conf` and flags that win
+   over both; nothing about a voice is fixed in the code (Squirrel, 9 October 2026, 16:22).
+7. Squirrel creates the GitHub repository `douglassquirrel/video-tools` (private) and pushes when
+   he is ready; until then there is no remote (Squirrel, 9 October 2026, 16:22).

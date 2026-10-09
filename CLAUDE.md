@@ -28,7 +28,7 @@ stills for review, scene segments rendered through ffmpeg, and the final assembl
 narration mixed in.
 
 ```
-<command> [--dry-run] <arguments>       # one command per job; the list in PLAN.md is provisional
+<command> [--dry-run] <arguments>       # one script per job, as in book-tools; the list in PLAN.md is provisional
 ```
 
 **Nothing is built yet.** The commands come from the prototype that made the first video
@@ -322,8 +322,8 @@ keeping. The rest can be reconstructed from git and the suite; that cannot.
 cd ~/projects/code/video-tools
 .venv/bin/pytest                # all green, with no external programs and no network
 .venv/bin/ruff check .          # clean
-./bin/<command> --help                 # for each command built
-./bin/<command> --dry-run <arguments>  # on the example video: everything but writing the output
+./<command> --help                 # for each command built
+./<command> --dry-run <arguments>  # on the example video: everything but writing the output
 ```
 
 All of it succeeds with the real output pasted into DIARY.md; coverage is reported and at
