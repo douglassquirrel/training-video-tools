@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-9 October 2026, 21:16 (from the clock). **Requests 1 to 8 are built in full, and the bed video
+9 October 2026, 21:11 (from the clock). **Requests 1 to 8 are built in full, and the bed video
 is accepted and rebuilt on the frame methods.** All eight commands work (`check-script`, `narrate`, `crop-insets`, `stills`,
 `render`, `assemble`, `check-video`, `font-weights`) on the package `videotools/`. Every build
 step of PLAN.md is done: step 8, the re-make, was done by the training-video project at
