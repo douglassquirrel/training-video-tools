@@ -132,3 +132,31 @@ exit 0
 ```
 
 **State.** Step 1 done. Next: step 2, `videotools.script`, test-first.
+
+### 9 October 2026 — Script reader: a well-formed script reads back
+
+**Goal.** `script.parse(text)` returns the title, the three tables and the scenes with their
+properties, cues (with sub-bullets), side-panel and on-screen items, each with its line number.
+
+**Test.** `tests/tier1/test_script_reads.py`: `title_settings_colours_and_insets_read_back`,
+`scenes_read_back_with_properties_cues_lists_and_lines`,
+`parse_reports_no_problems_for_a_well_formed_script`, on a hand-written two-scene script.
+
+**Red.** First run: `ImportError: cannot import name 'script'`, the wrong reason; with the module
+and an unimplemented `parse`: `NotImplementedError` ×3, the right one.
+
+**Green.** After implementing, one assertion still failed:
+```
+AssertionError: assert ('A', 'First loop', 33) == ('A', 'First loop', 31)
+```
+The test's line numbers were wrong, not the code: the fixture string begins on line 5 of the
+test file, so every line I had counted from the file was 4 too high. Counted again with a
+four-line script (`33 ## Scene A`, `45 1. Step A`, `47 2. Don't`, `54 - Loop`, `59 - first loop`,
+`60 - room for the second`), corrected the six numbers: `3 passed in 0.01s`.
+
+**Decision / surprise.** The parser was written whole in this increment (sections, tables, cues,
+sub-bullets, lists, the three structural problems), more than the minimum for these three tests.
+The tests for its other behaviours (next entry) are therefore characterisation tests: each is
+checked by breaking the code and seeing it fail before it is trusted.
+
+**State.** Green: 3 tests. Next: the skipped sections, Unicode, and the structural problems.
