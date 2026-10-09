@@ -482,3 +482,36 @@ invented 3 s file made in the scratchpad; a missing input makes ffmpeg exit 254.
 and ffprobe will speak these formats.
 
 **State.** Green: 149 tests. Next: `assemble` against the stubs.
+
+### 9 October 2026 — `assemble`
+
+**Goal.** Segments joined in script order (concat demuxer, streams copied), every clip at its
+scene's start plus its cue's start plus 50 ms in a 48 kHz mix normalised to 0.89, muxed with
+AAC; refusals naming every missing segment and clip, segments that do not add up or chain,
+missing timings, an existing output (never replaced) and existing intermediates (unless
+`--replace`); ffmpeg's exit status checked at both steps, the partial file named; length, size
+and SHA-256 printed.
+
+**Test.** `tests/tier2/test_assemble.py`, seventeen tests. `tests/stubs/ffstub.py` stands in for
+ffmpeg and ffprobe (the conftest puts two shell wrappers on PATH that name it through
+`FFSTUB_NAME`): media files are fake `key=value` text files, every call is logged, and
+`FFSTUB_FAIL` makes a named job fail after writing a partial output. The conftest's `narrated()`
+writes real 1 s clips with soundfile and a `timing.json`; `rendered()` fakes one segment per
+scene with the frame counts the timing gives (249, 261, 237, 159, 267, 243, 171).
+
+**Red.** `16 failed, 1 passed`: `NotImplementedError` tracebacks. "Never modified" proved after
+the green by making assemble append to a segment: `1 failed`.
+
+**Green.** Three rounds: the stub dispatched on its own file name instead of `FFSTUB_NAME` (every
+ffprobe call hit the ffmpeg branch: `unexpected arguments`), fixed in the stub; then the
+fixture's sine tone began with a zero sample so the first loud sample was 36001 not 36000 (a
+cosine now); and two failure tests wrongly expected an empty stdout, when progress printed
+before the failure stays there. `17 passed`; the suite `165 passed`, coverage 94% (`ffmpeg.py`'s
+probe, levels and silences are for `check-video`).
+
+**Decision / surprise.** Resampling is linear (`numpy.interp`), enough for speech at 24 kHz to
+48 kHz. A scene's segments must chain from frame 0 (`A_00000`, `A_00100`, …) and their counted
+frames must equal the timeline's; both are checked with ffprobe before anything is written.
+`videotools/ffmpeg.py` holds the running and parsing of ffmpeg and ffprobe for every command.
+
+**State.** Green: 165 tests. Next: `check-video`.
