@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 09:07 (from the clock), at the end of request 12. **Requests 1 to 12 are built in
+10 October 2026, 10:22 (from the clock), at the handover ending the session that built requests 9 to 12. **Requests 1 to 12 are built in
 full: the eight commands of the first request, the four checking commands of the ninth
 (`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
 20), the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
@@ -11,7 +11,7 @@ spans in `say:` lines with `narrate --dry-run --phonemes` and `check-script`'s s
 (item 13, "Settled" 22), and the twelfth's curtain on the timeline (`covered`, `before_curtain`,
 `curtain`) with `stills --cue-changes` and its warning (item 14, "Settled" 23), each in the
 README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (empty at 09:07; anything at its top level other than README.md
+and this section, then `inbox/` (empty at 10:22; anything at its top level other than README.md
 is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
 (request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
 roundel and icon) was not asked for and is not done.
@@ -1662,3 +1662,21 @@ falls in the lead; a time clipped to the scene is kept once. `--scenes` applies 
 
 **State.** Request 12 complete: 386 tests, 98%, lint clean, README and PLAN.md current. Nothing
 waiting.
+
+### 10 October 2026 — Session end and handover
+
+**Decision / surprise.** The session's record, for whoever picks this up: it began 9 October at
+21:25 with the inbox empty, checked `assemble --replace` against the real ffmpeg, then built
+requests 9 (four checking commands), 10 (✓ and ✗ drawn where a font lacks them; the font check),
+11 (phoneme spans) and 12 (the curtain; stills at cue changes), fourteen commits after
+`6b07320`, each green on the full suite with lint clean and pushed to `origin/main`; every
+behaviour through a test seen red first, the exceptions named in their entries. Wrong turns,
+all recorded: 215 coverage fragments swept into one commit (removed in the next; `.coverage.*`
+ignored); several of my own test expectations wrong before the green (line numbers, a guessed
+caption, a guessed pixel count in a README draft, replaced by the real run). Squirrel's
+standing OK on the training-video side lets that project send requests; each one was OK'd here
+before anything was done ("Settled" 22). Scratch copies of the example live only in the
+session's scratchpad. "Where things stand" above is the handover.
+
+**State.** Green: 386 tests, 98%, lint clean, pushed at `124413e` plus this entry. Inbox empty.
+Nothing waiting on Squirrel.
