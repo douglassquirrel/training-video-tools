@@ -13,6 +13,7 @@ import shlex
 
 NAME = r"[A-Za-z0-9][A-Za-z0-9-]*"
 DOTTED = r"[a-z][a-z0-9-]*(?:\.\d+)*"            # a parameter or anchor name, maybe indexed: highlight.3
+ROTATE = "rotate"                                 # on any member: degrees clockwise about its box's centre
 OWN_COLOUR = "colour."                            # colour.<role>=<name>: a member's own colour for an element's role
 NUM = r"-?\d+(?:\.\d+)?"
 REGIONS = ("left", "right", "centre", "top-left", "top-right", "bottom-left", "bottom-right", "full")
@@ -559,6 +560,11 @@ def _state_problem(el, state):
     return None
 
 
+def _rotate_problem(value):
+    """The problem with a value for `rotate`, which any member takes, or None."""
+    return None if re.match(f"^{NUM}$", value) else f"'{ROTATE}' should be a number, not '{value}'"
+
+
 def _own_colour_problem(el, name, value, colours):
     """The problem with `colour.<role>=<name>` on a member of `el`, or None: the role is one of the
     element's, and the name a colour the video knows (when `colours` says which those are)."""
@@ -581,6 +587,8 @@ def _library_params(m, ctx):
     for name, value in m["params"].items():
         if name.startswith(OWN_COLOUR):
             problem = _own_colour_problem(el, name, value, ctx["colours"])
+        elif name == ROTATE:
+            problem = _rotate_problem(value)
         elif name == "state":
             problem = _state_problem(el, value)
         else:
@@ -644,6 +652,10 @@ def _piece_params(m, ctx):
         if name not in m["params"]:
             out.append(f"'{m['name']}': {_a(piece)} needs '{name}'")
     for name, value in m["params"].items():
+        if name == ROTATE:
+            if _rotate_problem(value):
+                out.append(f"'{m['name']}': {_rotate_problem(value)}")
+            continue
         if name not in params:
             out.append(f"'{m['name']}': {_a(piece)} has no parameter '{name}' "
                        f"(its parameters are {', '.join(params)})")
@@ -723,6 +735,11 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         else:                                   # param (animate) or set
             member = members[act["name"]]
             values = [act["value"]] if act["kind"] == "set" else [act["from"], act["to"]]
+            if act["param"] == ROTATE:          # any member turns
+                problem = next((p for p in map(_rotate_problem, values) if p), None)
+                if problem:
+                    problems.append(f"{at}'{act['name']}': {problem}")
+                continue
             if _element_kind(member["element"], lib) == "library":
                 el = lib.element(member["element"])
                 desc = _param_match(act["param"], el["params"])

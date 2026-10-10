@@ -6,6 +6,7 @@ library's elements through `el.draw`. Needs nothing beyond what the frame carrie
 
 import copy
 import csv
+import math
 import os
 
 from videotools import choreography, cli, timeline
@@ -60,6 +61,13 @@ def box_anchors(rect):
     x, y, w, h = rect
     return {"top-left": (x, y), "top-right": (x + w, y), "bottom-left": (x, y + h), "bottom-right": (x + w, y + h),
             "centre": (x + w / 2, y + h / 2)}
+
+
+def turn(point, centre, degrees):
+    """`point` turned `degrees` clockwise (as the frame is seen, y downward) about `centre`."""
+    a = math.radians(degrees)
+    dx, dy = point[0] - centre[0], point[1] - centre[1]
+    return (centre[0] + dx * math.cos(a) - dy * math.sin(a), centre[1] + dx * math.sin(a) + dy * math.cos(a))
 
 
 def window(move, tl, panel_start, panel=True):
@@ -133,7 +141,7 @@ class Performance:
             return drawn[anchor]
         rect = self.rect(name)
         if anchor in choreography.BOX_ANCHORS:
-            return box_anchors(rect)[anchor]
+            return self._turned(name, box_anchors(rect)[anchor], rect)
         element = self.cast[name]["element"]
         if element not in choreography.PIECES:
             el = self.lib.element(element)
@@ -142,9 +150,15 @@ class Performance:
                     x, y, w, h = rect
                     w0, h0 = el["size"]
                     scale = min(w / w0, h / h0) if w0 and h0 else 1.0
-                    return (x + (w - w0 * scale) / 2 + value[0] * scale, y + (h - h0 * scale) / 2 + value[1] * scale)
+                    fixed = (x + (w - w0 * scale) / 2 + value[0] * scale, y + (h - h0 * scale) / 2 + value[1] * scale)
+                    return self._turned(name, fixed, rect)
         raise cli.Failure(f"'{anchor}' of '{name}' is computed when it is drawn, so a member placed by it must "
                           f"come after '{name}' in the cast")
+
+    def _turned(self, name, point, box):
+        """A point of a member not yet drawn, turned as the member will be about its box's centre."""
+        degrees = self.params(self.cast[name])[0].get(choreography.ROTATE, 0.0)
+        return turn(point, (box[0] + box[2] / 2, box[1] + box[3] / 2), degrees) if degrees else point
 
     def rect(self, name):
         if name in self._rects:
@@ -188,6 +202,8 @@ class Performance:
 
     def _kind(self, member, name):
         """The type of a parameter: the library description's, or the piece's (number or a word)."""
+        if name == choreography.ROTATE:
+            return "number"
         if member["element"] in choreography.PIECES:
             return "number" if choreography.PIECE_PARAMS[member["element"]][name] in ("number", "unit") else "text"
         return choreography._param_match(name, self.lib.element(member["element"])["params"])["type"]
@@ -249,49 +265,78 @@ class Performance:
             alpha = self.alpha(name)
             if alpha <= 0:
                 continue
-            x, y, w, h = self.rect(name)
-            element = member["element"]
             p, state = self.params(member)
-            if element == "pill":
-                box = frame.tag(p["text"], x, y, size=float(p.get("size", 22)), fill=p.get("fill", "ink"),
-                                colour=p.get("colour", "on-accent"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
-                self._anchors[name] = box_anchors(box)
-            elif element == "text":
-                size, align = float(p.get("size", 22)), ALIGN[p.get("anchor", "left")]
-                width = frame.text(p["text"], x, y, size, role=p.get("role", "body"), colour=p.get("colour", "ink"),
-                                   anchor=align, alpha=alpha, check=True)
-                left = x if align == "l" else x - width / 2 if align == "c" else x - width
-                scaled = frame._size(size)                      # the baseline is at y; the box is the type size
-                self._anchors[name] = box_anchors((left, y - scaled * 0.75, width, scaled))
-            elif element == "badge":
-                r = float(p.get("r", 24))
-                frame.badge(x, y, p["ok"] in YES, r=r, alpha=alpha)
-                self._anchors[name] = box_anchors((x - r, y - r, 2 * r, 2 * r))
-            elif element == "hand":
-                frame.hand(x, y, float(p["angle"]), float(p["scale"]), alpha=alpha, mirror=p.get("mirror") in YES,
-                           label=p.get("label") or None)       # an empty label is no label
-            elif element == "callout":
-                target = self._point(p["target"])
-                frame.callout(p["text"], target, (x, y), size=float(p.get("size", 22)), fill=p.get("fill", "surface"),
-                              colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha,
-                              leader=p.get("leader", "ink"))
-            elif element == "arrow":
-                from videotools import draw
-                headless = {} if p.get("head", "yes") in YES else {"head": 0}     # draw.arrow's head is its size
-                via = [self._place(w) for w in choreography.parse_points(p["via"])] if "via" in p else []
-                control = [self._point(p["from"])] + via + [self._point(p["to"])]    # two points, or a curve by four
-                draw.arrow(frame.ctx, control,
-                           frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)),
-                           progress=float(p.get("progress", 1)), alpha=alpha,
-                           dash=choreography.parse_dash(p["dash"]) if "dash" in p else None, **headless)
-            else:
-                el = self.lib.element(element)
-                try:
-                    self._anchors[name] = el.draw(self._in_its_colours(frame, member), (x, y, w, h), state=state,
-                                                  params=p, alpha=alpha)
-                except Exception as e:      # the library refuses in words (its Failure) or fails: one line, exit 3
-                    raise cli.Failure(f"scene {frame.scene['key']}: the library could not draw '{name}' ({element}): "
-                                      f"{e}") from e
+            degrees = p.pop(choreography.ROTATE, 0.0)
+            if not degrees:
+                self._draw_member(frame, name, member, p, state, alpha)
+                continue
+            import cairo
+            aside = copy.copy(frame)            # the member as it would be unturned, recorded, then painted turned
+            recording = cairo.RecordingSurface(cairo.CONTENT_COLOR_ALPHA, None)
+            aside.ctx = cairo.Context(recording)
+            box = self._draw_member(aside, name, member, p, state, alpha)
+            centre = (box[0] + box[2] / 2, box[1] + box[3] / 2)
+            ctx = frame.ctx
+            ctx.save()
+            ctx.translate(*centre)
+            ctx.rotate(math.radians(degrees))
+            ctx.translate(-centre[0], -centre[1])
+            ctx.set_source_surface(recording, 0, 0)
+            ctx.paint()
+            ctx.restore()
+            anchors = dict(box_anchors(box), **self._anchors.get(name, {}))     # its anchors turn with it
+            self._anchors[name] = {k: turn(pt, centre, degrees) for k, pt in anchors.items()}
+
+    def _draw_member(self, frame, name, member, p, state, alpha):
+        """Draw one member, unturned, on `frame`; keep the anchors its drawing gives; return its box."""
+        x, y, w, h = self.rect(name)
+        element = member["element"]
+        if element == "pill":
+            box = frame.tag(p["text"], x, y, size=float(p.get("size", 22)), fill=p.get("fill", "ink"),
+                            colour=p.get("colour", "on-accent"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
+            self._anchors[name] = box_anchors(box)
+            return box
+        if element == "text":
+            size, align = float(p.get("size", 22)), ALIGN[p.get("anchor", "left")]
+            width = frame.text(p["text"], x, y, size, role=p.get("role", "body"), colour=p.get("colour", "ink"),
+                               anchor=align, alpha=alpha, check=True)
+            left = x if align == "l" else x - width / 2 if align == "c" else x - width
+            scaled = frame._size(size)                      # the baseline is at y; the box is the type size
+            box = (left, y - scaled * 0.75, width, scaled)
+            self._anchors[name] = box_anchors(box)
+            return box
+        if element == "badge":
+            r = float(p.get("r", 24))
+            frame.badge(x, y, p["ok"] in YES, r=r, alpha=alpha)
+            box = (x - r, y - r, 2 * r, 2 * r)
+            self._anchors[name] = box_anchors(box)
+            return box
+        if element == "hand":
+            frame.hand(x, y, float(p["angle"]), float(p["scale"]), alpha=alpha, mirror=p.get("mirror") in YES,
+                       label=p.get("label") or None)       # an empty label is no label
+        elif element == "callout":
+            target = self._point(p["target"])
+            frame.callout(p["text"], target, (x, y), size=float(p.get("size", 22)), fill=p.get("fill", "surface"),
+                          colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha,
+                          leader=p.get("leader", "ink"))
+        elif element == "arrow":
+            from videotools import draw
+            headless = {} if p.get("head", "yes") in YES else {"head": 0}     # draw.arrow's head is its size
+            via = [self._place(w) for w in choreography.parse_points(p["via"])] if "via" in p else []
+            control = [self._point(p["from"])] + via + [self._point(p["to"])]    # two points, or a curve by four
+            draw.arrow(frame.ctx, control,
+                       frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)),
+                       progress=float(p.get("progress", 1)), alpha=alpha,
+                       dash=choreography.parse_dash(p["dash"]) if "dash" in p else None, **headless)
+        else:
+            el = self.lib.element(element)
+            try:
+                self._anchors[name] = el.draw(self._in_its_colours(frame, member), (x, y, w, h), state=state,
+                                              params=p, alpha=alpha)
+            except Exception as e:      # the library refuses in words (its Failure) or fails: one line, exit 3
+                raise cli.Failure(f"scene {frame.scene['key']}: the library could not draw '{name}' ({element}): "
+                                  f"{e}") from e
+        return (x, y, w, h)
 
     def _in_its_colours(self, frame, member):
         """The frame the member's element draws on: the frame itself, or a copy whose colours carry

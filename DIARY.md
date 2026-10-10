@@ -2997,3 +2997,47 @@ placed below 948 would be cut there.
 both yes": after request 17, in the order linear, dim, spans and percentages, CSV, with
 `rows.columns`, `rows.where`, `rows.first`); it goes into PLAN.md when request 17 is finished.
 Next: item 19, 5, turning a member.
+
+### 11 October 2026 — Item 19, 5: turning a member
+
+**Goal.** `rotate=DEGREES` on any member, clockwise about its box's centre, animated and set
+like any number; an anchor read from a turned member turned with it (request 17, item 2).
+
+**Tests.** Tier 1: `test_rotate_is_a_number_on_any_piece_in_the_cast_and_in_a_move`,
+`test_rotate_is_a_number_on_a_library_member_too_and_is_not_one_of_the_elements_parameters`.
+Tier 2 (`test_perform.py`, one cast: a 200 × 80 pot turned 90°, two small pots placed by its
+corners, one before it in the cast and one after, and the same pill plain and turned with
+small pots on each one's corner and centre):
+`test_a_turned_member_is_drawn_turned_about_the_centre_of_its_box` (pixels),
+`test_an_anchor_read_from_a_turned_member_is_turned_with_it_before_or_after_it_in_the_cast`,
+`test_a_piece_is_turned_about_the_centre_of_what_it_drew`,
+`test_a_turn_is_animated_like_any_number_and_no_turn_is_exactly_the_frame_without` (a frame
+with `rotate=0` byte for byte the frame with no `rotate`).
+
+**Red.** The checks: `'a': a pill has no parameter 'rotate' (its parameters are text, size,
+fill, colour, anchor)`, `'p': a pot has no parameter 'rotate' (its parameters are )`. Then,
+the checks done, the drawing: `TypeError: 'NoneType' object is not subscriptable` four times
+(`_kind` looking `rotate` up among the element's parameters): `4 failed, 38 deselected`.
+
+**Green.** `33 passed in 0.07s` (the two check files); `42 passed in 12.13s`
+(`test_perform.py`); suite `530 passed in 148.69s (0:02:28)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** How: the member is drawn exactly as it would be unturned, on a cairo
+recording surface (a copy of the frame with its `ctx` swapped), and that recording is painted
+onto the frame turned about the centre of the box the drawing reported. So nothing inside a
+piece or an element knows about the turn, a pill's box (known only once it is drawn) is no
+special case, and colours come out exact (the turned pot's pixels equal the accent). With no
+turn the member is drawn straight onto the frame as before, which is what makes `rotate=0`
+the same bytes. `Performance.draw` split into `draw` (the turn) and `_draw_member` (one
+member, returning its box). A turned member's stored anchors are its box's corners and centre
+and whatever its drawing returned, all turned; before it is drawn, a box corner or a fixed
+anchor is turned from its rect (`_turned`), which is what places the member listed before it.
+One test of mine was wrong, not the code: the animated turn was sampled at 3.75 s, 0.05 s
+after scene A's mistake panels start to rise, so the pixel was the accent under 4% of
+curtain (`(34, 110, 136)`); the move and the sample moved earlier. The `stub records the
+transform` idea of the request does not apply to this way of doing it: the element draws in an
+unturned context, so the tests look at pixels and at where the followers land.
+
+**State.** 530 green, 98%, lint clean. Item 19's five parts built; the README, the Tier 3 and
+the note to training-video are left. Squirrel (00:36): "check inbox for request 19 and cue up
+work on it (if you agree) after 17 and 18": next.

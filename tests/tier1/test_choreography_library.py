@@ -341,3 +341,26 @@ def test_without_the_videos_colours_only_the_role_is_checked(lib, folder):
         "line 28: scene A2, cast: 's': a pill has no parameter 'colour.fill' (its parameters are text, size, fill, "
         "colour, anchor)",
     ]
+
+
+# ---- item 19 (request 17), 5: any member may be turned
+
+def test_rotate_is_a_number_on_a_library_member_too_and_is_not_one_of_the_elements_parameters(lib, folder):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| p | pot | 10 10 | 120 | rotate=2.2 | |
+| q | pot | 200 10 | 120 | rotate=lots | |
+
+### Moves
+
+- cue 1: show p, q
+- cue 1, 0–0.6 s: p.rotate 0 → 180
+- cue 2: q.rotate round
+"""
+    assert _check(text, lib, folder) == [
+        "line 26: scene A2, cast: 'q': 'rotate' should be a number, not 'lots'",
+        "line 32: scene A2, moves: 'q': 'rotate' should be a number, not 'round'",
+    ]

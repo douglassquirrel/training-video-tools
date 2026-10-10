@@ -487,3 +487,28 @@ def test_a_scene_with_no_cues_has_its_moves_checked_against_its_own_length():
         "line 17: scene end, cast: 'b' is never shown",
         "line 23: scene end, moves: 6 s is past the end of the scene, which is 5.7 s long",
     ]
+
+
+# ---- item 19 (request 17), 5: any member may be turned
+
+def test_rotate_is_a_number_on_any_piece_in_the_cast_and_in_a_move():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" rotate=10 | |
+| b | badge | 70 100 | | ok=yes rotate=sideways | |
+| c | hand | 70 100 | | angle=1 scale=1 rotate=-90 | |
+
+### Moves
+
+- cue 1: show a, b, c
+- cue 1: a.rotate 0 → -20
+- cue 2: a.rotate upside
+- cue 3: c.rotate 45
+"""
+    assert _check(text) == [
+        "line 26: scene A2, cast: 'b': 'rotate' should be a number, not 'sideways'",
+        "line 33: scene A2, moves: 'a': 'rotate' should be a number, not 'upside'",
+    ]

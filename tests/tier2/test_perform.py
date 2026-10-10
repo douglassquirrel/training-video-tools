@@ -694,3 +694,61 @@ def test_an_end_cards_cast_is_drawn_and_its_moves_count_from_the_scenes_start_an
     assert pixel(rendered(video, "end", 0.4), 200, 800) != ACCENT
     assert pixel(rendered(video, "end", 2.0), 200, 800) == ACCENT
     assert pixel(rendered(video, "end", 5.3), 200, 800) != ACCENT      # hidden from 4.7 to 5.2 s
+
+
+# ---- item 19 (request 17), 5: any member may be turned
+
+TURNED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| early | pot | wide.bottom-left | 20 | | placed by the turned member's corner, before it in the cast |
+| wide | pot | 100 100 | 200x80 | rotate=90 | frame rect 140 218, 200 x 80: centre 240 258; turned, it covers 200..280 by 158..358 |
+| late | pot | wide.top-right | 20 | | placed by its corner, after it |
+| plain | pill | 400 100 | | text=crease size=22 | |
+| turned | pill | 400 400 | | text=crease size=22 rotate=90 | the same pill, a quarter turn about its own centre |
+| plain-corner | pot | plain.top-left | 6 | | |
+| plain-middle | pot | plain.centre | 6 | | |
+| turned-corner | pot | turned.top-left | 6 | | |
+| turned-middle | pot | turned.centre | 6 | | |
+
+### Moves
+
+- cue 1: show early, wide, late, plain, turned, plain-corner, plain-middle, turned-corner, turned-middle
+
+"""
+
+
+def test_a_turned_member_is_drawn_turned_about_the_centre_of_its_box(example):
+    s = rendered(pointed(example, TURNED), "A", 2.0)
+    assert pixel(s, 240, 170) == ACCENT                      # above the unturned rect, inside the turned one
+    assert pixel(s, 150, 258) != ACCENT                      # inside the unturned rect, outside the turned one
+
+
+def test_an_anchor_read_from_a_turned_member_is_turned_with_it_before_or_after_it_in_the_cast(example):
+    video = pointed(example, TURNED)
+    rendered(video, "A", 2.0)
+    small = [d["rect"] for d in video.library.draws if d["rect"][2] == 20.0]
+    assert small[0] == pytest.approx((200.0, 158.0, 20.0, 20.0))        # bottom-left (140 298), a quarter turn on
+    assert small[1] == pytest.approx((280.0, 358.0, 20.0, 20.0))        # top-right (340 218)
+
+
+def test_a_piece_is_turned_about_the_centre_of_what_it_drew(example):
+    video = pointed(example, TURNED)
+    rendered(video, "A", 2.0)
+    (px, py), (pcx, pcy), (tx, ty), (tcx, tcy) = [d["rect"][:2] for d in video.library.draws if d["rect"][2] == 6.0]
+    half_w, half_h = pcx - px, pcy - py                                 # the pill's half size, from the plain one
+    assert half_w > half_h > 0
+    assert (tx, ty) == pytest.approx((tcx + half_h, tcy - half_w))      # its top-left corner, a quarter turn on
+
+
+def test_a_turn_is_animated_like_any_number_and_no_turn_is_exactly_the_frame_without(example):
+    spun = TURNED.replace("| rotate=90 | frame rect", "| rotate=0 | frame rect").replace(
+        "turned-middle\n", "turned-middle\n- cue 1, 1.5–2.5 s: wide.rotate 0 → 90\n")
+    video = pointed(example, spun)
+    before = bytes(rendered(video, "A", 2.0).get_data())                # rotate=0, before the move (2.2 to 3.2 s)
+    assert pixel(rendered(video, "A", 3.4), 240, 170) == ACCENT         # after it, before the panels rise at 3.7 s
+    cast = video.scene("A")["cast"]
+    del next(m for m in cast if m["name"] == "wide")["params"]["rotate"]
+    video.scene("A")["moves"][:] = [m for m in video.scene("A")["moves"] if m["action"]["kind"] != "param"]
+    assert bytes(rendered(video, "A", 2.0).get_data()) == before
