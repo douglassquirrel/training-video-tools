@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 10:45. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 13:05. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -11,7 +11,7 @@ the two files in `inbox/done/`) **and no code is written for them**: the choreog
 item 15 is a *proposal* (PLAN.md "Open questions" 1), written with scene A2 of the training-video
 project's second video as a worked example, and waits for Squirrel's approval. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-10:45; anything at its top level other than README.md is new and is reported to Squirrel, never
+13:05; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
@@ -49,9 +49,10 @@ choreography format", and "Open questions" 1), or his changes to it; then item 1
 work" starts, test-first against an invented library. Also "Open questions" 2 (three things
 video-elements must know, to go there through him in the same words) and 3 (the credits file is
 never replaced, Claude's default). The three details of request 13 are settled ("Settled" 24).
-video-elements (read-only from here) has its step 2 of 8 done, awaiting his approval to start
-step 3 (the reader, checks and credits) and his Open Peeps download; its `rsvg-convert` checks
-and licence texts are in; our Tier 3 on real elements waits on its steps 3 and 4. Also the
+video-elements (read-only from here) has its step 3 of 8 done (the reader, checks and
+`credits`; `el.draw` is its step 4, next), and its request that `library.open` take the
+repository root is OK'd and recorded ("Settled" 26); our Tier 3 on real elements waits on its
+step 4 and first elements. Also the
 training-video project's: its six phoneme spans and re-made clips, its three scenes on
 `before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
 standard ✓ drawing with its own `tag()` helper retired, and any request it sends here. The stub
@@ -1737,3 +1738,22 @@ the file sat in `inbox/` for a few minutes before a plain `mv`; nothing else was
 
 **State.** PLAN.md items 15 and 16 written; inbox empty; no code, suite untouched (386 green at
 the last run). Waiting on Squirrel's approval of the format.
+
+### 10 October 2026 — video-elements' request: `library.open` takes the root folder
+
+**Goal.** Read and report the item that arrived at 12:59 (`inbox/request-from-video-elements-2026-10-10.md`),
+then on Squirrel's OK (13:02: "Let's do that") record it and stop.
+
+**Decision / surprise.** video-elements' step 3 reads the whole library at once, the sources
+register under `licenses/` included, so `open` needs the repository root, which is the folder
+`VIDEO_ELEMENTS_DIR` already names: the command passes it straight through instead of joining
+`elements/`. One comment line of the shared interface changes; confirmed in its repository
+(commit `8e946a7`, `library.open`, `names`, `element`, `credits` present; `draw` not yet).
+Recorded in PLAN.md item 15 (the sentence and the interface block), "Settled" 26, and "Open
+questions" 2 narrowed: the request answers what the description exposes (plain data with
+`anchors`, `states`, `params` {type, min, max, default}, and `Failure.problems` for errors);
+still to go to video-elements through Squirrel: data as named parameters read by video-tools,
+which parameters are labels, and indexed parameter names. Item moved to `inbox/done/`.
+
+**State.** No code; suite untouched (386 green at the last run). Waiting on Squirrel's approval
+of the choreography format ("Open questions" 1).

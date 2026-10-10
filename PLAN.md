@@ -546,7 +546,9 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
 - `VIDEO_ELEMENTS_DIR` / `--elements DIR`: the root of the video-elements repository, the folder
   holding the package `videoelements/` and the drawings `elements/`. At the point of use the
   command puts that folder on Python's import path, imports `videoelements.library`, and opens
-  `elements/` under it. The package is never installed into this repository's venv.
+  that folder (the library reads `elements/` and `licenses/` under it at once; video-elements'
+  request of 10 October 2026, 12:59, `inbox/done/request-from-video-elements-2026-10-10.md`,
+  OK'd 13:02). The package is never installed into this repository's venv.
 - `RSVG_CONVERT` / `--renderer PATH`: the SVG renderer, passed through to the library as its
   `renderer`; absent, the library's own default (`rsvg-convert` on PATH). The training-video
   project's Linux shell runs one extracted from a package, not on PATH.
@@ -556,12 +558,13 @@ A script with a described scene and no library setting, a folder that is missing
 setting and the folder, exit 3. A script with no described scene never needs the library.
 
 **The interface**, video-elements' settled text (its PLAN.md "The interface video-tools calls";
-Squirrel, 10 October 2026, 10:36: "go with the choice in video-elements"). The same words are in
-both READMEs; a change goes through Squirrel to both:
+Squirrel, 10 October 2026, 10:36: "go with the choice in video-elements"; the first line's comment
+changed by its request of 12:59, OK'd 13:02). The same words are in both READMEs; a change goes
+through Squirrel to both:
 
 ```python
 from videoelements import library
-lib = library.open(path, renderer="rsvg-convert")   # the elements folder; refuses in words, exit 3
+lib = library.open(path, renderer="rsvg-convert")   # the library's root folder (elements/ and licenses/ inside); refuses in words, exit 3
 el = lib.element("spreadsheet")               # description: size, anchors, states, params, colours
 anchors = el.draw(frame, rect, state=None, params=None, alpha=1.0)
 #   frame: video-tools' scenes.Frame (ctx, brand, colours, label(), text(), …)
@@ -1009,11 +1012,15 @@ README): each command for real on the example video.
 2. **Three things video-elements must know**, to go to it through Squirrel in the same words,
    assumed here meanwhile: data reaches an element as a named parameter (`rows=`, `text=`),
    read from the video's folder by video-tools, so the interface's `params` carries it and the
-   library never reads a video's files; the description `lib.element(name)` returns exposes its
-   anchors, states and parameters (name, type, range, default, label or data) as plain data,
-   which `check-script` reads on Python 3.9; and an indexed parameter (a row, a cell) is written
-   `highlight.3`, `cell-alpha.3.2`. Element names and parameter names in item 15's example are
-   the starter set's as far as it goes; `formula-bar` is not in it.
+   library never reads a video's files; which parameters are labels (checked against On screen)
+   and which are data; and an indexed parameter (a row, a cell) is written `highlight.3`,
+   `cell-alpha.3.2`. Answered by its request of 10 October 2026, 12:59: the description
+   `lib.element(name)` returns is plain data with `name`, `kind`, `size`, `anchors` {name: (x,
+   y)}, `states`, `default-state`, `params` {name: {type, min, max, default}}, `colours`,
+   `provenance`, `folder`, which `check-script` can read on Python 3.9; `open` raises
+   `videoelements.cli.Failure` with `.problems`, a list of lines each naming its file and line.
+   Element names and parameter names in item 15's example are the starter set's as far as it
+   goes; `formula-bar` is not in it.
 3. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
    Claude's default; Squirrel's word moves it to "Settled".
 
@@ -1095,3 +1102,6 @@ README): each command for real on the example video.
     that"). The format itself waits for his approval ("Open questions" 1).
 25. The fourteenth request (`inbox/done/request-from-training-video-2026-10-10-14.md`), all five
     items, after request 13 (Squirrel, 10 October 2026, 10:36, with request 13).
+26. video-elements' request (`inbox/done/request-from-video-elements-2026-10-10.md`): `library.open`
+    takes the library's root folder, the one `VIDEO_ELEMENTS_DIR` names, and the interface's first
+    comment line says so; nothing else changes (Squirrel, 10 October 2026, 13:02: "Let's do that").
