@@ -22,3 +22,9 @@
 |---|---|---|
 | plain | element.plain.svg | |
 | cracked | element.cracked.svg | the same drawing: the stub cross-fades nothing |
+
+## Colours
+
+| Key | Value | Notes |
+|---|---|---|
+| fill | accent | what the stub fills the rect with |

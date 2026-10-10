@@ -139,10 +139,11 @@ def library_for(data, args):
         return None, [str(f)]
 
 
-def choreography_problems(data, args, script_path, lib):
+def choreography_problems(data, args, script_path, lib, kit=None):
     """The problems with every described scene (choreography.check), with the library when it
     could be opened (the pieces are checked either way), cue lengths from
-    work/narration/timing.json when it exists, else the estimate. Nothing when no scene is
+    work/narration/timing.json when it exists, else the estimate, and a member's own colours
+    against the script's Colours and the kit's roles when the kit read. Nothing when no scene is
     described or the settings are unusable (their problems are already listed)."""
     described = [sc for sc in data["scenes"] if sc["cast"] or sc["panels"]]
     if not described:
@@ -158,9 +159,10 @@ def choreography_problems(data, args, script_path, lib):
     if os.path.isfile(timing_path):
         with open(timing_path, encoding="utf-8") as f:
             timing = json.load(f)
+    colours = set(data["colours"]) | set(kit["colours"]) if kit else None
     for sc in described:
         tl = timeline.build(settings, sc, timeline.clips_for(timing, sc), estimate=True)
-        problems += choreography.check(sc, tl, lib, folder)
+        problems += choreography.check(sc, tl, lib, folder, colours=colours)
     return problems
 
 
@@ -197,7 +199,7 @@ def main(argv=None):
     problems += phoneme_problems(data)
     problems += code_problems(data, args.SCRIPT)
     problems += library_problems
-    problems += choreography_problems(data, args, args.SCRIPT, lib)
+    problems += choreography_problems(data, args, args.SCRIPT, lib, kit)
     print(summary(data))
     if credits.elements_used(data) or "element-credits" in data["settings"]:
         print("Credits on the end card:")

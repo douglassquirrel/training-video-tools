@@ -237,3 +237,21 @@ def test_an_arrow_may_have_a_blank_where_and_nothing_else_may():
     ]
     assert [(m["name"], m["where"]) for m in scene["cast"]] == [
         ("a", {"kind": "pixels", "x": 1.0, "y": 2.0}), ("line", None)]
+
+
+# ---- item 19 (request 17), 3: a member's own colours for an element's colour roles
+
+def test_a_colour_role_is_a_parameter_named_colour_dot_the_role():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| brick | pot | 1 2 | 100 | colour.fill=doc colour.line-2=sheet-tab state=plain | |
+| bad | pot | 1 2 | 100 | colour.=doc colour.Fill=doc | |
+"""
+    scene, problems = _scene(text)
+    assert problems == ["line 25: scene A2, cast: Parameters: 'colour.=doc' is not name=value",
+                        "line 25: scene A2, cast: Parameters: 'colour.Fill=doc' is not name=value"]
+    assert scene["cast"][0]["params"] == {"colour.fill": "doc", "colour.line-2": "sheet-tab", "state": "plain"}
+

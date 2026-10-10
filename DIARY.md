@@ -2893,3 +2893,40 @@ built, and the seven things its modules do that the format cannot say. Nothing e
 project was touched.
 
 **State.** 514 green, 98%, lint clean. Next: item 19, 3, a member's own colours.
+
+### 11 October 2026 — Item 19, 3: one member in other colours
+
+**Goal.** `colour.<role>=<colour name>` on a library member (request 17, item 5).
+
+**Tests.** Tier 1: `test_a_colour_role_is_a_parameter_named_colour_dot_the_role` (the parser);
+`test_a_members_colour_must_be_a_role_the_element_has_and_a_colour_the_video_knows` and
+`test_without_the_videos_colours_only_the_role_is_checked` (the check, with and without the
+video's colour names). Tier 2:
+`test_a_member_with_a_colour_of_its_own_is_drawn_in_it_and_its_neighbour_in_the_default` (two
+pots, by pixels) and
+`test_a_members_own_colour_that_the_video_does_not_know_is_listed_by_line` (`check-script`).
+
+**Red.** All of the first four on the parser's refusal, the behaviour missing at its first
+step: `Parameters: 'colour.fill=correct' is not name=value` (`4 failed, 1 passed`); the
+command's, once the rest was built, on `assert (0, '') == (1, '')`: `check-script` was not yet
+handing the check the video's colours.
+
+**Green.** `58 passed in 10.65s` (the three files); `13 passed in 2.33s`
+(`test_check_script_choreography.py`); suite `519 passed in 147.04s (0:02:27)`, 98%;
+`All checks passed!`.
+
+**Decision / surprise.** No interface change: the real library takes a role's colour from
+`frame.colours` when the role's name is a key there (`videoelements/draw.py`, `colours_for`;
+`shapes.py:134`), so the member's element is handed a shallow copy of the frame whose
+`colours` carry its own under the roles' names (`Performance._in_its_colours`); every other
+member gets the frame itself. The invented elements gained a `fill` role and the stub fills
+with it, resolved as the real one resolves a role, so the tests go through the same door.
+`choreography.check` takes the names `frame.colour` knows as an optional `colours`:
+`frame.Video` always has them, `check-script` has them when the brand kit read. Only
+`colour.<role>` values are checked against them; a piece's `fill` or a library `colour`
+parameter with an unknown name is still found at draw time, as before (not asked; a possible
+follow-up). A move cannot name `colour.<role>`: the move grammar does not match it, so it is
+refused as "not show NAME, …" as any unknown action is.
+
+**State.** 519 green, 98%, lint clean. Next: item 19, 4 (its tests are written, set aside
+while this is committed).

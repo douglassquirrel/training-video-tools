@@ -630,3 +630,14 @@ def test_a_plain_arrow_is_handed_no_dash(example, monkeypatch):
     arrows, _targets = recorded(monkeypatch)
     rendered(pointed(example), "A", 2.0)
     assert arrows[0][1].get("dash") is None and len(arrows[0][0]) == 2
+
+
+# ---- item 19 (request 17), 3: a member's own colours for an element's colour roles
+
+def test_a_member_with_a_colour_of_its_own_is_drawn_in_it_and_its_neighbour_in_the_default(example):
+    own = POINTED.replace("| pot1 | pot | 100 100 | 200 | |", "| pot1 | pot | 100 100 | 200 | colour.fill=correct |")
+    video = pointed(example, own)
+    s = rendered(video, "A", 2.0)
+    assert pixel(s, 150, 228) == hex_rgb("#3E7D4F")          # pot1 in the paperboat kit's `correct`
+    assert pixel(s, 550, 428) == ACCENT                      # pot2 as ever
+

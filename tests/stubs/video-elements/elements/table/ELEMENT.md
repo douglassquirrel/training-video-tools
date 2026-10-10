@@ -36,3 +36,4 @@
 | Key | Value | Notes |
 |---|---|---|
 | line | rule | |
+| fill | accent | what the stub fills the rect with |

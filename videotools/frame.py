@@ -59,7 +59,8 @@ class Video:
         problems = []
         for sc in self.data["scenes"]:
             if sc["cast"] or sc["panels"]:
-                problems += choreography.check(sc, self.timeline(sc, estimate=True), self.library, self.folder)
+                problems += choreography.check(sc, self.timeline(sc, estimate=True), self.library, self.folder,
+                                               colours=set(self.colours) | set(self.brand["colours"]))
         if problems:
             n = len(problems)
             listed = "\n".join("  - " + p for p in problems)

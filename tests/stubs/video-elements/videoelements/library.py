@@ -84,7 +84,7 @@ class Element(dict):
         self.library = library
 
     def draw(self, frame, rect, state=None, params=None, alpha=1.0):
-        """The stub's drawing: the rect filled with the brand's accent at `alpha` (a cross-fade
+        """The stub's drawing: the rect filled with its `fill` role (the brand's accent) at `alpha` (a cross-fade
         part-way draws the same); every label parameter given is passed through `frame.label`;
         the call recorded in `library.draws`; anchors returned in frame
         pixels: fixed ones scaled into the rect, `row.N` down the right edge and `cell.N.M` across
@@ -101,7 +101,8 @@ class Element(dict):
         if alpha > 0:
             frame.ctx.save()
             frame.ctx.rectangle(x, y, w, h)
-            frame.ctx.set_source_rgba(*frame.colour("accent"), alpha)
+            fill = frame.colours["fill"] if "fill" in frame.colours else frame.colour(self["colours"]["fill"])
+            frame.ctx.set_source_rgba(*fill, alpha)     # a role named in the frame's colours wins, as in the real one
             frame.ctx.fill()
             frame.ctx.restore()
         w0, h0 = self["size"]

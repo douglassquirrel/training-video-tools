@@ -304,3 +304,40 @@ def test_an_empty_label_for_a_library_element_is_not_checked_and_others_still_ar
         "line 34: scene A2, moves: 'w' draws 'Sheet 9', which is not in the script's On screen list "
         "(Sample output, checked ✓)",
     ]
+
+
+# ---- item 19 (request 17), 3: a member's own colours for an element's colour roles
+
+OWN_COLOURS = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| p | pot | 10 10 | 120 | colour.fill=correct | |
+| q | pot | 200 10 | 120 | colour.rim=correct | no such role |
+| r | pot | 400 10 | 120 | colour.fill=nosuch | |
+| s | pill | 10 300 | | text="Sample output" colour.fill=correct | the pieces keep their own fill |
+
+### Moves
+
+- cue 1: show p, q, r, s
+"""
+
+
+def test_a_members_colour_must_be_a_role_the_element_has_and_a_colour_the_video_knows(lib, folder):
+    scene = _scene(OWN_COLOURS)
+    assert choreography.check(scene, TL, lib, folder, colours={"ink", "correct", "accent"}) == [
+        "line 26: scene A2, cast: 'q': a pot has no colour role 'rim' (its colour roles are fill)",
+        "line 27: scene A2, cast: 'r': 'colour.fill' names 'nosuch', which is not in the script's Colours or the "
+        "brand's roles (accent, correct, ink)",
+        "line 28: scene A2, cast: 's': a pill has no parameter 'colour.fill' (its parameters are text, size, fill, "
+        "colour, anchor)",
+    ]
+
+
+def test_without_the_videos_colours_only_the_role_is_checked(lib, folder):
+    assert choreography.check(_scene(OWN_COLOURS), TL, lib, folder) == [
+        "line 26: scene A2, cast: 'q': a pot has no colour role 'rim' (its colour roles are fill)",
+        "line 28: scene A2, cast: 's': a pill has no parameter 'colour.fill' (its parameters are text, size, fill, "
+        "colour, anchor)",
+    ]

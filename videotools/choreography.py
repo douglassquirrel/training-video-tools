@@ -13,6 +13,7 @@ import shlex
 
 NAME = r"[A-Za-z0-9][A-Za-z0-9-]*"
 DOTTED = r"[a-z][a-z0-9-]*(?:\.\d+)*"            # a parameter or anchor name, maybe indexed: highlight.3
+OWN_COLOUR = "colour."                            # colour.<role>=<name>: a member's own colour for an element's role
 NUM = r"-?\d+(?:\.\d+)?"
 REGIONS = ("left", "right", "centre", "top-left", "top-right", "bottom-left", "bottom-right", "full")
 CAST_COLUMNS = ("Name", "Element", "Where", "Size", "Parameters")
@@ -92,7 +93,7 @@ def parse_params(text):
         return out, [f"Parameters: {e}"]
     for token in tokens:
         name, eq, value = token.partition("=")
-        if not eq or not re.match(f"^{DOTTED}$", name):
+        if not eq or not re.match(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*)$", name):
             problems.append(f"Parameters: '{token}' is not name=value")
             continue
         out[name] = value
@@ -320,11 +321,13 @@ def _secs(t):
     return f"{round(t, 3):g}"
 
 
-def check(scene, tl, lib, folder):
+def check(scene, tl, lib, folder, colours=None):
     """Every problem with what a scene's choreography means: the elements (the pieces, and the
     library's when `lib` is given), the anchors members are placed by, the parameters by name,
     kind and range, labels against On screen, cues and times against `tl` (a Timeline), members
-    shown twice or never. `folder` is the video's, for data files. [] when all is well."""
+    shown twice or never. `folder` is the video's, for data files; `colours` the names
+    `frame.colour` knows (the script's Colours and the brand's roles), for a member's own
+    colours, or None when they are not known. [] when all is well."""
     key = scene["key"]
     problems = []
     has_mistake = any("mistake" in c for c in scene["cues"])
@@ -334,12 +337,13 @@ def check(scene, tl, lib, folder):
                             f"but no cue has a 'mistake:'")
     labels = [it["text"] for it in scene["screen"]]
     problems += _check_part(scene, scene["cast"], scene["moves"], f"scene {key}, cast", f"scene {key}, moves",
-                            tl, lib, labels, folder, panel=False)
+                            tl, lib, labels, folder, panel=False, colours=colours)
     for panel in PANELS:
         if panel in scene["panels"]:
             p = scene["panels"][panel]
             where = f"scene {key}, {panel}"
-            problems += _check_part(scene, p["cast"], p["moves"], where, where, tl, lib, labels, folder, panel=True)
+            problems += _check_part(scene, p["cast"], p["moves"], where, where, tl, lib, labels, folder, panel=True,
+                                    colours=colours)
     return problems
 
 
@@ -380,10 +384,10 @@ def _size_is_nominal(el):
     return False
 
 
-def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel):
+def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel, colours=None):
     members = {m["name"]: m for m in cast}
     rows_of = {m["name"]: _rows_file(m, lib, folder) for m in cast}   # name -> (file, row count) or None
-    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of,
+    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of, "colours": colours,
            "order": {m["name"]: i for i, m in enumerate(cast)}}
     problems = []
     for m in cast:
@@ -549,6 +553,19 @@ def _state_problem(el, state):
     return None
 
 
+def _own_colour_problem(el, name, value, colours):
+    """The problem with `colour.<role>=<name>` on a member of `el`, or None: the role is one of the
+    element's, and the name a colour the video knows (when `colours` says which those are)."""
+    role = name[len(OWN_COLOUR):]
+    if role not in el["colours"]:
+        roles = ", ".join(el["colours"]) or "none"
+        return f"{_a(el['name'])} has no colour role '{role}' (its colour roles are {roles})"
+    if colours is not None and value not in colours:
+        return (f"'{name}' names '{value}', which is not in the script's Colours or the brand's roles "
+                f"({', '.join(sorted(colours))})")
+    return None
+
+
 def _library_params(m, ctx):
     el = ctx["lib"].element(m["element"])
     params, out = el["params"], []
@@ -556,7 +573,9 @@ def _library_params(m, ctx):
         if desc["type"] == "rows" and name not in m["params"]:
             out.append(f"'{m['name']}': {_a(el['name'])} needs '{name}'")
     for name, value in m["params"].items():
-        if name == "state":
+        if name.startswith(OWN_COLOUR):
+            problem = _own_colour_problem(el, name, value, ctx["colours"])
+        elif name == "state":
             problem = _state_problem(el, value)
         else:
             desc = _param_match(name, params)

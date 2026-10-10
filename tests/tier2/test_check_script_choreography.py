@@ -189,3 +189,21 @@ def test_no_warning_for_an_element_that_offers_its_natural_size(example):
     code, out, err = run("check-script", with_a_table(example), "--elements", INVENTED)
     assert (code, err) == (0, "")
     assert out.endswith("\nNo problems found.\n")
+
+
+# ---- item 19 (request 17), 3: a member's own colours are checked against the script's and the brand's
+
+def test_a_members_own_colour_that_the_video_does_not_know_is_listed_by_line(example):
+    script = described(example)
+    text = open(script, encoding="utf-8").read()
+    row = "| sheet | pot | left | 300 | state=plain | |"
+    assert text.count(row) == 1
+    open(script, "w", encoding="utf-8").write(
+        text.replace(row, "| sheet | pot | left | 300 | state=plain colour.fill=nosuch | |\n"
+                          "| second | pot | right | 300 | colour.fill=correct | |").replace(
+            "- cue 1: show sheet\n", "- cue 1: show sheet, second\n"))
+    code, out, err = run("check-script", script, "--elements", INVENTED)
+    assert (code, err) == (1, "")
+    problems = out[out.index("\n1 problem:\n"):]
+    assert problems.startswith("\n1 problem:\n  - line 128: scene A, cast: 'sheet': 'colour.fill' names 'nosuch', which "
+                               "is not in the script's Colours or the brand's roles (accent, accent-dark, ")

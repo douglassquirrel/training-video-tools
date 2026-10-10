@@ -4,6 +4,7 @@ spans; then each member drawn in cast order, the pieces through the frame's meth
 library's elements through `el.draw`. Needs nothing beyond what the frame carries.
 """
 
+import copy
 import csv
 import os
 
@@ -221,7 +222,7 @@ class Performance:
         for pname, value in member["params"].items():
             if pname == "state":
                 state = value
-            else:
+            elif not pname.startswith(choreography.OWN_COLOUR):     # its own colours are not the element's parameters
                 out[pname] = self._convert(self._kind(member, pname), value)
         if state is None and member["element"] not in choreography.PIECES:
             state = self.lib.element(member["element"]).get("default-state")
@@ -286,10 +287,23 @@ class Performance:
             else:
                 el = self.lib.element(element)
                 try:
-                    self._anchors[name] = el.draw(frame, (x, y, w, h), state=state, params=p, alpha=alpha)
+                    self._anchors[name] = el.draw(self._in_its_colours(frame, member), (x, y, w, h), state=state,
+                                                  params=p, alpha=alpha)
                 except Exception as e:      # the library refuses in words (its Failure) or fails: one line, exit 3
                     raise cli.Failure(f"scene {frame.scene['key']}: the library could not draw '{name}' ({element}): "
                                       f"{e}") from e
+
+    def _in_its_colours(self, frame, member):
+        """The frame the member's element draws on: the frame itself, or a copy whose colours carry
+        the member's own (`colour.<role>=<name>`) under the roles' names, which is where the library
+        looks for a role's colour before the element's default."""
+        own = {n[len(choreography.OWN_COLOUR):]: v for n, v in member["params"].items()
+               if n.startswith(choreography.OWN_COLOUR)}
+        if not own:
+            return frame
+        tinted = copy.copy(frame)
+        tinted.colours = dict(frame.colours, **{role: frame.colour(colour) for role, colour in own.items()})
+        return tinted
 
     def _point(self, text):
         """A point written as a member's anchor with an optional offset (an arrow's ends, a callout's target)."""
