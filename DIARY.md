@@ -2,16 +2,20 @@
 
 ## Where things stand
 
-10 October 2026, 13:05. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 13:30. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
 real run. **Requests 13 and 14 are recorded** (PLAN.md items 15 and 16, "Settled" 24 and 25,
-the two files in `inbox/done/`) **and no code is written for them**: the choreography format of
-item 15 is a *proposal* (PLAN.md "Open questions" 1), written with scene A2 of the training-video
-project's second video as a worked example, and waits for Squirrel's approval. A new session
+the two files in `inbox/done/`) **and no code is written for them yet**: the choreography format of
+item 15 is **approved** (Squirrel, 13:24; "Settled" 27), with scene A2 of the training-video
+project's second video as a worked example, and video-elements' reply fixed the element
+description's rows (`rows` and `label` types, `*` for an index, indices from 1, `"computed"`
+anchors) that the invented test library and `check-script` are written to. **The next step is
+the first increment of item 15's "Order of work"**: the two config settings and flags, then the
+library's import and refusals, test-first against an invented library in `tests/`. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-13:05; anything at its top level other than README.md is new and is reported to Squirrel, never
+13:30; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
@@ -44,15 +48,12 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: **his approval of the choreography format** (PLAN.md item 15, "The
-choreography format", and "Open questions" 1), or his changes to it; then item 15's "Order of
-work" starts, test-first against an invented library. Also "Open questions" 2 (three things
-video-elements must know, to go there through him in the same words) and 3 (the credits file is
-never replaced, Claude's default). The three details of request 13 are settled ("Settled" 24).
-video-elements (read-only from here) has its step 3 of 8 done (the reader, checks and
-`credits`; `el.draw` is its step 4, next), and its request that `library.open` take the
-repository root is OK'd and recorded ("Settled" 26); our Tier 3 on real elements waits on its
-step 4 and first elements. Also the
+Waiting on Squirrel: nothing for item 15 (format approved, description rows settled); "Open
+questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+video-elements (read-only from here) has its step 3 of 8 done plus our four asks (its commit
+`4dd19c8`: the reader, checks, `credits`, the new types; `el.draw` is its step 4, next); our
+Tier 3 on real elements waits on its step 4 and first elements. The one write made into that
+repository was the request file of 13:05, at Squirrel's word; it is in its `inbox/done/` now. Also the
 training-video project's: its six phoneme spans and re-made clips, its three scenes on
 `before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
 standard ✓ drawing with its own `tag()` helper retired, and any request it sends here. The stub
@@ -1776,3 +1777,23 @@ element's per-row anchors need a form it does not have yet: that is point 3.
 
 **State.** No code; suite untouched. Waiting on Squirrel's approval of the format, and on
 video-elements' answer.
+
+### 10 October 2026 — The format approved; video-elements' reply recorded
+
+**Goal.** Record Squirrel's approval of the choreography format (13:24: "choreography format is
+fine") and video-elements' reply of 13:18 to our request, move the reply to `inbox/done/`, and
+say what comes next.
+
+**Decision / surprise.** The reply accepted all three asks in the shapes we suggested, built and
+tested on its side (its commit `4dd19c8`; checked read-only: `PARAM_TYPES` has `label` and
+`rows`, the `computed` anchor value and the whole-segment `*` rule are in its element module).
+Recorded in PLAN.md item 15 "The cast" (the description's rows as it reads them), the Labels
+paragraph (type `label`), the Checks (an index of 0 or past the data), "Settled" 27; "Open
+questions" 1 and 2 are closed, the credits-file default is now "Open questions" 1. One rule
+worth remembering from the reply: indices count **from 1**, and an index past the data is the
+element's refusal at draw time, so `check-script`'s own index check covers only data video-tools
+read itself (a CSV in the cast row).
+
+**State.** No code; suite untouched (386 green at the last run). Next: item 15's "Order of
+work", first increment: `VIDEO_ELEMENTS_DIR` / `RSVG_CONVERT` in `config.read` and `--elements` /
+`--renderer` on the drawing commands and `check-script`, test-first.

@@ -575,7 +575,7 @@ anchors = el.draw(frame, rect, state=None, params=None, alpha=1.0)
 lib.credits(names)                            # request 2: credit lines for the elements a video used
 ```
 
-### The choreography format (item 2): *proposal, awaiting Squirrel's approval*
+### The choreography format (item 2; approved: Squirrel, 10 October 2026, 13:24, "choreography format is fine")
 
 Two new `###` sections in a scene, after `### On screen`, and two for the mistake panels. Prose
 under `### Pictures` stays for people. The training-video project's `SCRIPT-FORMAT.md` gets this
@@ -622,9 +622,22 @@ earlier).
   the element's, from its description; the state of a multi-state element is `state=lump`. A
   value naming a file under the video's folder (`assets/….csv`, `.txt`) is read by video-tools
   (CSV into rows, text as it is) and handed to the element as that parameter: the library never
-  reads the video's folder. A quoted value for a parameter the element declares as a label
-  (a tab name, a prompt, a file name, a pill's `text`) goes through `frame.label`, so the On
-  screen check holds; data (cell values) does not. The pieces' own parameters: `pill` and
+  reads the video's folder. **The description's rows, as video-elements reads them** (its reply of
+  10 October 2026, 13:18, `inbox/done/reply-from-video-elements-2026-10-10.md`; "Settled" 27):
+  a parameter's type is one of `number MIN MAX DEFAULT`, `integer MIN MAX DEFAULT`, `colour
+  ROLE`, `boolean`, `text DEFAULT` (data, may be long and multi-line), `label DEFAULT` (words
+  the viewer reads) or `rows` (the data, always required, no default: a list of rows of strings
+  as the csv module gives them), exposed as `params[name] == {"type": …, "min", "max",
+  "default"}`; an indexed parameter or anchor has one `*` per index as a whole segment between
+  dots (`highlight.*`, `cell-alpha.*.*`, `row.*`, `cell.*.*`), exposed with the pattern as its
+  key, and a script fills the indices in **from 1** (row 1 the first data row, tab 1 the first
+  tab), `draw` taking `params` keyed by the dotted names (`{"highlight.3": 0.18}`) and returning
+  anchors the same way (`{"row.3": (x, y)}`); an anchor's value is a pair of numbers (fixed, in
+  element units) or the string `"computed"` (a code element's `draw` works it out; every indexed
+  anchor is computed). An index past the data is refused by the element at draw time, in words.
+  A quoted value for a `label` parameter (a tab name, a prompt, a file name, a pill's `text`)
+  goes through `frame.label`, so the On screen check holds; a `text` parameter is data (cell
+  values) and is not checked. The pieces' own parameters: `pill` and
   `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`, `right`), and for
   `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`, `anchor`; `badge`:
   `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`; `arrow`: `from`, `to`
@@ -660,7 +673,7 @@ cover it and the glimpse of request 12 cannot be written by accident. One named 
 mistake (hidden, moved or changed at the next cue) is left to its moves.
 
 **Labels**: every `text` parameter of a `pill`, `callout` or `text` member, and every library
-parameter declared a label, is checked against the scene's On screen list as `frame.label`
+parameter of type `label`, is checked against the scene's On screen list as `frame.label`
 checks now, by `check-script` before drawing and again at draw time.
 
 **With a module.** A scene with `code` and a description: the described cast is drawn first,
@@ -752,7 +765,8 @@ neither a piece nor in the library; a Where that is not pixels, a region or a me
 an anchor, state or parameter the element's description does not have, or a value out of its
 range; a parameter file that does not exist; a cue number the scene does not have; a time past
 the cue's length (measured from `work/narration/timing.json` when it exists, else the
-words-a-second estimate, said which); a move naming no cast member; a label not in the On
+words-a-second estimate, said which); an index of 0 or past the data's rows for an indexed
+parameter or anchor whose data video-tools read; a move naming no cast member; a label not in the On
 screen list; a cast member never shown; one shown again while still shown; a panel section in a
 scene with no mistake cue; a step scene with neither `code` nor a Cast. With no library
 setting and a script that needs one, one problem naming the setting. `stills --cue-changes` and
@@ -968,8 +982,9 @@ remote ("Settled" 7).
    `before_curtain` and adds the check to its routine (their side).
 14. **Request 13** (10 October 2026, 10:09; OK'd 10:36 with the three details settled): item 15.
    First the format, written in item 15 with scene A2 as a worked example, for Squirrel's
-   approval; **no code until he approves it**. Then item 15's "Order of work", test-first
-   against the invented library. Real drawing waits on video-elements' steps 3 and 4.
+   approval (given 13:24, "Settled" 27). Then item 15's "Order of work", test-first against
+   the invented library, written to the description rows of "Settled" 27. Real drawing waits on
+   video-elements' step 4 and first elements.
 15. **Request 14** (10 October 2026, 10:20; OK'd 10:36): item 16, after item 15's parser, in
    item 16's order.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
@@ -1005,26 +1020,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **The choreography format** (item 15, "The choreography format") is a proposal: the two
-   `###` sections, the cast table's columns, the four kinds of move, the pieces as cast members,
-   area pixels for Where, panel pixels for the panels, the curtain rule and the checks. Squirrel
-   approves or changes it before any code (10 October 2026, 10:36: "get my approval on that").
-2. **Three things video-elements must know**, to go to it through Squirrel in the same words,
-   assumed here meanwhile: data reaches an element as a named parameter (`rows=`, `text=`),
-   read from the video's folder by video-tools, so the interface's `params` carries it and the
-   library never reads a video's files; which parameters are labels (checked against On screen)
-   and which are data; and an indexed parameter (a row, a cell) is written `highlight.3`,
-   `cell-alpha.3.2`. Answered by its request of 10 October 2026, 12:59: the description
-   `lib.element(name)` returns is plain data with `name`, `kind`, `size`, `anchors` {name: (x,
-   y)}, `states`, `default-state`, `params` {name: {type, min, max, default}}, `colours`,
-   `provenance`, `folder`, which `check-script` can read on Python 3.9; `open` raises
-   `videoelements.cli.Failure` with `.problems`, a list of lines each naming its file and line.
-   Element names and parameter names in item 15's example are the starter set's as far as it
-   goes; `formula-bar` is not in it.
-   Sent to video-elements as `inbox/request-from-video-tools-2026-10-10.md` there (10 October
-   2026, 13:05; Squirrel, 13:04: "make the requests to video-elements through its inbox"); its
-   answer comes back as a file in our inbox.
-3. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
+1. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
    Claude's default; Squirrel's word moves it to "Settled".
 
 ## Settled
@@ -1108,3 +1104,16 @@ README): each command for real on the example video.
 26. video-elements' request (`inbox/done/request-from-video-elements-2026-10-10.md`): `library.open`
     takes the library's root folder, the one `VIDEO_ELEMENTS_DIR` names, and the interface's first
     comment line says so; nothing else changes (Squirrel, 10 October 2026, 13:02: "Let's do that").
+27. **The choreography format** of item 15 as written (the two `###` sections, the cast table's
+    columns, the four kinds of move, the pieces as cast members, area pixels for Where, panel
+    pixels for the panels, the curtain rule and the checks), with the worked example (Squirrel,
+    10 October 2026, 13:24: "choreography format is fine"). And **the element description's
+    rows** as video-elements' reply of 13:18 states them (`inbox/done/reply-from-video-elements-2026-10-10.md`,
+    answering our request of 13:05 there; Squirrel there, 13:18: all three asks accepted): the
+    `rows` and `label` parameter types, `*` as a whole segment for an index, indices from 1,
+    dotted names in `params` and the returned anchors, `"computed"` anchors; the description
+    `lib.element(name)` returns is plain data (`name`, `kind`, `size`, `anchors`, `states`,
+    `default-state`, `params`, `colours`, `provenance`, `folder`), `open` raises
+    `videoelements.cli.Failure` with `.problems` (its request of 12:59). Recorded in item 15,
+    "The cast". The spreadsheet's final parameter names come with video-elements' step 6; the
+    example's are guesses until then (Squirrel, 13:24: "record and move reply to done").
