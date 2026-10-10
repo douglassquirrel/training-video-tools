@@ -487,8 +487,8 @@ earlier). The tools read the first five columns; Notes is for people.
   its centre, is then the rectangle its two ends span. Nothing else may.
 - **Size**: `W` (the width in pixels, the height from the element's own proportions) or `WxH`;
   blank for the element's own size, or, in a region, fitted to it. An element whose size comes
-  from its data or text (a `spreadsheet`, a `prompt-box`, a `file-chip`: `fit` is `natural` in
-  its description) is drawn at that natural size when Size is blank, its text at the sizes its
+  from its data or text (a `spreadsheet`, a `prompt-box`, a `file-chip`, a `diff`: `fit` is
+  `natural` in its description) is drawn at that natural size when Size is blank, its text at the sizes its
   parameters say, and in a region is centred at that size rather than scaled to it. A `WxH`
   is handed to the element as written, so one that stretches (`chat-window`, `bubble`,
   `formula-bar`: `fit` is `stretch`) takes that shape; the others are fitted inside it.
@@ -552,11 +552,15 @@ library cannot draw or cannot give the natural size of (one line, in the library
 
 After the problems `check-script` lists **warnings**: things that are allowed but probably not
 meant. They do not change its exit code (0 when there are no problems) and refuse nothing.
-There is one today: a blank Size on a code element whose size is only nominal and which does
-not offer its natural size (the library's `diff`: its `ELEMENT.md` says `nominal` beside its
-size), which is therefore fitted into that nominal size whatever its lines need. From a scratch
-copy of the example against the real library, 10 October 2026 (a `spreadsheet` with a blank
-Size in the same cast is not warned of: it is drawn at its natural size):
+There is one kind today: a blank Size on a code element whose size is only nominal (its
+`ELEMENT.md` says `nominal` beside its size) and which does not offer its natural size, so that
+it is fitted into that nominal size whatever its data or text needs. No element in the
+video-elements library gives it at present: every nominal-sized one (`spreadsheet`,
+`prompt-box`, `file-chip`, `diff`) now offers its natural size; the warning is there for one
+that does not. The output below is real, from a scratch copy of the example on 10 October 2026
+against video-elements as it was before its commit `5f98a74`, when `diff` offered none (a
+`spreadsheet` with a blank Size in the same cast was not warned of); the same run against the
+library since prints `No problems found.` and no warning:
 
 ```
 No problems found.
@@ -862,11 +866,12 @@ the arrow half grown where v4's is.
   21 8"`); the offset used to be dropped, so an arrow or callout written with one moves to where
   the script says. An `arrow` has `progress` (0 to 1, animate it to draw the arrow on) and `head`
   (`yes`/`no`), and may leave its Where blank. A blank Size now draws a `spreadsheet`,
-  `prompt-box` or `file-chip` at its natural size (the size its data and text need) instead of
-  fitted into its nominal one, so **a cast row that left Size blank for one of these changes
-  size**; give the Size to keep the old one. This needs video-elements at `ff50009` or later
-  (an older library draws as before). `check-script` lists warnings after the problems, without
-  changing its exit code: a blank Size on an element whose size is only nominal (`diff`).
+  `prompt-box`, `file-chip` or `diff` at its natural size (the size its data and text need)
+  instead of fitted into its nominal one, so **a cast row that left Size blank for one of these
+  changes size**; give the Size to keep the old one. This needs video-elements at `ff50009` or
+  later (`5f98a74` for `diff`; an older library draws as before). `check-script` lists warnings
+  after the problems, without changing its exit code: a blank Size on an element whose size is
+  only nominal and which offers no natural size (none in the library today).
 - 10 October 2026 (night, last): the end card credits the library's art below its two credit lines
   (one line per category), governed by a new Settings key `element-credits` (`auto`, `none`, or
   wording); `check-script` prints the lines as `Credits on the end card:`; `assemble` writes

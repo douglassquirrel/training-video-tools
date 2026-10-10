@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 23:48. **Requests 1 to 15 are built in full**: the eight commands of the first
+10 October 2026, 23:53. **Requests 1 to 15 are built in full**: the eight commands of the first
 request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans in `say:` lines (13); the curtain on the
 timeline and `stills --cue-changes` (14); choreography described in the script and drawn from
@@ -15,7 +15,7 @@ warning, exit code unchanged, for a nominal-sized element that offers none; and 
 that a `WxH` Size reaches the element as its rect. Each is in the README. A new session starts
 by reading CLAUDE.md, PLAN.md (items 15 to 17 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Request 15 and video-elements' note are in `inbox/done/`.
+**Inbox: empty.** Request 15 and video-elements' two notes (23:32, 23:53) are in `inbox/done/`.
 
 Green: 504 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
 `origin/main`.
@@ -61,7 +61,8 @@ library (`~/projects/code/video-elements`, at `65227bc`): the example's scene A 
 (19:40); the credit lines and credits file against the real register (20:55); and for item 17
 (the entry of 23:45): arrows with offsets, a growing arrow, a headless one and a badge on a
 blank-Where arrow's centre on the example, by eye; `check-script`'s warning for a real `diff`
-with no Size and none for a `spreadsheet`; and the second video's scene B as the training-video
+with no Size and none for a `spreadsheet` (since video-elements `5f98a74` `diff` offers its
+natural size too, and the same run prints no warning: no real element gives it now); and the second video's scene B as the training-video
 project described it, with every Size blank and the arrow with no Where, against v4 through
 `compare-frames`: 1.8 to 4.3 mean difference at four moments, the same picture by eye.
 `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR` only; the Tier 3 runs passed
@@ -2679,3 +2680,33 @@ blank Size in a region is centred at its natural size ("Settled" 32). "Open ques
 empty. No code changes.
 
 **State.** 504 green, 98%, lint clean, pushed. Nothing in progress; the inbox is empty.
+
+### 10 October 2026 — video-elements' second note: `diff` is a fourth natural element
+
+**What arrived.** `inbox/request-from-video-elements-2026-10-10-3.md` (23:53): our Tier 3 run of
+the warning had named the real `diff`, rightly, and video-elements gave it a natural size
+(`5f98a74`: `fit` `natural`, its `width` by 30 a line plus 20). It asks for `diff` to be named
+with the natural elements in PLAN.md's interface block and the README, and for the README's
+example of the warning to be put right, since that run no longer warns. Read and reported;
+checked read-only in its repository (`elements/diff/ELEMENT.md`: `| fit | natural |`, the size
+row still noted `nominal`).
+
+**Decision.** Squirrel (23:53): "yes ok", to the changes as proposed, with the README's example
+kept and labelled as from before the change. PLAN.md: the interface line, item 17, 3, "Settled"
+33. README: `diff` in "Size" and in the note for users; the warnings paragraph says that no
+element in the library gives the warning today and that the example is real output against the
+library before `5f98a74`. The item moved to `inbox/done/`. No code or test changed: the suite
+uses the invented library, which has a natural element and (in a copy) a nominal one without.
+
+**Tier 3.** The same scratch copy (a `diff` and a `spreadsheet`, both without a Size) against
+video-elements at `23c4f5d`:
+
+```
+No problems found.
+exit 0
+```
+
+and no warning after it.
+
+**State.** 504 green as last run (documents only since), lint clean, pushed. Nothing in
+progress; the inbox is empty.

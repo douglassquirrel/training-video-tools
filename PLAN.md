@@ -673,7 +673,7 @@ anchors = el.draw(frame, rect, state=None, params=None, alpha=1.0)
 #   returns {anchor name: (x, y)} in frame pixels, for labels, hands and arrows
 el["fit"]                                     # "ratio", "stretch" or "natural" (request 3)
 el.natural_size(frame, params=None)           # request 3, item 5: (w, h) in pixels for an element whose
-#   fit is "natural" (spreadsheet, prompt-box, file-chip): the size at which it is drawn at scale 1
+#   fit is "natural" (spreadsheet, prompt-box, file-chip, diff): the size at which it is drawn at scale 1
 #   for those params, text measured at the brand's font-size-scale; params are checked as for draw;
 #   None for any other element (its size does not come from its parameters)
 lib.credits(names)                            # request 2: credit lines for the elements a video used
@@ -681,7 +681,8 @@ lib.credits(names)                            # request 2: credit lines for the 
 
 The `fit` and `natural_size` lines and the longer `rect` comment are video-elements' additions of
 10 October 2026, 23:32 (its note, `inbox/done/request-from-video-elements-2026-10-10-2.md`;
-"Settled" 30), used by item 17, 3.
+"Settled" 30), used by item 17, 3; `diff` joined the natural elements with its note of 23:53
+(`inbox/done/request-from-video-elements-2026-10-10-3.md`; "Settled" 33).
 
 ### The choreography format (item 2; approved: Squirrel, 10 October 2026, 13:24, "choreography format is fine")
 
@@ -1010,8 +1011,9 @@ Four things the training-video project found describing its scenes A2 and B for 
    A Size that is given wins, as before, and the library fits the element into it.
    `check-script` cannot ask for the size (it has no frame) and does not need to; the warning
    is now given only for an element that does not offer its natural size (its `fit` is not
-   `natural`: today the real `diff`), and a library without the `fit` key is treated as
-   offering none.
+   `natural`), and a library without the `fit` key is treated as offering none. That was the
+   real `diff` until video-elements `5f98a74` gave it a natural size too (its note of 23:53);
+   since then no real element is warned of, and the warning stays for any that comes later.
 4. **A `WxH` Size reaches the element as its rect**, whatever the element's own proportions,
    so an element video-elements marks as stretching (its request 3, item 4) is given the shape
    the script says. Already so; pinned by a test of its own.
@@ -1334,3 +1336,9 @@ None.
 32. A natural-sized element in a region with a blank Size is centred in the region at its
     natural size and not scaled to it; every other element with a blank Size in a region is
     fitted to the region as before (item 17, 3; Squirrel, 10 October 2026, 23:48: "ok").
+33. video-elements' second note (`inbox/done/request-from-video-elements-2026-10-10-3.md`, 23:53):
+    `diff` is a fourth natural element (`fit` `natural`, its natural size its `width` by 30 a
+    line plus 20, from video-elements `5f98a74`), so the interface block names it, a `diff` with
+    a blank Size is drawn at that size, and `check-script` no longer warns of it; no code here
+    changes. The README's example of the warning is kept and labelled as output from before that
+    change, since no real element gives the warning now (Squirrel, 10 October 2026, 23:53: "yes ok").
