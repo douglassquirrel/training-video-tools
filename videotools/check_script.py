@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 
-from videotools import brand, choreography, cli, config, elements, scenes, script, timeline
+from videotools import brand, choreography, cli, config, credits, elements, scenes, script, timeline
 
 PROG = "check-script"
 WORDS_PER_SECOND = 2.6
@@ -62,9 +62,10 @@ KIT_ROLES = {"website": "italic", "illustration-credit": "body"}
 DRAWN_ANYWAY = "✓✗"          # drawn as strokes where a font lacks them (draw.text)
 
 
-def font_problems(data, kit):
+def font_problems(data, kit, credit_lines=()):
     """Every text the chrome draws that holds a character the font for its role lacks: one
-    problem per text, naming where it is, the text, the first such character and the file."""
+    problem per text, naming where it is, the text, the first such character and the file;
+    `credit_lines` are the end card's credit lines for the library's art (item 16)."""
     from videotools import glyphs
     problems = []
 
@@ -97,6 +98,8 @@ def font_problems(data, kit):
     kit_file = os.path.join(kit["folder"], "BRAND.md")
     for key, role in KIT_ROLES.items():
         check(f"{kit_file}: Identity '{key}'", kit["identity"].get(key, ""), role)
+    for line in credit_lines:
+        check("end card credit line", line, "body")
     return problems
 
 
@@ -125,22 +128,26 @@ def code_problems(data, script_path):
     return scenes.check_code(os.path.join(os.path.dirname(os.path.abspath(script_path)), folder), data)
 
 
-def choreography_problems(data, args, script_path):
-    """The problems with every described scene (choreography.check): the library opened from
-    --elements or the config file when a cast names a library element (one problem when it
-    cannot be, the pieces still checked), cue lengths from work/narration/timing.json when it
-    exists, else the estimate. Nothing when no scene is described or the settings are unusable
-    (their problems are already listed)."""
+def library_for(data, args):
+    """(the library, or None; [a problem]) when a cast names a library element: opened from
+    --elements or the config file, one problem in words when it cannot be."""
+    if not credits.elements_used(data):
+        return None, []
+    try:
+        return elements.open_library(*elements.settings(args, config.read())), []
+    except (cli.Failure, config.ConfigError) as f:
+        return None, [str(f)]
+
+
+def choreography_problems(data, args, script_path, lib):
+    """The problems with every described scene (choreography.check), with the library when it
+    could be opened (the pieces are checked either way), cue lengths from
+    work/narration/timing.json when it exists, else the estimate. Nothing when no scene is
+    described or the settings are unusable (their problems are already listed)."""
     described = [sc for sc in data["scenes"] if sc["cast"] or sc["panels"]]
     if not described:
         return []
-    problems, lib = [], None
-    casts = [m for sc in described for m in sc["cast"] + [m for p in sc["panels"].values() for m in p["cast"]]]
-    if any(m["element"] not in choreography.PIECES for m in casts):
-        try:
-            lib = elements.open_library(*elements.settings(args, config.read()))
-        except (cli.Failure, config.ConfigError) as f:
-            problems.append(str(f))
+    problems = []
     try:
         settings = script.settings(data)
     except (KeyError, ValueError):
@@ -180,15 +187,22 @@ def main(argv=None):
     problems += script.check(data, args.SCRIPT)
     kit_problems, kit = brand_problems(data, args.SCRIPT, problems)
     problems += kit_problems
+    lib, library_problems = library_for(data, args)
+    credit_lines = credits.lines(data, lib)
     if kit:
         try:
-            problems += font_problems(data, kit)
+            problems += font_problems(data, kit, credit_lines)
         except cli.Failure as f:            # a font file that is not a font: one problem, not a crash
             problems.append(str(f))
     problems += phoneme_problems(data)
     problems += code_problems(data, args.SCRIPT)
-    problems += choreography_problems(data, args, args.SCRIPT)
+    problems += library_problems
+    problems += choreography_problems(data, args, args.SCRIPT, lib)
     print(summary(data))
+    if credits.elements_used(data) or "element-credits" in data["settings"]:
+        print("Credits on the end card:")
+        for line in credit_lines or ["none"]:
+            print("  " + line)
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump({k: v for k, v in data.items() if k != "lines"}, f, indent=1, ensure_ascii=False)

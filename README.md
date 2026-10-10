@@ -557,6 +557,17 @@ by a library element's fixed anchor before that element is drawn is placed as if
 were fitted uniformly and centred in its rect; a text's box for its corners is its width by its
 type size above the baseline.
 
+**Credits for the library's art.** The elements come from outside sources (Tabler Icons, Open
+Peeps, …; CC0 or MIT, none requiring credit), and the end card credits them anyway, briefly:
+one line per category below the script's `credit` and the brand's `illustration-credit`, in
+the same style (`Icons: Tabler Icons`, `People: Open Peeps by Pablo Stanley`), wrapped when
+long, the block moved up rather than off the bottom. The Settings key `element-credits` is
+`auto` (the default: the lines for the elements the video uses), `none`, or the wording itself,
+which is drawn instead. `check-script` prints the lines the card will show, after the `added:`
+lines, as `Credits on the end card:`, so they are approved with the script, and its check of
+characters a font lacks covers them. A video with no library elements draws exactly the card
+it drew before.
+
 ### `assemble SCRIPT.md [--out FILE] [--replace]`
 
 Joins the rendered segments (`work/segments/<scene>_<frame>.mp4`) in script order with ffmpeg's
@@ -804,7 +815,11 @@ to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 10 October 2026 (evening, last): a scene can be described in the script and drawn from the video-elements
+- 10 October 2026 (night, last): the end card credits the library's art below its two credit lines
+  (one line per category), governed by a new Settings key `element-credits` (`auto`, `none`, or
+  wording); `check-script` prints the lines as `Credits on the end card:`. A script with no
+  library elements and no such setting draws and prints exactly as before.
+- 10 October 2026 (evening): a scene can be described in the script and drawn from the video-elements
   library: "Describing a scene in the script", above, has the format, the checks and a real run.
   A library refusal while drawing is one line in words (exit 3), never a traceback.
 - 10 October 2026 (afternoon, later): `check-script` reads and checks a scene's `### Cast`, `### Moves`,

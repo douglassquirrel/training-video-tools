@@ -81,7 +81,9 @@ def test_the_invented_library_opens_with_its_two_elements_and_the_renderer_given
     assert lib.element("table")["anchors"]["row.*"] == "computed"
     assert lib.element("pot")["anchors"]["rim"] == (12.0, 4.0)
     assert list(lib.element("pot")["states"]) == ["plain", "cracked"]
-    assert lib.credits(["pot", "table"]) == [{"category": "Icons", "credit": "Invented Icons", "licence": "MIT"}]
+    assert lib.credits(["pot", "table"]) == [{"category": "Icons", "credit": "Invented Icons", "licence": "MIT"},
+                                            {"category": "People", "credit": "Invented Peeps by Nobody", "licence": "CC0 1.0"}]
+    assert lib.credits(["pot"]) == [{"category": "Icons", "credit": "Invented Icons", "licence": "MIT"}]
 
 
 def test_no_renderer_leaves_the_library_its_own_default(fresh_import):

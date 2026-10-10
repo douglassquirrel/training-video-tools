@@ -50,7 +50,7 @@ def described(example, extra=""):
 def test_a_described_scene_checks_clean_with_the_library_given_as_a_flag(example):
     code, out, err = run("check-script", described(example), "--elements", INVENTED)
     assert (code, err) == (0, "")
-    assert out == SUMMARY + "\nNo problems found.\n"
+    assert out == SUMMARY + "Credits on the end card:\n  Icons: Invented Icons\n\nNo problems found.\n"
 
 
 def test_the_library_from_the_config_file_when_no_flag_is_given(example, tmp_path):
@@ -103,3 +103,31 @@ def test_a_bad_library_folder_is_one_problem_in_words(example, tmp_path):
     assert (code, err) == (1, "")
     assert out.endswith(f"\n1 problem:\n  - {tmp_path / 'gone'}: video-elements folder not found (VIDEO_ELEMENTS_DIR "
                         "in {conf}, or --elements)\n".replace("{conf}", os.path.expanduser("~/.video-tools.conf")))
+
+
+# ---- request 14: the credit lines the end card will show, printed for approval
+
+def test_the_credit_lines_are_printed_after_the_added_lines_for_a_script_with_library_elements(example):
+    code, out, err = run("check-script", described(example), "--elements", INVENTED)
+    assert (code, err) == (0, "")
+    assert out.endswith("      -> as cue 2.\nCredits on the end card:\n  Icons: Invented Icons\n\nNo problems found.\n")
+
+
+def test_element_credits_none_and_wording_are_printed_as_they_will_show(example):
+    script = described(example)
+    text = open(script, encoding="utf-8").read()
+    open(script, "w", encoding="utf-8").write(text.replace("| credit |", "| element-credits | none | |\n| credit |"))
+    code, out, err = run("check-script", script, "--elements", INVENTED)
+    assert code == 0 and "Credits on the end card:\n  none\n" in out
+    open(script, "w", encoding="utf-8").write(text.replace("| credit |", "| element-credits | Art by the paper crew | |\n| credit |"))
+    code, out, err = run("check-script", script, "--elements", INVENTED)
+    assert code == 0 and "Credits on the end card:\n  Art by the paper crew\n" in out
+
+
+def test_a_credit_line_with_a_character_the_body_font_lacks_is_listed(example):
+    script = described(example)
+    text = open(script, encoding="utf-8").read()
+    open(script, "w", encoding="utf-8").write(text.replace("| credit |", "| element-credits | Art for €1 | |\n| credit |"))
+    code, out, err = run("check-script", script, "--elements", INVENTED)
+    assert code == 1
+    assert "end card credit line 'Art for €1' has '€' (U+20AC), which " in out

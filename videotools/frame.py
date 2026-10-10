@@ -15,9 +15,11 @@ import os
 import cairo
 
 from videotools import brand as brand_
-from videotools import choreography, chrome, cli, draw, elements, fonts, perform, scenes, script, timeline
+from videotools import choreography, chrome, cli, credits, draw, elements, fonts, perform, scenes, script, timeline
 
 HEADING_HEIGHT = 38      # what a side-panel heading adds above a steps or checklist panel
+CREDIT_MARGIN = 260      # the end card's credit lines wrap inside this margin each side
+CREDIT_BOTTOM = 90       # and never come closer than this to the bottom edge
 
 
 class Video:
@@ -378,11 +380,14 @@ def end_card(ctx, video, scene, tl, t):
     ctx.fill()
     _text(ctx, video, kit["identity"]["website"], lay.width / 2, 770, "italic", 34, "muted", anchor="c", alpha=b)
     c = timeline.ep(t, 1.2, 2.0)
-    y = 860
-    for line in (st["credit"], kit["identity"].get("illustration-credit", "")):
-        if line:
-            _text(ctx, video, line, lay.width / 2, y, "body", 22, "muted", anchor="c", alpha=c)
-            y += 36
+    lines = [line for line in (st["credit"], kit["identity"].get("illustration-credit", "")) if line]
+    size = chrome.px(video.scale, 22)
+    for line in credits.lines(video.data, video.library):          # the library's art (item 16), wrapped
+        lines += draw.wrap(ctx, line, _font(video, "body"), size, lay.width - 2 * CREDIT_MARGIN)
+    y = min(860, lay.height - CREDIT_BOTTOM - 36 * (len(lines) - 1))  # the block moves up rather than down
+    for line in lines:
+        _text(ctx, video, line, lay.width / 2, y, "body", 22, "muted", anchor="c", alpha=c)
+        y += 36
 
 
 def draw_frame(ctx, video, scene, tl, t, curtain=True):

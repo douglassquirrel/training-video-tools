@@ -933,6 +933,21 @@ today's card; wording replacing the lines; a long line wrapping without reaching
 line); `check-script`'s lines; the credits file and its refusal; README, "Notes for users", lint.
 After item 15's parser, which it collects from.
 
+**Built, 10 October 2026.** Increment 13 (20:20): `element-credits` in the Settings (optional,
+default `auto`); `videotools.credits`: `elements_used` (every cast's and panel's library
+elements, in script order, once each), `known` (those the library has: an unknown one is the
+checks' problem, not a credit), `lines` (`none` → nothing; wording → itself; `auto` → one line
+per category, `Icons: Invented Icons`, from `lib.credits`), `sources` (for the file: credit
+line, category, licence, elements); `check-script` opens the library once (`library_for`) for
+the checks and the credits, prints `Credits on the end card:` and the lines (or `none`) after
+the `added:` lines when the script uses library elements or sets the setting, and runs the
+font check over the lines as `end card credit line`. The invented library gained a second
+source (Invented Peeps, CC0, the `table`), so two lines can be seen. Increment 14 (20:35):
+`frame.end_card` draws the lines after the two it drew (body, 22 px, muted, centred, 36 px
+apart, with their fade), each wrapped inside a 260 px margin each side, the whole block moved
+up when its last line would come within 90 px of the bottom; `none`, and a video with no
+library elements, draw byte for byte today's card (pinned).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,

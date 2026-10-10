@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 19:55. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 20:40. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -53,19 +53,26 @@ now one line in words; 12, 19:40: the Tier 3 on the real second video's scene A2
 copy against the real library, `compare-frames` against v4 the same picture, with three finds
 fixed or recorded: the check's ordering of end-relative times, the `keep` action, a data-driven
 element's Size; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then request 14").
-**Next**: request 14 (item 16) as increments 13–15: the `element-credits` setting, the
-collection and `check-script`'s `credits:` lines; the end card; the credits file by `assemble`.
+**Request 14 (item 16) is two increments in**: 13 (20:20: the `element-credits` setting,
+`videotools.credits`, `check-script`'s `Credits on the end card:` block and its font check) and
+14 (20:35: the lines drawn on the end card, wrapped, the block moved up rather than off the
+bottom; `none` and a video with no library elements byte for byte today's card). **Next**:
+increment 15, the credits file written by `assemble` beside the finished video
+(`<output>.credits.txt`: every source's credit line, licence and elements; refused if it
+exists, never replaced; `assemble` gains `--elements`/`--renderer` to open the library for it;
+no file and one line said when the video uses no library elements); then the README, a dated
+note, and lint.
 The training-video project's side of item 15 (re-describing its scenes in its own script,
 comparing, retiring modules) is theirs. Then 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
-starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-19:55; anything at its top level other than README.md is new and is reported to Squirrel, never
+starts by reading CLAUDE.md, PLAN.md (items 15 and 16 in full) and this section, then `inbox/` (empty at
+20:40; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 464 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 476 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -2296,3 +2303,37 @@ The commit `71293d0` went out without this entry (my script's search string was 
 entry follows in its own commit.
 
 **State.** Item 15 complete on this side. Next: request 14, item 16.
+
+### 10 October 2026 — Item 16, increments 13 and 14: the setting, the lines, check-script, the end card
+
+**Goal.** `element-credits` in the Settings; the library elements a video uses collected and
+credited through `lib.credits`; the lines printed by `check-script` for approval and checked
+against the body font; and drawn on the end card below the two it draws today.
+
+**Test.** `tests/tier1/test_credits.py` (six tests on an invented two-scene script and the
+invented library, which gained a second source, Invented Peeps for the `table`): the elements
+used in script order, once each, panels included, pieces not; `auto` one line per category;
+`none` nothing; wording wins; no library elements no lines unless wording; the setting optional
+and read back; an element the library lacks left to the checks. `test_check_script_choreography.py`:
+the block after the `added:` lines; `none` and wording printed; a credit line with `€` listed
+by the font check. `tests/tier2/test_end_card_credits.py`: the two library lines at 932 and
+968 px below the existing two, nothing at 1004; `none` byte for byte the plain example's card;
+a long wording wrapping to two lines with the bottom margin clear.
+
+**Red.** `ImportError: cannot import name 'credits'`; `assert False` on the block;
+`assert (1 == 0)` (the setting unknown); the font-check line absent; `_band_has_text(…, 932)`
+false.
+
+**Green.** Each file green after its implementation; the full suite `476 passed in 135.22s
+(0:02:15)`, `TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** `check-script` now opens the library once (`library_for`) for both the
+checks and the credits. The first run of the "element the library lacks" test ended in a
+traceback: `lib.credits` refuses an unknown name, so `credits.known` keeps only the elements
+the library has and leaves the unknown one to the checks (test first). Three expectations of
+mine were corrected against the code: the described example's exact output gains the credits
+block; the end card has *two* library lines because the `table` now has a source; a test that
+changed one pot to a teapot had left the panel's pot. The block prints only when the script
+uses library elements or sets the setting, so every plain script's output is unchanged.
+
+**State.** 476 green, 98%, lint clean, pushed. Next: increment 15, the credits file.

@@ -16,7 +16,8 @@ SETTINGS = {"title": True, "subtitle": False, "eyebrow": False, "brand": True, "
             "speed": True, "language": True, "speech-model": True, "size": True, "fps": True,
             "quality": False, "lead": False, "cue-gap": False, "tail": False, "fade": False,
             "source": True, "source-image": False, "source-label": False,
-            "title-image-caption": False, "credit": False, "output": True, "scene-code": True}
+            "title-image-caption": False, "credit": False, "output": True, "scene-code": True,
+            "element-credits": False}
 NUMBER_SETTINGS = ("speed", "fps", "quality", "lead", "cue-gap", "tail")
 FILE_SETTINGS = ("source", "source-image")
 SCENE_KEYS = {"kind", "letter", "tracker-label", "eyebrow", "title", "inset", "source",
@@ -300,10 +301,11 @@ def folder(path):
     return os.path.dirname(os.path.abspath(path))
 
 
-DEFAULTS = {"quality": "18", "lead": "0.7", "cue-gap": "0.55", "tail": "1.0", "fade": "0.45 0.4"}
+DEFAULTS = {"quality": "18", "lead": "0.7", "cue-gap": "0.55", "tail": "1.0", "fade": "0.45 0.4",
+            "element-credits": "auto"}
 TEXT_SETTINGS = ("title", "subtitle", "eyebrow", "brand", "voice", "language", "speech-model",
                  "source", "source-image", "source-label", "title-image-caption", "credit",
-                 "output", "scene-code")
+                 "output", "scene-code", "element-credits")
 
 
 def settings(data):
