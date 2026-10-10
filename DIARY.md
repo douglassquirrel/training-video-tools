@@ -3140,3 +3140,43 @@ purpose. My new check test's line numbers were all one too high (a miscount, the
 tonight: I now count from a known line in the same file rather than by eye).
 
 **State.** Green, lint clean. Next: item 20, 3, percentages and spans across cues.
+
+### 11 October 2026 — Item 20, 3: percentages, spans across cues, and the scene's end
+
+**Goal.** A time as `P%` of its cue's length; a span that ends in a later cue (`cue 1, 0.5 s –
+cue 2, end-0.5 s`) or at the scene's end (`– end of scene`); each resolved in one place
+(request 18, item 4; request 19's spans).
+
+**Tests.** Tier 1: `test_a_time_may_be_a_percentage_and_a_span_may_end_in_a_later_cue_or_at_the_scenes_end`
+(the parser: seven forms read, five refused); `test_choreography_window.py`, new, five tests
+of `choreography.window` (seconds, percentages, a later cue, the scene's end, a panel, a scene
+with no cues);
+`test_each_time_of_a_span_is_checked_against_its_own_cue_and_the_later_cue_must_come_after`
+(the check);
+`test_a_member_in_a_span_that_ends_at_a_later_cue_or_at_the_scenes_end_is_left_to_its_moves`
+(the curtain rule). Tier 2: `test_a_show_timed_in_percentages_of_its_cue_is_drawn_at_those_moments`.
+
+**Red.** `9 failed, 304 passed in 13.50s`: the parser's refusal of `74%–80%`, `module
+'videotools.choreography' has no attribute 'window'`, and the drawing test on the script the
+parser refused.
+
+**Green.** `313 passed in 14.17s` (tier 1 and `test_perform.py`); suite `545 passed in 148.03s
+(0:02:28)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** A written time is now one of `("start", s)`, `("end", s)`,
+`("fraction", share)` (and `("fraction", share, 0.6)` for a lone `42%`, which runs the usual
+0.6 s from there) or `("scene", 0.0)`; a move has `end_cue` only when its span ends in a later
+cue, so every existing parsed move is the same data as before. `choreography.window(move, tl,
+panel)` replaces `perform.window` and the check's own arithmetic (`_in_scene` is gone), so the
+check and the drawing cannot disagree about when a move happens. **One behaviour changed on
+purpose** (PLAN.md item 20, 3): in a panel a time counts within the mistake cue, so `end`
+there is that cue's end (it was the panel's rise, the same as 0) and a percentage is of its
+length. Seconds keep their ` s` and a percentage has none, which is what tells `74–80%` (refused)
+from `74%–80%`; the first time of a span may share the second's ` s` only when both are seconds
+in the same cue, as `0.5–1.7 s` always did. The refusal's help text grew, changing three
+expectations. For the curtain rule a member is named at the cue its span ends in, and at every
+cue for `end of scene`. Coverage showed two new refusals unreached (`74% s`; `0.5` with no
+` s`): added to the parser's test as two more refused lines.
+
+**State.** 545 green, 98%, lint clean. Next: item 20, 4, a CSV's columns and rows (its pure
+function's tests are written and red).

@@ -798,3 +798,14 @@ def test_a_dim_takes_the_opacity_to_its_level_over_the_span_and_a_show_brings_it
     assert _draw(video, "table", 2.5)[1]["alpha"] == pytest.approx(0.55)
     assert _draw(video, "table", 2.9)[1]["alpha"] == pytest.approx((1 + 0.55) / 2)      # the show: 2.7–3.1 s
     assert _draw(video, "table", 3.3)[1]["alpha"] == 1.0
+
+
+# ---- item 20 (request 18), 3: percentages and spans, through to the drawing
+
+def test_a_show_timed_in_percentages_of_its_cue_is_drawn_at_those_moments(example):
+    cropped(example)
+    narrated(example)                                        # cue 1 is 3.0 s long from 0.7 s: 50%–60% is 2.2–2.5 s
+    timed = CAST.replace("- cue 1, 0.5 s: show sheet\n", "- cue 1, 50%–60%: show sheet\n")
+    video = frame.Video(describe(example, timed), INVENTED, None)
+    assert _draw(video, "table", 2.35)[1]["alpha"] == pytest.approx(0.5)
+    assert _draw(video, "table", 2.6)[1]["alpha"] == 1.0

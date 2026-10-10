@@ -48,3 +48,11 @@ def test_a_keep_at_a_later_cue_leaves_the_member_to_stay_through_the_mistake():
     moves = [_move(1, "show", ["d"]), _move(3, "keep", ["d"])]
     assert perform.Performance([_member("d")], moves, AREA, TL, 5.0, None).alpha("d") == 1.0
     assert perform.Performance([_member("d")], moves, AREA, TL, 8.5, None).alpha("d") == 1.0
+
+
+def test_a_member_in_a_span_that_ends_at_a_later_cue_or_at_the_scenes_end_is_left_to_its_moves():
+    # item 20, 3: the member is named at the cue its span ends in
+    across = dict(_move(1, "keep", ["e"]), end_cue=3)
+    assert perform.Performance([_member("e")], [_move(1, "show", ["e"]), across], AREA, TL, 5.0, None).alpha("e") == 1.0
+    to_the_end = dict(_move(1, "keep", ["f"]), end=("scene", 0.0))
+    assert perform.Performance([_member("f")], [_move(1, "show", ["f"]), to_the_end], AREA, TL, 5.0, None).alpha("f") == 1.0

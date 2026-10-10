@@ -76,20 +76,6 @@ def progress(t, a, b, move):
     return (timeline.prog if move.get("linear") else timeline.ep)(t, a, b)
 
 
-def window(move, tl, panel_start, panel=True):
-    """(from, to) in scene seconds for a move: its span against its cue's start and length; or,
-    with no cue, against the panel's rise, or (not in a panel) the scene's own start and end."""
-    if move["cue"] is None:
-        base, length = (panel_start, 0.0) if panel else (0.0, tl.total)
-    else:
-        base, length = tl.start(move["cue"]), tl.length(move["cue"])
-
-    def at(when):
-        ref, offset = when
-        return base + (offset if ref == "start" else length + offset)
-    return at(move["start"]), at(move["end"])
-
-
 class Performance:
     """One cast (the scene's or a panel's) at time t: alpha and rect per member, resolved lazily
     so a member placed by another's anchor follows it."""
@@ -98,8 +84,7 @@ class Performance:
         self.cast = {m["name"]: m for m in cast}
         self.moves = moves
         self.area, self.tl, self.t, self.lib, self.folder = area, tl, t, lib, folder
-        self.panel = panel_start is not None
-        self.panel_start = panel_start or 0.0
+        self.panel = panel_start is not None       # a panel's moves count from its rise, the mistake cue's start
         self._rects, self._anchors, self._busy, self._params, self._frame = {}, {}, set(), {}, None
 
     def _moves_of(self, name, kinds):
@@ -107,7 +92,7 @@ class Performance:
         for mv in self.moves:
             act = mv["action"]
             if act["kind"] in kinds and name in act.get("names", [act.get("name")]):
-                out.append((window(mv, self.tl, self.panel_start, self.panel), mv))
+                out.append((choreography.window(mv, self.tl, self.panel), mv))
         return sorted(out, key=lambda item: item[0])
 
     def alpha(self, name):
@@ -132,9 +117,10 @@ class Performance:
         first_show = next((a for (a, _b), mv in shows if mv["action"]["kind"] == "show"), None)
         if first_show is None or first_show >= self.tl.start(self.tl.mistake):
             return False
-        for mv in self.moves:
+        for mv in self.moves:               # named at the cue its span ends in; to the scene's end, at every cue
             act = mv["action"]
-            if mv["cue"] > self.tl.mistake and name in act.get("names", [act.get("name")]):
+            last = math.inf if mv["end"][0] == "scene" else mv.get("end_cue", mv["cue"])
+            if last > self.tl.mistake and name in act.get("names", [act.get("name")]):
                 return False
         return True
 

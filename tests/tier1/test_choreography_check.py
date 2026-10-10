@@ -544,3 +544,31 @@ def test_a_dim_needs_a_level_from_0_to_1_and_a_member_that_is_shown_and_a_show_a
         "line 37: scene A2, moves: 'c' is dimmed at cue 3 but is not shown",
         "line 38: scene A2, moves: 'ghost' is not in the cast (a, b, c)",
     ]
+
+
+# ---- item 20 (request 18), 3: percentages, and a span that ends in a later cue
+
+def test_each_time_of_a_span_is_checked_against_its_own_cue_and_the_later_cue_must_come_after():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+
+### Moves
+
+- cue 1: show a
+- cue 2, 50%–120%: a.size 22 → 30
+- cue 2, 0.5 s – cue 1, 1 s: a.size 22 → 30
+- cue 1, 0.5 s – cue 9, 1 s: a.size 22 → 30
+- cue 1, 0.5 s – cue 3, 5 s: a.size 22 → 30
+- cue 1, 0.5 s – cue 3, 50%: a.size 22 → 30
+- cue 3, 1 s – end of scene: a.size 22 → 30
+"""
+    assert _check(text) == [                                # the first move is line 29
+        "line 30: scene A2, moves: 4.8 s is past the end of cue 2, which is 4.0 s long" + choreography.ESTIMATE_NOTE,
+        "line 31: scene A2, moves: the span ends at cue 1, which is not after cue 2",
+        "line 32: scene A2, moves: cue 9: the scene has 3 cues",
+        "line 33: scene A2, moves: 5 s is past the end of cue 3, which is 2.0 s long" + choreography.ESTIMATE_NOTE,
+    ]

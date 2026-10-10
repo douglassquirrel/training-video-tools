@@ -25,8 +25,10 @@ _NAME_RE = re.compile(f"^{NAME}$")
 _PIXELS_RE = re.compile(rf"^({NUM}) ({NUM})$")
 _ANCHOR_RE = re.compile(rf"^({NAME})\.({DOTTED})(?: \+ ({NUM}) ({NUM}))?$")
 _SIZE_RE = re.compile(rf"^({NUM})(?:x({NUM}))?$")
-_TIME = rf"end(?:[+-]{NUM})?|{NUM}"
-_SPAN_RE = re.compile(rf"^(?P<a>{_TIME})(?:\s*[–-]\s*(?P<b>{_TIME}))?\s*s$|^(?P<over>over the cue)$")
+_TIME = rf"end(?:[+-]{NUM})?|{NUM}%|{NUM}"       # seconds from the cue's start or its end, or a share of its length
+_SPAN_RE = re.compile(rf"^(?P<a>{_TIME})(?P<as>\s*s)?(?:\s*[–-]\s*(?P<b>{_TIME})(?P<bs>\s*s)?)?$")
+_ACROSS_RE = re.compile(rf"^(?P<a>{_TIME})(?P<as>\s*s)?\s*[–-]\s*"
+                        rf"(?:cue (?P<cue>\d+),\s*(?P<b>{_TIME})(?P<bs>\s*s)?|(?P<scene>end of scene))$")
 _SCENE_MOVE_RE = re.compile(r"^cue (\d+)(?:, ([^:]+))?: (.+)$")
 _PANEL_MOVE_RE = re.compile(r"^(?:([^:]+): )?(.+)$")
 _VALUE = r'"[^"]*"|\S+'
@@ -134,33 +136,55 @@ def parse_action(text):
 
 
 def _time(s):
-    """('start' | 'end', offset seconds) from '0.4', '-0.3', 'end', 'end-1.2'."""
+    """A written time as data, and whether it is in seconds: ('start' | 'end', offset seconds) from
+    '0.4', '-0.3', 'end', 'end-1.2'; ('fraction', share of the cue's length) from '74%'."""
     if s.startswith("end"):
-        return ("end", float(s[3:] or 0))
-    return ("start", float(s))
+        return ("end", float(s[3:] or 0)), True
+    if s.endswith("%"):
+        return ("fraction", float(s[:-1]) / 100), False
+    return ("start", float(s)), True
 
 
 def parse_span(text):
-    """(start, end) as (ref, offset) pairs from 'A s', 'A–B s' or 'over the cue'; None when
-    `text` is None (the default: the first 0.6 s); (None, None) when not understood."""
+    """(start, end, end cue) from a move's written time: 'A s', 'A–B s', 'over the cue', a time as
+    'P%' (that share of the cue's length), 'A s – cue M, B s' (ending in a later cue: its number
+    is the third value, else None) or 'A s – end of scene'. A time is ('start' | 'end', seconds
+    from there), ('fraction', share) or ('scene', 0.0), the scene's end; a lone 'P%' ends
+    ('fraction', share, 0.6), the usual 0.6 s later. `text` None is the default, the first 0.6 s.
+    (None, None, None) when not understood: seconds are written with ' s' (once, at the end,
+    for 'A–B s'), a percentage without."""
     if text is None:
-        return ("start", 0.0), ("start", DEFAULT_SPAN)
-    m = _SPAN_RE.match(text.strip())
+        return ("start", 0.0), ("start", DEFAULT_SPAN), None
+    text = text.strip()
+    if text == "over the cue":
+        return ("start", 0.0), ("end", 0.0), None
+    across = _ACROSS_RE.match(text)
+    m = across or _SPAN_RE.match(text)
     if not m:
-        return None, None
-    if m.group("over"):
-        return ("start", 0.0), ("end", 0.0)
-    a = _time(m.group("a"))
-    if m.group("b"):
-        return a, _time(m.group("b"))
-    return a, (a[0], a[1] + DEFAULT_SPAN)
+        return None, None, None
+    a, a_seconds = _time(m.group("a"))
+    if bool(m.group("as")) and not a_seconds:
+        return None, None, None                 # '74% s'
+    if across and across.group("scene"):
+        return (a, ("scene", 0.0), None) if a_seconds == bool(m.group("as")) else (None, None, None)
+    if not m.group("b"):
+        if a_seconds != bool(m.group("as")):
+            return None, None, None             # seconds without their ' s'
+        return a, ((a[0], a[1] + DEFAULT_SPAN) if a_seconds else ("fraction", a[1], DEFAULT_SPAN)), None
+    b, b_seconds = _time(m.group("b"))
+    if b_seconds != bool(m.group("bs")):
+        return None, None, None                 # '0.5–50% s', or seconds without ' s'
+    if a_seconds and not m.group("as") and (across or not b_seconds):
+        return None, None, None                 # the first time's ' s' is shared only with seconds in the same cue
+    return a, b, (int(across.group("cue")) if across else None)
 
 
 CUELESS = {"panel": "a panel's moves have no 'cue N': times count from the panel's rise",
            "scene": "the scene has no cues, so its moves have no 'cue N': times count from the scene's start"}
 
 
-MOVE_HELP = "is not cue N[, A s | A–B s | over the cue][, linear]: ACTION"
+MOVE_HELP = ("is not cue N[, TIME][, linear]: ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, "
+             "or A s – end of scene)")
 
 
 def parse_move(text, cueless=None):
@@ -185,16 +209,39 @@ def parse_move(text, cueless=None):
         parts = [part.strip() for part in span.split(",")]
         if parts[-1] == "linear":
             linear, span = True, ", ".join(parts[:-1]) or None
-    start, end = parse_span(span)
-    if start is None:
+    start, end, end_cue = parse_span(span)
+    if start is None or (end_cue and cueless):
         return None, f"'{text}' {MOVE_HELP}"
     act, problem = parse_action(action.strip())
     if problem:
         return None, problem
     move = {"cue": cue, "start": start, "end": end, "action": act}
+    if end_cue:
+        move["end_cue"] = end_cue
     if linear:
         move["linear"] = True
     return move, None
+
+
+def window(move, tl, panel=False):
+    """(from, to) in scene seconds for a move against a Timeline: each time from its own cue's
+    start, end or length (the span's later cue for its end, when it has one); with no cue, the
+    mistake cue's in a panel (times count from the panel's rise) or the scene's own."""
+    def frame_of(cue):
+        if cue is not None:
+            return tl.start(cue), tl.length(cue)
+        if not panel:
+            return 0.0, tl.total
+        return (tl.start(tl.mistake), tl.length(tl.mistake)) if tl.mistake else (0.0, 0.0)
+
+    def at(when, cue):
+        base, length = frame_of(cue)
+        if when[0] == "scene":
+            return tl.total
+        if when[0] == "fraction":
+            return base + length * when[1] + (when[2] if len(when) > 2 else 0.0)
+        return base + when[1] + (length if when[0] == "end" else 0.0)
+    return at(move["start"], move["cue"]), at(move["end"], move.get("end_cue", move["cue"]))
 
 
 def _cells(line):
@@ -686,14 +733,12 @@ def _piece_params(m, ctx):
 
 
 def _resolve(tl, cue, when):
-    ref, offset = when
-    return offset if ref == "start" else tl.length(cue) + offset
-
-
-def _in_scene(tl, when):
-    """Seconds into a scene with no cues for a move's time: from its start, or back from its end."""
-    ref, offset = when
-    return offset if ref == "start" else tl.total + offset
+    """Seconds into its cue for a written time (None for the scene's end, which is in no cue)."""
+    if when[0] == "scene":
+        return None
+    if when[0] == "fraction":
+        return tl.length(cue) * when[1] + (when[2] if len(when) > 2 else 0.0)
+    return when[1] if when[0] == "start" else tl.length(cue) + when[1]
 
 
 def _check_moves(scene, ctx, moves, where, tl, panel):
@@ -704,21 +749,26 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         at = f"line {mv['line']}: {where}: "
         cue, act = mv["cue"], mv["action"]
         if cue is None and not panel:           # a scene with no cues: times from its start, `end` its end
-            for when in (mv["start"], mv["end"]):
-                if _in_scene(tl, when) > tl.total + 1e-9:
-                    problems.append(f"{at}{_secs(_in_scene(tl, when))} s is past the end of the scene, which is "
-                                    f"{tl.total:.1f} s long")
+            for t in window(mv, tl):
+                if t > tl.total + 1e-9:
+                    problems.append(f"{at}{_secs(t)} s is past the end of the scene, which is {tl.total:.1f} s long")
                     break
         elif not panel:
             if not 1 <= cue <= len(scene["cues"]):
                 problems.append(f"{at}cue {cue}: the scene has {len(scene['cues'])} cues")
                 continue
-            length = tl.length(cue)
-            for when in (mv["start"], mv["end"]):
-                t = _resolve(tl, cue, when)
-                if t > length + 1e-9:
-                    note = ESTIMATE_NOTE if cue in tl.estimated else ""
-                    problems.append(f"{at}{_secs(t)} s is past the end of cue {cue}, which is {length:.1f} s "
+            later = mv.get("end_cue", cue)
+            if not 1 <= later <= len(scene["cues"]):
+                problems.append(f"{at}cue {later}: the scene has {len(scene['cues'])} cues")
+                continue
+            if later < cue or (later == cue and "end_cue" in mv):
+                problems.append(f"{at}the span ends at cue {later}, which is not after cue {cue}")
+                continue
+            for when, its_cue in ((mv["start"], cue), (mv["end"], later)):
+                t, length = _resolve(tl, its_cue, when), tl.length(its_cue)
+                if t is not None and t > length + 1e-9:
+                    note = ESTIMATE_NOTE if its_cue in tl.estimated else ""
+                    problems.append(f"{at}{_secs(t)} s is past the end of cue {its_cue}, which is {length:.1f} s "
                                     f"long{note}")
                     break
         names = act.get("names", [act.get("name")])
@@ -732,8 +782,7 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         if act["kind"] == "dim" and not 0 <= act["level"] <= 1:
             problems.append(f"{at}a level is 0 to 1, not '{act['level']:g}'")
         if act["kind"] in ("show", "hide", "dim"):
-            t = (mv["start"][1] if panel else _in_scene(tl, mv["start"]) if cue is None
-                 else tl.start(cue) + _resolve(tl, cue, mv["start"]))
+            t = window(mv, tl, panel)[0]
             for n in names:
                 events.append((t, mv["line"], act["kind"], n, cue))
         elif act["kind"] == "move":

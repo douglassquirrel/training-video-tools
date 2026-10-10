@@ -203,10 +203,10 @@ just prose
         "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have none)",
-        "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
+        "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, TIME][, linear]: ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, or A s – end of scene)",
         "line 34: scene A2, moves: Where 'nowhere' is not X Y in area pixels, a region (left, right, centre, "
         "top-left, top-right, bottom-left, bottom-right, full) or a member's anchor like sample.row.3 + 40 -12",
-        "line 35: scene A2, moves: 'prose in the list' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
+        "line 35: scene A2, moves: 'prose in the list' is not cue N[, TIME][, linear]: ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, or A s – end of scene)",
         "line 36: scene A2, moves: not a move (a list item '- cue N[, TIME]: ACTION'): just prose",
         "line 44: scene A2, mistake: a panel's moves have no 'cue N': times count from the panel's rise",
         "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
@@ -314,8 +314,8 @@ def test_a_moves_time_may_end_linear_in_a_scene_and_in_a_panel():
 - cue 2, 1.0 s, steady: show pot
 """ + PANELS.replace("- 0.4–0.8 s: show wrong", "- 0.4–0.8 s, linear: show wrong\n- linear: hide wrong")
     scene, problems = _scene(text)
-    assert problems == ["line 34: scene A2, moves: 'cue 2, 1.0 s, steady: show pot' is not cue N[, A s | A–B s | "
-                        "over the cue][, linear]: ACTION"]
+    assert problems == ["line 34: scene A2, moves: 'cue 2, 1.0 s, steady: show pot' is not cue N[, TIME][, linear]: "
+                        "ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, or A s – end of scene)"]
     assert [(m.get("linear", False), m["start"], m["end"]) for m in scene["moves"]] == [
         (True, ("start", 0.5), ("start", 1.7)), (True, ("start", 0.0), ("start", 0.6)),
         (False, ("start", 0.0), ("start", 0.6))]
@@ -342,3 +342,40 @@ def test_dim_names_members_and_a_level():
         "move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert scene["moves"][1]["action"] == {"kind": "dim", "names": ["sample", "pot"], "level": 0.55}
+
+
+# ---- item 20 (request 18), 3: percentages, and a span that ends in a later cue or at the scene's end
+
+def test_a_time_may_be_a_percentage_and_a_span_may_end_in_a_later_cue_or_at_the_scenes_end():
+    from videotools import choreography
+    text = HEAD + CAST + """
+### Moves
+
+- cue 2, 74%–80%: show sample
+- cue 2, 42%: show pot
+- cue 2, 0.5 s–50%: hide pot
+- cue 2, 20%–end-0.3 s: show pot
+- cue 1, 0.5 s – cue 2, end-0.5 s: sample.rows-shown 0 → 3
+- cue 1, 10% – cue 3, 50%, linear: sample.highlight.1 0 → 1
+- cue 2, 2.6 s – end of scene: keep pot
+- cue 2, 74–80%: show sample
+- cue 2, 0.5–50% s: show sample
+- cue 1, 0.5 – cue 2, 1 s: show sample
+- cue 2, 74% s: show sample
+- cue 2, 0.5: show sample
+"""
+    scene, problems = _scene(text)                          # the first move is line 31
+    assert problems == [f"line {n}: scene A2, moves: '{move}' {choreography.MOVE_HELP}" for n, move in (
+        (38, "cue 2, 74–80%: show sample"), (39, "cue 2, 0.5–50% s: show sample"),
+        (40, "cue 1, 0.5 – cue 2, 1 s: show sample"), (41, "cue 2, 74% s: show sample"),
+        (42, "cue 2, 0.5: show sample"))]
+    assert [(m["cue"], m.get("end_cue"), m["start"], m["end"]) for m in scene["moves"]] == [
+        (2, None, ("fraction", 0.74), ("fraction", 0.8)),
+        (2, None, ("fraction", 0.42), ("fraction", 0.42, 0.6)),       # from there, for the usual 0.6 s
+        (2, None, ("start", 0.5), ("fraction", 0.5)),
+        (2, None, ("fraction", 0.2), ("end", -0.3)),
+        (1, 2, ("start", 0.5), ("end", -0.5)),
+        (1, 3, ("fraction", 0.1), ("fraction", 0.5)),
+        (2, None, ("start", 2.6), ("scene", 0.0)),
+    ]
+    assert scene["moves"][5]["linear"] is True
