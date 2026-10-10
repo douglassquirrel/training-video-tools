@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 23:53. **Requests 1 to 15 are built in full**: the eight commands of the first
+11 October 2026, 00:05. **Requests 1 to 16 are built in full**: the eight commands of the first
 request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans in `say:` lines (13); the curtain on the
 timeline and `stills --cue-changes` (14); choreography described in the script and drawn from
@@ -12,19 +12,27 @@ written (a bug fixed); `progress` and `head` on the `arrow` piece and a blank Wh
 arrow; a blank Size drawn at the element's natural size when the library offers one (`fit`
 `natural`, `el.natural_size`, video-elements' interface note of 23:32), with a `check-script`
 warning, exit code unchanged, for a nominal-sized element that offers none; and a test pinning
-that a `WxH` Size reaches the element as its rect. Each is in the README. A new session starts
-by reading CLAUDE.md, PLAN.md (items 15 to 17 in full) and this section, then `inbox/`.
+that a `WxH` Size reaches the element as its rect; and **item 18 (request 16, OK'd 23:59)**:
+an empty label is no label (not checked by `check-script` for a library element's label
+parameter, nor by `frame.label`; a pill's, callout's or text's empty `text` a plain-worded
+problem; a hand's empty `label` none). Each is in the README. A new session starts by reading
+CLAUDE.md, PLAN.md (items 15 to 18 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Request 15 and video-elements' two notes (23:32, 23:53) are in `inbox/done/`.
+**Inbox: empty.** Requests 15 and 16 and video-elements' two notes (23:32, 23:53) are in `inbox/done/`.
 
-Green: 504 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
+Green: 509 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
 `origin/main`.
 
-**Waiting on Squirrel: nothing.** He answered the three things put to him (10 October 2026, 23:48;
-PLAN.md "Settled" 30 to 32, "Open questions" empty): building the natural-size half on his
-earlier answer when video-elements' note came "was OK, although always better to check if not
-sure"; reading "nominal" from the note in the element's `ELEMENT.md` is left as it is for now;
-a natural-sized element in a region is centred at its natural size.
+**Waiting on Squirrel** (PLAN.md "Open questions" 1 and 2, neither blocking; both are the
+request's own "your call" points, built on the assumption stated):
+
+1. A label that is only spaces is still a label and still checked against On screen; only the
+   empty string is "none".
+2. A `pill`, `callout` or `text` whose `text` is empty stays a problem; a `hand` whose `label`
+   is empty is drawn without a label.
+
+His earlier answers (10 October, 23:48; "Settled" 30 to 32) stand: when unsure whether an
+earlier OK covers a new inbox item, ask.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -36,7 +44,8 @@ Icons") and `table` (code, `rows`, a `label`, indexed parameters, computed ancho
 noted `nominal`, `fit` `natural` with a `natural_size` of 120 a column by 30 a row recorded in
 `lib.sizes`, an `explode` parameter that makes its draw and its `natural_size` refuse, from
 "Invented Peeps"); its draw fills the rect with the brand's accent and records every call in
-`lib.draws`; its README says what it checks and what it does not). The warning's tests use a
+`lib.draws`, and passes every label parameter it is given through `frame.label`, as the real
+elements do; its README says what it checks and what it does not). The warning's tests use a
 copy of it with the table's `fit` row removed (`without_fit`). One test is skipped off macOS
 (CoreText). **The whole suite takes about 2 min 25 s**, longer than a foreground command's
 default two minutes: run it with a longer timeout or in the background.
@@ -65,6 +74,9 @@ with no Size and none for a `spreadsheet` (since video-elements `5f98a74` `diff`
 natural size too, and the same run prints no warning: no real element gives it now); and the second video's scene B as the training-video
 project described it, with every Size blank and the arrow with no Where, against v4 through
 `compare-frames`: 1.8 to 4.3 mean difference at four moments, the same picture by eye.
+For item 18 (00:02): the real `formula-bar` with `ref="" placeholder=yes` in that scene B's
+Mistake panel: `check-script` clean where it was refused before, and the bar drawn with no
+reference, no divider and its grey placeholder.
 `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR` only; the Tier 3 runs passed
 `--elements` on the command line.
 
@@ -2736,3 +2748,54 @@ label; the real elements call `frame.label` themselves (`formula-bar` skips an e
 makes it true whatever an element does is `Frame.label`.
 
 **State.** 504 green as left. Next: item 18, 1, test first.
+
+### 11 October 2026 — Item 18: an empty label is not a label
+
+**Goal.** Request 16: an empty label parameter is not checked, by `check-script` or at draw
+time; a piece's empty text decided and pinned. Four cycles.
+
+**Tests, red and green, in order.**
+
+1. `test_an_empty_label_for_a_library_element_is_not_checked_and_others_still_are` (tier 1,
+   `test_choreography_library.py`: `tab=""` in a cast row and set in a move; a label not on the
+   list and one of a single space still refused). Red, the bug reproduced:
+   ```
+   E   At index 0 diff: "line 25: scene A2, cast: 't' draws '', which is not in the script's On screen list (Sample output, checked ✓)" != "line 26: scene A2, cast: 'u' draws 'Sheet 9', …
+   E   Left contains 2 more items, first extra item: "line 33: scene A2, moves: 'w' draws '', …
+   ```
+   Green: `1 passed, 10 deselected in 0.12s`.
+2. `test_a_pieces_empty_text_is_a_problem_in_plain_words_and_a_hands_empty_label_means_none`
+   (tier 1, `test_choreography_check.py`). Red:
+   ```
+   E   At index 0 diff: "line 25: scene A2, cast: 'a' draws '', which is not in the script's On screen list (Sample output, checked ✓)" != "line 25: scene A2, cast: 'a': 'text' is empty, so there is nothing to draw"
+   ```
+   Green with a new parameter kind `caption` for the hand's optional label: `27 passed in 0.13s`
+   (both check files).
+3. `test_an_empty_label_is_no_label_and_is_not_checked_but_one_of_spaces_is` (tier 1,
+   `test_scenes.py`). Red: `videotools.cli.Failure: scene A: the scene code draws '', which is
+   not in the script's On screen list (near side, far side)`. Green: `14 passed in 0.03s`.
+4. `test_a_hand_with_an_empty_label_is_drawn_with_no_label` (tier 2; `Frame.hand` recorded).
+   Red: `AssertionError: assert '' is None`. Green: `2 passed, 30 deselected in 0.57s`.
+
+Full suite: `509 passed in 141.52s (0:02:21)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** The invented library's `draw` now passes every label parameter it is
+given through `frame.label`, as the real `prompt-box` and `file-chip` do, so
+`test_an_element_given_an_empty_label_is_drawn_and_one_given_a_listed_label_too` (tier 2) draws
+through the same door. It passed the moment it was written, cycle 3 having been done, so it
+was seen to fail with that fix undone (`the library could not draw 'sheet' (table): scene A:
+the scene code draws '', which is not in the script's On screen list`), and the fix put back.
+`frame.label("")` passing also holds for a video's own scene code: an empty label there draws
+nothing either. The request's second ask (skip a label the element does not draw in some
+state) is not built: the library says it only in prose; the README tells the author to leave
+the parameter out or give it empty.
+
+**Tier 3** (00:02, the scratch copy of the second video from item 17's check): the real
+`formula-bar` added to scene B's Mistake panel as `ref="" placeholder=yes`. With this commit's
+code: `No problems found.`, exit 0. With the changes stashed, the refusal the request quoted:
+`line 457: scene B, mistake: 'bar' draws '', which is not in the script's On screen list (…)`.
+`stills` at 26.0 s (cue 5), by eye: the bar above the sheet, no reference, no divider, a grey
+placeholder bar.
+
+**State.** Item 18 complete. 509 green, 98%, lint clean, pushed. Two assumptions for Squirrel in
+"Where things stand".

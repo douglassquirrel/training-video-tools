@@ -85,12 +85,16 @@ class Element(dict):
 
     def draw(self, frame, rect, state=None, params=None, alpha=1.0):
         """The stub's drawing: the rect filled with the brand's accent at `alpha` (a cross-fade
-        part-way draws the same); the call recorded in `library.draws`; anchors returned in frame
+        part-way draws the same); every label parameter given is passed through `frame.label`;
+        the call recorded in `library.draws`; anchors returned in frame
         pixels: fixed ones scaled into the rect, `row.N` down the right edge and `cell.N.M` across
         the rows for a `rows` parameter, any other computed one at the rect's top-left."""
         params = dict(params or {})
         if params.get("explode"):
             raise Failure(f"element '{self['name']}': its draw failed: Failure: no font role 'mono' in the brand kit")
+        for pname, value in params.items():     # as the real elements do with the labels they draw
+            if self["params"].get(pname, {}).get("type") == "label":
+                frame.label(value)
         x, y, w, h = rect
         self.library.draws.append({"name": self["name"], "rect": tuple(float(v) for v in rect), "state": state,
                                    "params": params, "alpha": alpha})

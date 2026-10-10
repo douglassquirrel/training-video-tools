@@ -275,3 +275,32 @@ def test_no_warning_and_no_crash_when_the_elements_file_is_not_there_or_has_no_s
     assert choreography.warnings(_scene(NOMINAL), opened) == []
     described.unlink()
     assert choreography.warnings(_scene(NOMINAL), opened) == []
+
+
+# ---- item 18 (request 16): an empty label is not a label
+
+def test_an_empty_label_for_a_library_element_is_not_checked_and_others_still_are(lib, folder):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| t | table | 10 10 | 300x100 | rows=assets/sample.csv tab="" | none, as the element's description allows |
+| u | table | 10 300 | 300x100 | rows=assets/sample.csv tab="Sheet 9" | |
+| v | table | 400 300 | 300x100 | rows=assets/sample.csv tab=" " | spaces are still a label |
+| w | table | 400 10 | 300x100 | rows=assets/sample.csv tab="Sample output" | |
+
+### Moves
+
+- cue 1: show t, u, v, w
+- cue 2: w.tab ""
+- cue 3: w.tab "Sheet 9"
+"""
+    assert _check(text, lib, folder) == [
+        "line 26: scene A2, cast: 'u' draws 'Sheet 9', which is not in the script's On screen list "
+        "(Sample output, checked ✓)",
+        "line 27: scene A2, cast: 'v' draws ' ', which is not in the script's On screen list "
+        "(Sample output, checked ✓)",
+        "line 34: scene A2, moves: 'w' draws 'Sheet 9', which is not in the script's On screen list "
+        "(Sample output, checked ✓)",
+    ]

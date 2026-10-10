@@ -119,3 +119,11 @@ def test_a_step_scene_with_neither_code_nor_cast_is_refused_naming_both(tmp_path
     with pytest.raises(cli.Failure) as e:
         scenes.load(str(tmp_path), dict(SCENE, props={}))
     assert str(e.value) == "scene A has no 'code' property and no Cast, so nothing can draw it"
+
+
+def test_an_empty_label_is_no_label_and_is_not_checked_but_one_of_spaces_is():
+    f = scenes.Frame(ctx=None, t=0.0, timeline=None, scene=SCENE, colours={}, brand=None, area=(0, 0, 10, 10))
+    assert f.label("") == ""
+    with pytest.raises(cli.Failure) as e:
+        f.label(" ")
+    assert str(e.value) == "scene A: the scene code draws ' ', which is not in the script's On screen list (near side, far side)"

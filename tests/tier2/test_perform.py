@@ -567,3 +567,34 @@ def test_an_arrow_with_a_blank_where_can_be_moved_like_any_member(example):
     rendered(video, "A", 2.0)                       # after the move: the box's corner is at the area's 100 100
     small = [d["rect"] for d in video.library.draws if d["rect"][2] == 20.0]
     assert small[0] == (140.0, 218.0, 20.0, 20.0)
+
+
+# ---- item 18 (request 16): an empty label is not a label
+
+UNLABELLED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| sheet | table | 100 400 | 300x100 | rows=assets/sample.csv tab="" | no tab name: the stub passes it through frame.label |
+| named | table | 500 400 | 300x100 | rows=assets/sample.csv tab=crease | a label on the On screen list |
+| helper | hand | 100 300 | | angle=1.2 scale=0.8 label="" | no letter |
+
+### Moves
+
+- cue 1: show sheet, named, helper
+
+"""
+
+
+def test_an_element_given_an_empty_label_is_drawn_and_one_given_a_listed_label_too(example):
+    video = pointed(example, UNLABELLED)
+    rendered(video, "A", 2.0)
+    assert [d["params"]["tab"] for d in video.library.draws] == ["", "crease"]
+
+
+def test_a_hand_with_an_empty_label_is_drawn_with_no_label(example, monkeypatch):
+    from videotools import scenes
+    hands = []
+    monkeypatch.setattr(scenes.Frame, "hand", lambda self, x, y, angle, scale, **kw: hands.append(kw))
+    rendered(pointed(example, UNLABELLED), "A", 2.0)
+    assert hands[0]["label"] is None

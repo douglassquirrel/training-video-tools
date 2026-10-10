@@ -371,7 +371,7 @@ for the cue speaking now, `start(cue)`, `length(cue)`, `total`), `scene` (its da
 script), `colours` (the script's Colours as red-green-blue triples in 0–1), `brand` (the kit:
 `colours`, `fonts`, `settings`), `area` (its rectangle) and `label(text)`, which returns the
 text after checking it is in the scene's "On screen" list and stops the run with a message if
-it is not. A scene's `side-panel-heading` property puts a small heading above a `steps` or
+it is not (an empty text is no label: nothing is drawn, and it passes). A scene's `side-panel-heading` property puts a small heading above a `steps` or
 `checklist` panel, or in place of KEY POINTS.
 
 **The curtain.** On the mistake cue the panels rise over the animation area in half a second
@@ -498,7 +498,13 @@ earlier). The tools read the first five columns; Notes is for people.
   by the tools (CSV into rows) and handed to the element; the library never reads a video's
   folder. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
   name, a pill's `text`) must be in the scene's On screen list; data (cell values) need not. An
-  indexed parameter is written with dots: `highlight.3`, `cell-alpha.3.2`. The pieces' own
+  empty label is no label and is not checked, so an element's documented "none" can be written
+  as it is (`ref=""` on a `formula-bar`); one of spaces only is still a label. The pieces differ
+  by what the words are for: the `text` of a `pill`, a `callout` or a `text` may not be empty
+  (there would be nothing to draw), while a `hand`'s `label=""` is a hand with no letter. A
+  label an element does not draw in some state (a `formula-bar`'s `text` when
+  `placeholder=yes`) is still checked if you give it, since the tools cannot tell: leave it out
+  or give it empty. An indexed parameter is written with dots: `highlight.3`, `cell-alpha.3.2`. The pieces' own
   parameters: `pill` and `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`,
   `right`), and for `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`,
   `anchor`; `badge`: `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`;
@@ -797,7 +803,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(504 tests, lint clean).
+(509 tests on 11 October, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -861,6 +867,11 @@ the arrow half grown where v4's is.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 11 October 2026: an empty label is no label. `check-script` no longer refuses a library
+  element's label parameter given as `""` (a `formula-bar` with `ref=""`), in a cast row or a
+  move, and `frame.label("")` passes, for described scenes and scene code alike. A `pill`,
+  `callout` or `text` with an empty `text` is still a problem, now said as `'text' is empty, so
+  there is nothing to draw`; a `hand` with `label=""` is drawn without a label.
 - 10 October 2026 (late night): in a described scene, an `arrow`'s `from` and `to` and a
   `callout`'s `target` now land on the anchor **plus the offset written** (`from="export.right +
   21 8"`); the offset used to be dropped, so an arrow or callout written with one moves to where

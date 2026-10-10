@@ -410,3 +410,34 @@ def test_an_arrow_with_a_blank_where_cannot_point_from_or_to_its_own_box():
 """
     assert _check(text) == ["line 26: scene A2, cast: 'line': 'from' is its own anchor, but with a blank Where "
                             "its two ends are what place it"]
+
+
+# ---- item 18 (request 16): a piece's text may not be empty; a hand's empty label is no label
+
+def test_a_pieces_empty_text_is_a_problem_in_plain_words_and_a_hands_empty_label_means_none():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="" | |
+| b | callout | 70 100 | | text="" target=d.centre | |
+| c | text | 70 100 | | text="" | |
+| d | hand | 70 100 | | angle=1 scale=1 label="" | |
+| e | pill | 70 100 | | text="Sample output" | |
+| f | hand | 70 100 | | angle=1 scale=1 label=B | |
+
+### Moves
+
+- cue 1: show a, b, c, d, e, f
+- cue 2: e.text ""
+- cue 2: f.label ""
+"""
+    assert _check(text) == [
+        "line 25: scene A2, cast: 'a': 'text' is empty, so there is nothing to draw",
+        "line 26: scene A2, cast: 'b': 'text' is empty, so there is nothing to draw",
+        "line 27: scene A2, cast: 'c': 'text' is empty, so there is nothing to draw",
+        "line 30: scene A2, cast: 'f' draws 'B', which is not in the script's On screen list "
+        "(Sample output, checked ✓)",
+        "line 35: scene A2, moves: 'e': 'text' is empty, so there is nothing to draw",
+    ]

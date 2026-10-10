@@ -275,16 +275,17 @@ def _tables_only(lines, where, problems):
 
 BOX_ANCHORS = ("top-left", "top-right", "bottom-left", "bottom-right", "centre")   # every member has these
 PANELS = ("mistake", "right way")
-# The pieces' parameters by name and kind: label (checked against On screen), number, unit (a number from
-# 0 to 1), colour (a name frame.colour resolves), align (left, centre, right), yesno, anchor (a member's
-# anchor, a.centre, with an optional offset), text.
+# The pieces' parameters by name and kind: label (the words the piece is for: not empty, and checked
+# against On screen), caption (optional words: checked against On screen unless empty, which is none),
+# number, unit (a number from 0 to 1), colour (a name frame.colour resolves), align (left, centre, right),
+# yesno, anchor (a member's anchor, a.centre, with an optional offset), text.
 PIECE_PARAMS = {
     "pill": {"text": "label", "size": "number", "fill": "colour", "colour": "colour", "anchor": "align"},
     "callout": {"text": "label", "target": "anchor", "size": "number", "fill": "colour", "colour": "colour",
                 "anchor": "align"},
     "text": {"text": "label", "size": "number", "role": "text", "colour": "colour", "anchor": "align"},
     "badge": {"ok": "yesno", "r": "number"},
-    "hand": {"angle": "number", "scale": "number", "mirror": "yesno", "label": "label"},
+    "hand": {"angle": "number", "scale": "number", "mirror": "yesno", "label": "caption"},
     "arrow": {"from": "anchor", "to": "anchor", "colour": "colour", "width": "number", "progress": "unit",
               "head": "yesno"},
 }
@@ -505,7 +506,7 @@ def _library_value_problem(desc, name, value, ctx):
         if value not in ("yes", "no", "true", "false"):
             return f"'{name}' is yes or no (true or false), not '{value}'"
     elif kind == "label":
-        if value not in ctx["labels"]:
+        if value and value not in ctx["labels"]:        # an empty label is none: nothing drawn, nothing to check
             return f"draws '{value}', which is not in the script's On screen list ({', '.join(ctx['labels'])})"
     elif kind == "rows":
         if ctx["folder"] is not None and not os.path.isfile(os.path.join(ctx["folder"], value)):
@@ -566,7 +567,9 @@ def _value_problem(kind, name, value, ctx, self_name):
     elif kind == "yesno":
         if value not in ("yes", "no"):
             return f"'{name}' is yes or no, not '{value}'"
-    elif kind == "label":
+    elif kind in ("label", "caption"):
+        if not value:
+            return f"'{name}' is empty, so there is nothing to draw" if kind == "label" else None
         if value not in labels:
             return f"draws '{value}', which is not in the script's On screen list ({', '.join(labels)})"
     elif kind == "anchor":

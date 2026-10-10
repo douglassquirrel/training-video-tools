@@ -268,7 +268,7 @@ class Performance:
                 self._anchors[name] = box_anchors((x - r, y - r, 2 * r, 2 * r))
             elif element == "hand":
                 frame.hand(x, y, float(p["angle"]), float(p["scale"]), alpha=alpha, mirror=p.get("mirror") in YES,
-                           label=p.get("label"))
+                           label=p.get("label") or None)       # an empty label is no label
             elif element == "callout":
                 target = self._point(p["target"])
                 frame.callout(p["text"], target, (x, y), size=float(p.get("size", 22)), fill=p.get("fill", "surface"),

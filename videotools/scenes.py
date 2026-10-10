@@ -18,7 +18,8 @@ from videotools import cli, script
 class Frame:
     """What scene code is given: the cairo context (clipped to the area), the time into the
     scene, the timeline, the scene's data, the script's colours as (r, g, b), the brand kit and
-    the area's (x, y, w, h). `label(text)` checks a label against the script's On screen list."""
+    the area's (x, y, w, h). `label(text)` checks a label against the script's On screen list
+    (an empty one is no label and passes)."""
 
     def __init__(self, ctx, t, timeline, scene, colours, brand, area):
         self.ctx, self.t, self.timeline, self.scene = ctx, t, timeline, scene
@@ -26,7 +27,7 @@ class Frame:
 
     def label(self, text):
         listed = [item["text"] for item in self.scene["screen"]]
-        if text not in listed:
+        if text and text not in listed:         # an empty label is none: nothing is drawn, so nothing to check
             raise cli.Failure(f"scene {self.scene['key']}: the scene code draws '{text}', which is not in the "
                               f"script's On screen list ({', '.join(listed)})")
         return text
