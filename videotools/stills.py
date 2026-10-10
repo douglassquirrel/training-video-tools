@@ -16,7 +16,7 @@ import argparse
 import os
 import sys
 
-from videotools import brand, cli, script
+from videotools import brand, cli, elements, script
 from videotools.sheet import SHEET
 
 PROG = "stills"
@@ -40,6 +40,7 @@ def parser():
     p.add_argument("--scenes", metavar="KEY,...", help="with --cue-changes: only these scenes (default: all)")
     p.add_argument("--out", metavar="SHEET.png", required=True, help="the sheet to write (never over a file)")
     p.add_argument("--grid", metavar="CxR", default="2x2", help="columns x rows of a sheet (default 2x2)")
+    elements.add_arguments(p)
     return p
 
 

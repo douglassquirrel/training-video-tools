@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 
-from videotools import brand, cli, scenes, script
+from videotools import brand, cli, elements, scenes, script
 
 PROG = "check-script"
 WORDS_PER_SECOND = 2.6
@@ -130,6 +130,7 @@ def parser():
                                 "the script format, and list what needs approval and checking.")
     p.add_argument("SCRIPT", help="the video's script.md")
     p.add_argument("--json", metavar="OUT", help="also write the parsed script as JSON (never over an existing file)")
+    elements.add_arguments(p)
     return p
 
 

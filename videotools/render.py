@@ -13,7 +13,7 @@ import os
 import subprocess
 import time
 
-from videotools import brand, cli, ffmpeg, script
+from videotools import brand, cli, elements, ffmpeg, script
 
 PROG = "render"
 
@@ -27,6 +27,7 @@ def parser():
     p.add_argument("--replace", action="store_true", help="write over existing segments, listing them first")
     p.add_argument("--dry-run", action="store_true",
                    help="list the scenes, their lengths, frame counts and segments; write nothing")
+    elements.add_arguments(p)
     return p
 
 

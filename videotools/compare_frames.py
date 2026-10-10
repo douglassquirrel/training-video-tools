@@ -11,7 +11,7 @@ complete timings as `render` does; pycairo, numpy, Pillow and ffmpeg.
 import argparse
 import os
 
-from videotools import brand, cli, ffmpeg, script
+from videotools import brand, cli, elements, ffmpeg, script
 from videotools.stills import parse_frames, to_image
 
 PROG = "compare-frames"
@@ -28,6 +28,7 @@ def parser():
     p.add_argument("--out", metavar="SHEET.png", required=True, help="the sheet to write (never over a file)")
     p.add_argument("--offset", metavar="SCENE=SECONDS", action="append", default=[],
                    help="move one scene's start in the old video by so many seconds (repeatable)")
+    elements.add_arguments(p)
     return p
 
 

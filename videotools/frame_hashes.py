@@ -14,7 +14,7 @@ import json
 import os
 import time
 
-from videotools import brand, cli, script
+from videotools import brand, cli, elements, script
 
 PROG = "frame-hashes"
 SHOWN = 12            # differing frame numbers listed before an ellipsis
@@ -31,6 +31,7 @@ def parser():
                    "keeping its other scenes")
     p.add_argument("--scenes", metavar="KEY,...", help="only these scenes (default: all, in script order)")
     p.add_argument("--step", metavar="N", type=int, default=1, help="hash every N-th frame of a scene (default 1)")
+    elements.add_arguments(p)
     return p
 
 

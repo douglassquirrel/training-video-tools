@@ -2,26 +2,32 @@
 
 ## Where things stand
 
-10 October 2026, 13:30. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 13:50. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
 real run. **Requests 13 and 14 are recorded** (PLAN.md items 15 and 16, "Settled" 24 and 25,
-the two files in `inbox/done/`) **and no code is written for them yet**: the choreography format of
-item 15 is **approved** (Squirrel, 13:24; "Settled" 27), with scene A2 of the training-video
-project's second video as a worked example, and video-elements' reply fixed the element
-description's rows (`rows` and `label` types, `*` for an index, indices from 1, `"computed"`
-anchors) that the invented test library and `check-script` are written to. **The next step is
-the first increment of item 15's "Order of work"**: the two config settings and flags, then the
-library's import and refusals, test-first against an invented library in `tests/`. A new session
+the two files in `inbox/done/`) **and item 15 is under way**: its choreography format is **approved** (Squirrel, 13:24;
+"Settled" 27), with scene A2 of the training-video project's second video as a worked example,
+video-elements' reply fixed the element description's rows (`rows` and `label` types, `*` for
+an index, indices from 1, `"computed"` anchors) that the invented test library and
+`check-script` are written to, and **the first increment is built** (Squirrel, 13:32: "go ahead
+with the config settings"): `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT` in `config.KEYS`, the flags
+`--elements DIR` and `--renderer PATH` on `check-script`, `stills`, `render`, `frame-hashes` and
+`compare-frames` through `videotools.elements.add_arguments`, and `elements.settings(args, conf)`
+resolving them flag-first; nothing opens the library yet. **The next step** is item 15's second
+increment: putting the root on the import path at the point of use, `library.open(DIR,
+renderer=…)`, and the one-line refusals (no setting, no folder, no `videoelements/` or
+`elements/` in it, a library that will not open), test-first against an invented library in
+`tests/` (two tiny elements with `ELEMENT.md` files in the rows of "Settled" 27, a stub
+`rsvg-convert`). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-13:30; anything at its top level other than README.md is new and is reported to Squirrel, never
+13:50; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 386 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main` (the suite
-was not re-run this session: nothing under `videotools/` or `tests/` changed). The suite needs
+Green: 396 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -48,8 +54,8 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: nothing for item 15 (format approved, description rows settled); "Open
-questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
+first increment OK'd and built; the second follows unless he says otherwise); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) has its step 3 of 8 done plus our four asks (its commit
 `4dd19c8`: the reader, checks, `credits`, the new types; `el.draw` is its step 4, next); our
 Tier 3 on real elements waits on its step 4 and first elements. The one write made into that
@@ -1797,3 +1803,43 @@ read itself (a CSV in the cast row).
 **State.** No code; suite untouched (386 green at the last run). Next: item 15's "Order of
 work", first increment: `VIDEO_ELEMENTS_DIR` / `RSVG_CONVERT` in `config.read` and `--elements` /
 `--renderer` on the drawing commands and `check-script`, test-first.
+
+### 10 October 2026 — Item 15, increment 1: the config settings and the flags
+
+**Goal.** `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT` read from the config file, and `--elements DIR`
+and `--renderer PATH` on the five commands, resolved flag-first (Squirrel, 13:32: "go ahead with
+the config settings"). Baseline first: the full suite, `386 passed in 121.82s`, coverage 98%.
+
+**Test.** `test_the_elements_folder_and_the_renderer_are_read_the_folder_expanding_tilde`
+(tier 1, `test_config.py`): a file with the two keys reads back as both, `~` expanded in the
+folder. Then `tests/tier1/test_elements_settings.py` (four tests: the flags win; the config fills
+what a flag leaves out; neither is `(None, None)`; `~` in the flag means home) and
+`tests/tier2/test_elements_flags.py` (`--help` of each of the five commands names both flags and
+both settings).
+
+**Red.**
+```
+E           videotools.config.ConfigError: …/c.conf: line 1: unknown setting 'VIDEO_ELEMENTS_DIR' (the settings are SPEECH_MODEL_DIR, VOICE, SPEED)
+1 failed, 4 passed in 0.04s
+```
+the right failure: the reader refuses the key. The resolver's tests failed on
+`ImportError: cannot import name 'elements' from 'videotools'` (a new module: the behaviour
+missing is the module), and the help tests on `assert ('--elements DIR' in "usage: check-script
+[-h] [--json OUT] SCRIPT…")` for all five, `5 failed in 0.63s`.
+
+**Green.** `config.KEYS` gains the two keys (the `_DIR` suffix already expands `~`);
+`videotools/elements.py` (standard library, 3.9) with `add_arguments(p)` and `settings(args,
+conf)`; the five parsers call `add_arguments` last. `14 passed in 0.57s` for the new tests and
+the config file; the full suite `396 passed in 121.63s (0:02:01)`, `TOTAL … 98%`,
+`ruff check .` clean.
+
+**Decision / surprise.** Two predicted test changes, made before the runs: the unknown-key
+message's settings list grows (`test_an_unknown_key_…` now expects the five names), and the
+five `--help` usage-line assertions gain `[--elements DIR] [--renderer PATH]` before `SCRIPT`.
+The flags are accepted and resolved but nothing opens the library yet; the README's
+configuration section and "Notes for users" say so plainly, and `video-tools.conf.example` has
+the two keys commented out. `elements.settings` expands `~` in the flag too, so a quoted
+`--elements "~/x"` behaves like the config file.
+
+**State.** 396 green, 98%, lint clean. Next: increment 2, the import and `library.open` with
+the refusals, against an invented library.

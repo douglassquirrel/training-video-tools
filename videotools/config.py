@@ -5,7 +5,7 @@ Standard library only; runs on Python 3.9.
 
 import os
 
-KEYS = ("SPEECH_MODEL_DIR", "VOICE", "SPEED")
+KEYS = ("SPEECH_MODEL_DIR", "VOICE", "SPEED", "VIDEO_ELEMENTS_DIR", "RSVG_CONVERT")
 
 
 class ConfigError(Exception):

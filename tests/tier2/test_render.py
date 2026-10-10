@@ -26,7 +26,7 @@ def fake(path):
 
 def test_help_and_usage():
     code, out, err = run("render", "--help")
-    assert code == 0 and " ".join(out.split()).startswith("usage: render [-h] [--scenes KEY,...] [--frames A-B] [--replace] [--dry-run] SCRIPT")
+    assert code == 0 and " ".join(out.split()).startswith("usage: render [-h] [--scenes KEY,...] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH] SCRIPT")
     code, out, err = run("render")
     assert code == 2 and "usage: render" in err
 

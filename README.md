@@ -550,6 +550,12 @@ one under 3 `fails (under 3)`.
 |---|---|
 | `SPEECH_MODEL_DIR` | The folder holding `model.onnx` and `voices.npz`. Required by `narrate`. |
 | `VOICE`, `SPEED` | Defaults for a script that does not set its own. |
+| `VIDEO_ELEMENTS_DIR` | The video-elements repository: the folder holding `videoelements/` and `elements/`. Needed only by a script that describes a scene's cast (being built: PLAN.md item 15). |
+| `RSVG_CONVERT` | The SVG renderer the library uses, when it is not `rsvg-convert` on PATH (the Linux device shell runs one extracted from a package). Optional. |
+
+The last two can also be given as flags, `--elements DIR` and `--renderer PATH`, on
+`check-script`, `stills`, `render`, `frame-hashes` and `compare-frames`; a flag wins over the
+file. Until a script can describe a scene, the settings and flags are read and nothing uses them.
 
 ## Errors and exit codes
 
@@ -631,7 +637,11 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 10 October 2026 (morning, last): `frame.timeline.covered`, `before_curtain` and `curtain` tell
+- 10 October 2026 (afternoon, last): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
+  and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,
+  for the video-elements library (PLAN.md item 15, in progress); accepted now, used once a
+  script can describe a scene's cast. A config file with another key is still refused.
+- 10 October 2026 (morning): `frame.timeline.covered`, `before_curtain` and `curtain` tell
   scene code when the mistake panels hide the area, so a pre-mistake picture can be changed
   unseen; `stills --cue-changes` draws the frames around every cue start on numbered sheets and
   warns about a picture that vanishes as the panels lift.

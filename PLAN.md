@@ -552,6 +552,10 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
 - `RSVG_CONVERT` / `--renderer PATH`: the SVG renderer, passed through to the library as its
   `renderer`; absent, the library's own default (`rsvg-convert` on PATH). The training-video
   project's Linux shell runs one extracted from a package, not on PATH.
+  **Built 10 October 2026, 13:45**: `config.KEYS` has both (`~` expanded in the folder),
+  `videotools.elements.add_arguments` puts the flags on the five commands and
+  `elements.settings(args, conf)` resolves them, flag first; nothing opens the library yet (the
+  next increment).
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

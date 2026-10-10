@@ -28,7 +28,7 @@ def old_video(tmp_path, **fields):
 
 def test_help_and_usage():
     code, out, err = run("compare-frames", "--help")
-    assert code == 0 and " ".join(out.split()).startswith("usage: compare-frames [-h] --out SHEET.png [--offset SCENE=SECONDS] SCRIPT OLD FRAMES")
+    assert code == 0 and " ".join(out.split()).startswith("usage: compare-frames [-h] --out SHEET.png [--offset SCENE=SECONDS] [--elements DIR] [--renderer PATH] SCRIPT OLD FRAMES")
     code, out, err = run("compare-frames")
     assert code == 2 and "usage: compare-frames" in err
 

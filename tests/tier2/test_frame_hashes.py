@@ -35,7 +35,7 @@ def change_water(script_path):
 def test_help_and_usage():
     code, out, err = run("frame-hashes", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
-        "usage: frame-hashes [-h] (--out HASHES.json | --compare HASHES.json) [--merge] [--scenes KEY,...] [--step N] SCRIPT")
+        "usage: frame-hashes [-h] (--out HASHES.json | --compare HASHES.json) [--merge] [--scenes KEY,...] [--step N] [--elements DIR] [--renderer PATH] SCRIPT")
     code, out, err = run("frame-hashes")
     assert code == 2 and "usage: frame-hashes" in err
     code, out, err = run("frame-hashes", "x.md")

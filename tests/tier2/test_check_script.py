@@ -24,7 +24,7 @@ Beyond the source (added:), 4, for approval and checking:
 def test_help_describes_the_command_and_exits_0():
     code, out, err = run("check-script", "--help")
     assert code == 0
-    assert out.startswith("usage: check-script [-h] [--json OUT] SCRIPT")
+    assert " ".join(out.split()).startswith("usage: check-script [-h] [--json OUT] [--elements DIR] [--renderer PATH] SCRIPT")
     assert "--json" in out and err == ""
 
 

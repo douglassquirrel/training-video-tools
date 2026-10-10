@@ -5,3 +5,5 @@
 #SPEECH_MODEL_DIR=~/models/kokoro
 #VOICE=af_heart          # a default only: each video's settings choose its own voice
 #SPEED=0.98
+#VIDEO_ELEMENTS_DIR=~/projects/code/video-elements   # the library of drawn elements (PLAN.md item 15)
+#RSVG_CONVERT=/usr/bin/rsvg-convert                   # only when rsvg-convert is not on PATH
