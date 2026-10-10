@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 23:50. **Requests 1 to 15 are built in full**: the eight commands of the first
+10 October 2026, 23:48. **Requests 1 to 15 are built in full**: the eight commands of the first
 request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans in `say:` lines (13); the curtain on the
 timeline and `stills --cue-changes` (14); choreography described in the script and drawn from
@@ -20,19 +20,11 @@ by reading CLAUDE.md, PLAN.md (items 15 to 17 in full) and this section, then `i
 Green: 504 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
 `origin/main`.
 
-**Waiting on Squirrel** (PLAN.md "Open questions" 1 and 2, and "Settled" 30, none blocking):
-
-1. `check-script` learns that an element's size is nominal from the Notes cell beside `size` in
-   the element's `ELEMENT.md` (it begins `nominal`), read from the description's `folder`: a
-   file of video-elements' read directly, and prose at that. It is used only for an element
-   whose `fit` is not `natural` (today the real `diff`). Is that acceptable, or should
-   video-elements say it in the description?
-2. In a region, a natural-sized element with a blank Size is centred at its natural size and
-   not scaled to the region, where every other element with a blank Size is fitted to the
-   region. Is that what he wants?
-3. The natural-size half was built when video-elements' note arrived, on his 23:11 answer
-   ("do wait for natural-size in video-elements"), without asking again about the note itself.
-   If he wanted to see the note first, commit `10686b6` is the one to revert.
+**Waiting on Squirrel: nothing.** He answered the three things put to him (10 October 2026, 23:48;
+PLAN.md "Settled" 30 to 32, "Open questions" empty): building the natural-size half on his
+earlier answer when video-elements' note came "was OK, although always better to check if not
+sure"; reading "nominal" from the note in the element's `ELEMENT.md` is left as it is for now;
+a natural-sized element in a region is centred at its natural size.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -2675,3 +2667,15 @@ are used); written into "Where things stand" as a known limit.
 
 **State.** Item 17 complete. 504 green, 98%, lint clean, pushed. Three things for Squirrel in
 "Where things stand".
+
+### 10 October 2026 — Squirrel's three answers
+
+**Decision.** Squirrel (23:48): "1. that was OK, although always better to check if not sure
+2. leave for now 3. ok". So: building the natural-size half when video-elements' note arrived,
+on his 23:11 answer, was acceptable, and when unsure whether an earlier OK covers a new inbox
+item the thing to do is ask ("Settled" 30); `check-script` goes on reading "nominal" from the
+note beside `size` in the element's `ELEMENT.md` ("Settled" 31); a natural-sized element with a
+blank Size in a region is centred at its natural size ("Settled" 32). "Open questions" is
+empty. No code changes.
+
+**State.** 504 green, 98%, lint clean, pushed. Nothing in progress; the inbox is empty.

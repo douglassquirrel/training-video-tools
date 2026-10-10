@@ -998,14 +998,14 @@ Four things the training-video project found describing its scenes A2 and B for 
    Squirrel, 10 October 2026, 23:11), and a member with a Size has none. video-tools learns
    that a size is nominal from the Notes cell of the `size` row in the element's `ELEMENT.md`
    (it begins `nominal`), read from the description's `folder`, because the description the
-   library returns does not carry it ("Open questions" 1). **The natural
+   library returns does not carry it ("Settled" 31). **The natural
    size** (built 10 October 2026, after video-elements' note of 23:32 with the interface, item
    15; Squirrel, 23:11: "do wait for natural-size in video-elements (it's being worked on
    now)", and it came): a library member with a blank Size whose element's `fit` is `natural`
    is drawn at `el.natural_size(frame, params)`, asked with the parameters `draw` is given at
    that moment (the data file read into rows, the moves applied), so its text is at the sizes
    its parameters say. Placed by pixels or by an anchor, that is its size; in a region it is
-   centred at that size and not scaled to the region ("Open questions" 2). A refusal from
+   centred at that size and not scaled to the region ("Settled" 32). A refusal from
    `natural_size` is one line in words naming the member, exit 3, as a refusal from `draw` is.
    A Size that is given wins, as before, and the library fits the element into it.
    `check-script` cannot ask for the size (it has no frame) and does not need to; the warning
@@ -1210,28 +1210,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **How video-tools learns that an element's size is nominal** (item 17, 3). Assumed: from the
-   Notes cell of the `size` row in the element's `ELEMENT.md`, when it begins `nominal`, read
-   from the description's `folder`; the description `lib.element(name)` returns has no such
-   field. That reads a file of video-elements' directly rather than through the interface, and
-   a Notes column is prose for people. If video-elements comes to say it in the description
-   (its request 3, item 4 asks it to say which elements stretch and which keep their ratio),
-   video-tools reads it there instead. Claude's assumption, 10 October 2026, 23:12. **Seen
-   since (23:20, read-only):** video-elements has committed a `fit` key in the description
-   (`ratio`, `stretch` or `natural`) and `el.natural_size(frame, params)` for an element whose
-   fit is `natural` (`spreadsheet`, `prompt-box`, `file-chip`); its `diff` still says `nominal`
-   in the size row's note with fit `ratio`, so the note is the only thing that tells for it.
-   The warning is built on the note, which covers all four today. When the natural-size half of
-   item 17, 3 is built, an element whose fit is `natural` is drawn at its natural size and not
-   warned of; whether the note stays the signal for the rest is this question. (Built so, 23:40:
-   the note is read only for an element whose fit is not `natural`.)
-2. **A natural-sized element in a region with a blank Size** (item 17, 3). Item 15 says "a region
-   with a blank size fits the element inside it"; request 15 says a blank Size draws the element
-   at its natural size. Assumed: for an element whose `fit` is `natural`, the natural size wins,
-   and it is centred in the region at that size, not scaled to it (text stays the size its
-   parameters say; it may overflow a region it is too big for, and a Size then says otherwise).
-   Every other element in a region with a blank Size is fitted as before. Claude's assumption,
-   10 October 2026, 23:40.
+None.
 
 ## Settled
 
@@ -1344,5 +1323,14 @@ README): each command for real on the example video.
     natural-size in video-elements (it's being worked on now)") to the question whether that
     half should wait until he had OK'd the interface on the video-elements side, which he then
     did there (its DIARY: his answers of 23:31, the note sent with his "Yes"). He was not asked
-    again about the note itself; if that reading is wrong, the commits after `4c2091d` that
-    build it are the ones to revert.
+    again about the note itself. Squirrel, 10 October 2026, 23:48: "that was OK, although always better to
+    check if not sure".
+31. How `check-script` learns that an element's size is nominal (item 17, 3): from the Notes
+    cell of the `size` row in the element's `ELEMENT.md`, when it begins `nominal`, read from
+    the description's `folder`, and only for an element whose `fit` is not `natural` (today the
+    real `diff`). It reads a file of video-elements' directly, and a prose column; left so for
+    now, to be put to video-elements if more such elements appear (Squirrel, 10 October 2026, 23:48: "leave
+    for now").
+32. A natural-sized element in a region with a blank Size is centred in the region at its
+    natural size and not scaled to it; every other element with a blank Size in a region is
+    fitted to the region as before (item 17, 3; Squirrel, 10 October 2026, 23:48: "ok").
