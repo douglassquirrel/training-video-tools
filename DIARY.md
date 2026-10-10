@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 20:40. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 21:05. **Requests 1 to 14 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -53,26 +53,27 @@ now one line in words; 12, 19:40: the Tier 3 on the real second video's scene A2
 copy against the real library, `compare-frames` against v4 the same picture, with three finds
 fixed or recorded: the check's ordering of end-relative times, the `keep` action, a data-driven
 element's Size; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then request 14").
-**Request 14 (item 16) is two increments in**: 13 (20:20: the `element-credits` setting,
-`videotools.credits`, `check-script`'s `Credits on the end card:` block and its font check) and
-14 (20:35: the lines drawn on the end card, wrapped, the block moved up rather than off the
-bottom; `none` and a video with no library elements byte for byte today's card). **Next**:
-increment 15, the credits file written by `assemble` beside the finished video
-(`<output>.credits.txt`: every source's credit line, licence and elements; refused if it
-exists, never replaced; `assemble` gains `--elements`/`--renderer` to open the library for it;
-no file and one line said when the video uses no library elements); then the README, a dated
-note, and lint.
+**Request 14 (item 16) is complete**: 13 (20:20: the `element-credits` setting,
+`videotools.credits`, `check-script`'s `Credits on the end card:` block and its font check), 14
+(20:35: the lines drawn on the end card, wrapped, the block moved up rather than off the
+bottom; `none` and a video with no library elements byte for byte today's card) and 15 (20:55:
+`assemble` writes `<output stem>.credits.txt` beside the video, refused if it exists, never
+replaced, with `--elements`/`--renderer`; checked against the real library's register). **Nothing
+is in progress.** What waits: the training-video project's side of item 15 (re-describing its
+scenes, comparing, retiring modules, a `formula-bar` request to video-elements if it wants one),
+any request it sends here, and Squirrel's word on "Open questions" 1 (the credits file is never
+replaced: built as the default).
 The training-video project's side of item 15 (re-describing its scenes in its own script,
 comparing, retiring modules) is theirs. Then 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (items 15 and 16 in full) and this section, then `inbox/` (empty at
-20:40; anything at its top level other than README.md is new and is reported to Squirrel, never
+21:05; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 476 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 480 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -104,7 +105,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-item 15 complete; request 14 OK'd at 18:45, under way); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+items 15 and 16 complete); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) is **finished through its step 7** (17:20, commit
 `8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
 from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
@@ -2337,3 +2338,47 @@ changed one pot to a teapot had left the panel's pot. The block prints only when
 uses library elements or sets the setting, so every plain script's output is unchanged.
 
 **State.** 476 green, 98%, lint clean, pushed. Next: increment 15, the credits file.
+
+### 10 October 2026 — Item 16, increment 15: the credits file beside the finished video; request 14 complete
+
+**Goal.** `assemble` writes `<output stem>.credits.txt` after the video: every source the
+video's elements came from, its credit line, licence and elements; refused if it exists.
+
+**Test.** `test_assemble.py`: the described example (a `pot` from Invented Icons, a `table`
+from Invented Peeps) assembled with `--elements` writes the file with the exact text (the
+title, then one paragraph per source) and prints `Wrote …credits.txt`; an existing file is
+refused before anything is written, `--replace` or not, and kept; a plain video gets no file and
+its output has no word of credits; a video with library elements and no library is refused in
+words. The usage line gains the two flags (predicted change to `test_help_and_usage`).
+
+**Red.** `assert (2, 'usage: a…') == (0, '')` (no `--elements` on `assemble`) and the usage
+line.
+
+**Green.** `21 passed in 18.96s` for `test_assemble.py`; the full suite `480 passed in 137.96s
+(0:02:17)`, `TOTAL … 98%`, `ruff check .` clean. Against the real library, read-only, on the
+scratch example of 19:00 (`person`, `sun`, `gauge`, `calendar`):
+
+```
+['Icons: Tabler Icons', 'People: Open Peeps by Pablo Stanley']
+Credits for Folding a Paper Boat
+
+Icons: Tabler Icons
+  licence: MIT
+  elements: sun, calendar
+
+People: Open Peeps by Pablo Stanley
+  licence: CC0 1.0
+  elements: person
+```
+
+the gauge, drawn in the library, credited nothing, as the register says.
+
+**Decision / surprise.** The file is written whatever `element-credits` says, since it is the
+record for a client and the setting governs only the card. The `Wrote` line for the file comes
+after the video's three lines, so a plain video's last three lines are as pinned. PLAN.md item
+16 (5) had said "the dry run says so" for a video with no library elements; `assemble` has no
+dry run, so nothing is said and its output for such a video is unchanged (the PLAN.md wording
+corrected). The source name in the file is the credit line itself, since the interface's
+`lib.credits` gives category, credit line and licence and not the register's key.
+
+**State.** 480 green, 98%, lint clean, pushed. Items 15 and 16 complete. Nothing in progress.

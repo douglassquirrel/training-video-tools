@@ -15,7 +15,7 @@ import json
 import os
 import re
 
-from videotools import cli, ffmpeg, script, timeline
+from videotools import cli, credits, elements, ffmpeg, script, timeline
 
 PROG = "assemble"
 MIX_RATE = 48000
@@ -31,6 +31,7 @@ def parser():
     p.add_argument("--out", metavar="FILE", help="the finished video (default: the script's output setting)")
     p.add_argument("--replace", action="store_true",
                    help="write over existing intermediates in work/assemble/ (never the finished video)")
+    elements.add_arguments(p)
     return p
 
 
@@ -123,6 +124,12 @@ def _run(args):
         timing = json.load(f)
     out_file = args.out or os.path.join(video, settings["output"])
     cli.refuse_existing(out_file)
+    credits_file, credits_text = None, None
+    if credits.elements_used(data):             # the library's art is credited in a file beside the video
+        lib = elements.open_library(*elements.from_args(args))
+        credits_file = credits.file_path(out_file)
+        cli.refuse_existing(credits_file)
+        credits_text = credits.file_text(data, lib)
     plan = check_inputs(data, settings, video, timing)
     work = os.path.join(video, "work", "assemble")
     intermediates = [os.path.join(work, name) for name in ("narration.wav", "segments.txt", "video-only.mp4")]
@@ -162,4 +169,8 @@ def _run(args):
     print(f"Wrote {out_file}")
     print(f"length {total:.3f} s ({frames} frames), size {os.path.getsize(out_file)} bytes")
     print(f"sha256 {sha.hexdigest()}")
+    if credits_file:
+        with open(credits_file, "w", encoding="utf-8") as f:
+            f.write(credits_text)
+        print(f"Wrote {credits_file}")
     return cli.OK

@@ -25,7 +25,7 @@ def ready(example, ffstub):
 
 def test_help_and_usage():
     code, out, err = run("assemble", "--help")
-    assert code == 0 and out.startswith("usage: assemble [-h] [--out FILE] [--replace] SCRIPT")
+    assert code == 0 and " ".join(out.split()).startswith("usage: assemble [-h] [--out FILE] [--replace] [--elements DIR] [--renderer PATH] SCRIPT")
     code, out, err = run("assemble")
     assert code == 2 and "usage: assemble" in err
 
@@ -199,3 +199,56 @@ def test_the_segments_clips_and_script_are_never_modified(ready, ffstub):
     before = [open(p, "rb").read() for p in paths]
     run("assemble", ready, env=ffstub)
     assert [open(p, "rb").read() for p in paths] == before
+
+
+# ---- request 14 (PLAN.md item 16): a credits file beside the finished video
+
+INVENTED = os.path.join(os.path.dirname(__file__), "..", "stubs", "video-elements")
+CREDITS_TEXT = """Credits for Folding a Paper Boat
+
+Icons: Invented Icons
+  licence: MIT
+  elements: pot
+
+People: Invented Peeps by Nobody
+  licence: CC0 1.0
+  elements: table
+"""
+
+
+def _described(ready):
+    from tests.tier2.test_perform import describe
+    return describe(ready)
+
+
+def test_the_credits_file_lists_every_source_its_licence_and_its_elements_beside_the_video(ready, ffstub):
+    code, out, err = run("assemble", _described(ready), "--elements", INVENTED, env=ffstub)
+    assert (code, err) == (0, "")
+    path = os.path.join(video(ready), "out", "Folding a Paper Boat.credits.txt")
+    assert open(path, encoding="utf-8").read() == CREDITS_TEXT
+    assert f"Wrote {path}\n" in out
+
+
+def test_an_existing_credits_file_is_refused_before_anything_is_written_even_with_replace(ready, ffstub):
+    out_dir = os.path.join(video(ready), "out")
+    os.makedirs(out_dir)
+    path = os.path.join(out_dir, "Folding a Paper Boat.credits.txt")
+    open(path, "w").write("keep")
+    code, out, err = run("assemble", _described(ready), "--replace", "--elements", INVENTED, env=ffstub)
+    assert (code, out) == (3, "")
+    assert err == f"assemble: {path} already exists; give a new name\n"
+    assert open(path).read() == "keep"
+    assert not os.path.exists(os.path.join(video(ready), "work", "assemble"))
+
+
+def test_a_video_with_no_library_elements_gets_no_credits_file(ready, ffstub):
+    code, out, err = run("assemble", ready, env=ffstub)
+    assert (code, err) == (0, "")
+    assert not os.path.exists(os.path.join(video(ready), "out", "Folding a Paper Boat.credits.txt"))
+    assert "credits" not in out
+
+
+def test_a_video_with_library_elements_needs_the_library_for_its_credits_file(ready, ffstub):
+    code, out, err = run("assemble", _described(ready), env=dict(ffstub, VIDEO_TOOLS_CONF="/nowhere/c"))
+    assert (code, out) == (3, "")
+    assert err.startswith("assemble: VIDEO_ELEMENTS_DIR is not set in /nowhere/c and no --elements was given")

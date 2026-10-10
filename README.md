@@ -566,9 +566,14 @@ long, the block moved up rather than off the bottom. The Settings key `element-c
 which is drawn instead. `check-script` prints the lines the card will show, after the `added:`
 lines, as `Credits on the end card:`, so they are approved with the script, and its check of
 characters a font lacks covers them. A video with no library elements draws exactly the card
-it drew before.
+it drew before. `assemble` also writes a credits file beside the finished video,
+`out/<name>.credits.txt`: every source the video's elements came from, its credit line, its
+licence and the elements it supplied, one source per paragraph, for a video description or a
+client; whatever `element-credits` says, since the file is the record. Like the video it is
+never written over: `assemble` refuses before starting if it exists. A video with no library
+elements gets no file. `assemble` needs the library for it (`--elements` or the config file).
 
-### `assemble SCRIPT.md [--out FILE] [--replace]`
+### `assemble SCRIPT.md [--out FILE] [--replace] [--elements DIR] [--renderer PATH]`
 
 Joins the rendered segments (`work/segments/<scene>_<frame>.mp4`) in script order with ffmpeg's
 concat demuxer (streams copied), mixes every narration clip in at its scene's start plus its
@@ -817,8 +822,10 @@ to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
   roundel scales with it), so scene code can pass the brand-scaled size.
 - 10 October 2026 (night, last): the end card credits the library's art below its two credit lines
   (one line per category), governed by a new Settings key `element-credits` (`auto`, `none`, or
-  wording); `check-script` prints the lines as `Credits on the end card:`. A script with no
-  library elements and no such setting draws and prints exactly as before.
+  wording); `check-script` prints the lines as `Credits on the end card:`; `assemble` writes
+  `out/<name>.credits.txt` beside the video (never over an existing one) and takes `--elements`
+  and `--renderer` for it. A script with no library elements and no such setting draws, prints
+  and assembles exactly as before.
 - 10 October 2026 (evening): a scene can be described in the script and drawn from the video-elements
   library: "Describing a scene in the script", above, has the format, the checks and a real run.
   A library refusal while drawing is one line in words (exit 3), never a traceback.

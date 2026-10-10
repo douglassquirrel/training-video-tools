@@ -60,3 +60,18 @@ def sources(data, lib):
             found.setdefault(key, {"licence": entry["licence"], "elements": []})["elements"].append(name)
     return [(credit, category, v["licence"], v["elements"])
             for (category, credit), v in sorted(found.items())]
+
+
+def file_text(data, lib):
+    """The credits file beside the finished video: every source the video's elements came from,
+    its credit line, licence and elements, one source per paragraph."""
+    out = [f"Credits for {data['title']}", ""]
+    for credit, category, licence, names in sources(data, lib):
+        out += [f"{category}: {credit}", f"  licence: {licence}", f"  elements: {', '.join(names)}", ""]
+    return "\n".join(out)
+
+
+def file_path(out_file):
+    """`out/video.credits.txt` beside `out/video.mp4`."""
+    import os
+    return os.path.splitext(out_file)[0] + ".credits.txt"

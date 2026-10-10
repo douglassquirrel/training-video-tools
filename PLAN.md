@@ -925,7 +925,8 @@ words).
    supplied, one source per paragraph, for a video description or a client. Like the video it
    is never replaced: `assemble` refuses before starting if either exists, `--replace` covering
    its intermediates only as now ("Settled" 13; Claude's choice for the file, recorded in
-   "Settled"). A video with no library elements writes no credits file, and the dry run says so.
+   "Settled"). A video with no library elements writes no credits file (and nothing is said:
+   `assemble` has no dry run, and its output for such a video is unchanged).
 
 Order of work, test-first with the invented library (two elements from two invented sources):
 the setting and its check; the collection; the end card (pixels where the lines go; `none`
@@ -946,7 +947,13 @@ source (Invented Peeps, CC0, the `table`), so two lines can be seen. Increment 1
 `frame.end_card` draws the lines after the two it drew (body, 22 px, muted, centred, 36 px
 apart, with their fade), each wrapped inside a 260 px margin each side, the whole block moved
 up when its last line would come within 90 px of the bottom; `none`, and a video with no
-library elements, draw byte for byte today's card (pinned).
+library elements, draw byte for byte today's card (pinned). Increment 15 (20:55): `assemble`
+takes `--elements`/`--renderer`; when the video uses library elements it opens the library,
+refuses an existing `<output stem>.credits.txt` before anything is written (`--replace` never
+covers it), and after the video writes the file (`credits.file_text`: the title, then one
+paragraph per source, `Category: credit line`, `licence:`, `elements:`) and prints `Wrote …`
+after the sha256 line; whatever `element-credits` says, since the file is the record. Item 16
+complete.
 
 ## What is written where
 
