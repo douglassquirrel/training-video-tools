@@ -1037,9 +1037,9 @@ and nothing to check.
    removed) is not checked against On screen: by `check-script`, in a cast row and in a move
    that sets it, nor at draw time, where `frame.label("")` returns `""` without looking at the
    list (an element, or a video's own scene code, that passes an empty label through the check
-   is drawing nothing). A label that is only spaces is still a label and still checked ("Open
-   questions" 1).
-2. **The pieces** ("your call, said in the README"; "Open questions" 2): the `text` of a `pill`,
+   is drawing nothing). A label that is only spaces is still a label and still checked ("Settled"
+   35).
+2. **The pieces** ("your call, said in the README"; "Settled" 36): the `text` of a `pill`,
    a `callout` or a `text` is what the piece is for, so an empty one stays a problem, in plainer
    words than before (`'text' is empty, so there is nothing to draw`), in the cast and in a
    move. A `hand`'s `label` is optional, so `label=""` means no label, as leaving it out does:
@@ -1245,13 +1245,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **A label that is only spaces** (item 18, 1; the request asks "and whitespace only?"). Assumed:
-   only the empty string is "no label"; a value of spaces is still checked against On screen
-   and so refused unless it is listed, since it is far more likely a slip than a design.
-   Claude's assumption, 10 October 2026, 23:59.
-2. **A piece's empty text** (item 18, 2; the request leaves it to video-tools). Assumed: a
-   `pill`, `callout` or `text` with `text=""` stays a problem, in plainer words; a `hand` with
-   `label=""` has no label. Claude's assumption, 10 October 2026, 23:59.
+None.
 
 ## Settled
 
@@ -1385,3 +1379,7 @@ README): each command for real on the example video.
     label is not checked (item 18). Squirrel, 10 October 2026, 23:59, before the item was read
     out to him: "check inbox and do what it says". Its two "your call" points are "Open
     questions" 1 and 2 until he says.
+35. A label that is only spaces is still a label and still checked against On screen; only the
+    empty string is "none" (item 18, 1; Squirrel, 11 October 2026, 00:09: "agreed").
+36. A `pill`, `callout` or `text` whose `text` is empty stays a problem; a `hand` whose `label`
+    is empty is drawn without a label (item 18, 2; Squirrel, 11 October 2026, 00:09: "yes").

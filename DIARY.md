@@ -23,16 +23,9 @@ CLAUDE.md, PLAN.md (items 15 to 18 in full) and this section, then `inbox/`.
 Green: 509 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
 `origin/main`.
 
-**Waiting on Squirrel** (PLAN.md "Open questions" 1 and 2, neither blocking; both are the
-request's own "your call" points, built on the assumption stated):
-
-1. A label that is only spaces is still a label and still checked against On screen; only the
-   empty string is "none".
-2. A `pill`, `callout` or `text` whose `text` is empty stays a problem; a `hand` whose `label`
-   is empty is drawn without a label.
-
-His earlier answers (10 October, 23:48; "Settled" 30 to 32) stand: when unsure whether an
-earlier OK covers a new inbox item, ask.
+**Waiting on Squirrel:** his OK on request 17, in the inbox (below). His answers so far are
+all in PLAN.md "Settled" (30 to 36; "Open questions" is empty); one of them is a rule for
+every session: when unsure whether an earlier OK covers a new inbox item, ask.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -2799,3 +2792,46 @@ placeholder bar.
 
 **State.** Item 18 complete. 509 green, 98%, lint clean, pushed. Two assumptions for Squirrel in
 "Where things stand".
+
+### 11 October 2026 — Squirrel's answers on item 18
+
+**Decision.** Squirrel (00:09): "1. agreed 2. yes": a label of spaces only is still a label
+("Settled" 35); a piece's empty text stays a problem and a hand's empty label is none
+("Settled" 36). "Open questions" is empty. No code changes.
+
+### 11 October 2026 — The seventeenth request arrives; read and commented on, not started
+
+**What arrived.** `inbox/request-from-training-video-2026-10-11-17.md` (00:00): what the other
+ten scenes of "App For That" need the format to say, for a v5 with no Python in that project:
+(1) a Cast and Moves on title and end cards, in frame pixels; (2) `rotate` for any member, in
+the cast and animatable; (3) `via` (a curve) and `dash` on `arrow`; (4) `leader` on `callout`;
+(5) a member's own colours for an element's colour roles (`colour.<role>=<name>`); (6) to say
+what else we see the format cannot say, rather than build it. Its companion,
+`video-elements/inbox/request-from-training-video-2026-10-11-4.md` (read), asks that library
+for new elements and parameters.
+
+**Decision.** Squirrel (00:09): "look in the inbox and comment (don't start yet)". **Nothing
+done**: no PLAN.md item, no test, no code; the item stays in `inbox/`.
+
+**What reading found** (their ten modules, `frame.py` and video-elements' `draw.py`, all
+read-only), told to Squirrel:
+
+- (5) needs no change to the shared interface: the real library takes an element's colour
+  role from `frame.colours` when the role's name is there (`draw.colours_for`,
+  `shapes.py:134`), so video-tools can hand each member a frame whose colours carry its own.
+- (1) the end card has no cues (`extra 4.6`), and a move is written `cue N`: a scene without
+  cues needs moves timed from its start, as a panel's are. The title's drawing before cue 1 is
+  already sayable (`cue 1, -0.3–0.7 s`).
+- (2) a piece's box (a pill's) is known only once it is drawn, so turning about the box's centre
+  means drawing the member aside and painting it turned; anchors can be turned with it. The
+  `hand` piece already has `angle`, in radians, where `rotate` would be degrees.
+- (3) `draw.arrow` already draws a four-point curve and `draw.line` already takes `dash`.
+- (6) things the format cannot say that the modules do: a member dimmed to a level between
+  shown and hidden (takeaways: 0.55); a member growing or stretching (review's carton); a move
+  spanning two cues or timed as a fraction of a cue's length (add_data, dont_vibe); a change at
+  a steady rate rather than eased (typing, rows appearing, the history scrolling); a pulse (up
+  and back) other than as two moves, and anything that repeats with time (flashing warnings,
+  sparkles, steam); choosing columns or rows of a CSV (every module picks some); plain shapes
+  (a rounded bar, a disc, a line of dashes) other than through an element.
+
+**State.** 509 green, 98%, lint clean. Waiting on Squirrel's OK for request 17.
