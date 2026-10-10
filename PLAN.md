@@ -620,7 +620,13 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   multiplies by `tl.before_curtain(t)` for a scene member whose first show starts before the
   mistake cue and that no move at a later cue names; a member named after the mistake, or first
   shown at or after it, is left to its moves; a panel's members and a scene with no mistake are
-  untouched.
+  untouched. **Increment 10, 18:25**: a panel's own moves count from the moment the panels start
+  to rise (pinned by a member shown 1.0–1.4 s in, absent while covered before it, there after;
+  the test seen to fail with the panel's clock broken on purpose); and the request's proof, a
+  described scene and the same scene written as a module give equal frames through
+  `frame-hashes` (scene A of the example both ways against the invented library, `--compare`
+  exit 0). What remains of item 15: the README's format section and the flags in every usage
+  line (increment 11), and the Tier 3 against the real library (12).
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

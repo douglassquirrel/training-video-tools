@@ -668,7 +668,8 @@ with ffmpeg 4.4.
   eased, a word at the start, a state part-way as a cross-fade or morph; a member placed by
   another's row, cell or other computed anchor comes after it in the cast, which `check-script`
   checks; and a member shown before the mistake cue and not named after it fades under the
-  panels by itself, so the glimpse `stills --cue-changes` warns of cannot be written. The refusal for a step scene with
+  panels by itself, so the glimpse `stills --cue-changes` warns of cannot be written; a Mistake or
+  Right way section's own moves count from the moment the panels rise. The refusal for a step scene with
   no `code` now reads "has no 'code' property and no Cast, so nothing can draw it".
 - 10 October 2026 (afternoon): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,

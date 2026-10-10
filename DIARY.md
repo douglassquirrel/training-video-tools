@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 18:05. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 18:30. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -43,20 +43,21 @@ described scene's problems before drawing, and the four drawing commands pass th
 every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
 (`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
 span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): 1–9** (8, 17:40: computed anchors
+far of item 15's twelve increments (the list of 15:00): 1–10** (8, 17:40: computed anchors
 after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
-extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; Squirrel, 17:20:
-"continue with increments 8-10"). **Next**: 10 (panel moves under the curtain and the
-equivalence of a described scene with the same scene as a module through `frame-hashes`), 11 (README: the format under "Writing a video's script", the
+extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; 10, 18:25: a
+panel's moves from its rise, and the proof that a described scene and the same scene as a
+module give equal frames through `frame-hashes`; Squirrel, 17:20: "continue with increments
+8-10"). **Next**: 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-18:05; anything at its top level other than README.md is new and is reported to Squirrel, never
+18:30; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 458 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 460 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -86,7 +87,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–9 built, 10 OK'd at 17:20); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+increments 1–10 built; 11 and 12 on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) is **finished through its step 7** (17:20, commit
 `8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
 from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
@@ -2173,3 +2174,34 @@ pixel test is the proof. "Named at a later cue" is any move whose cue is greater
 mistake cue's.
 
 **State.** 458 green, 98%, lint clean, pushed. Next: increment 10.
+
+### 10 October 2026 — Item 15, increment 10: a panel's own moves, and the equivalence proof
+
+**Goal.** A Mistake or Right way section's moves count from the panels' rise; and the request's
+proof, a described scene and the same scene as a module giving equal frames.
+
+**Test.** `test_perform.py`: the Mistake panel's pot shown `1.0–1.4 s` after the rise, absent at
+cue 2 + 0.8 s (covered, before its show) and there at + 1.6 s; and scene A of the example
+described (a pot, a pill, a pot and a pill in the panels) hashed with `frame-hashes --out`,
+then the same scene as a module (`fold_in_half.py` rewritten to draw exactly what the stub
+draws: the accent rectangle, `frame.tag` with the same arguments) hashed with `--compare`, exit
+0 and nothing printed.
+
+**Red.** Neither test failed first: panel moves were built in increment 6 without a test of
+their own, and the proof is a proof. So, as CLAUDE.md's exception asks, the panel test was
+checked against the code broken on purpose: with the panel's clock set to 0 it failed
+(`assert (31, 111, 139) != (31, 111, 139)`), restored it passed. My first version of that test
+did not fail even then, because it sampled while the panels were still translucent; it now
+samples while they are fully up. The proof's power rests on `frame-hashes --compare` exiting 1
+when frames differ, which its own tests pin.
+
+**Green.** `2 passed in 1.53s`; the full suite `460 passed in 134.72s (0:02:14)`, `TOTAL … 98%`,
+`ruff check .` clean.
+
+**Decision / surprise.** The equivalence holds bit for bit on this scene: the described cast
+and the module go through the same `frame.tag` and the same cairo fill, so the hashes match
+with no tolerance. With the real library the Tier 3 compares a described scene A2 against v4
+of the second video by `compare-frames`, where differences are expected and looked at by eye.
+
+**State.** 460 green, 98%, lint clean, pushed. Increments 8–10 done as asked at 17:20. Next:
+increment 11, the README's format section, then 12, the Tier 3.

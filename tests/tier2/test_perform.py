@@ -290,3 +290,92 @@ def test_stills_cue_changes_is_quiet_on_a_described_scene_whose_picture_fades_un
     code, out, err = run("stills", script, "--cue-changes", "--scenes", "A", "--out", tmp_path / "cues.png",
                          "--elements", INVENTED)
     assert (code, err) == (0, "")
+
+
+# ---- increment 10: a panel's own moves, and a described scene equal to the same scene as a module
+
+PANEL_MOVES = CAST.replace("| wrong | pot | 100 100 | 100 | | panel body at 52 196: frame rect 152 296 |\n",
+                           "| wrong | pot | 100 100 | 100 | | panel body at 52 196: frame rect 152 296 |\n\n"
+                           "- 1.0–1.4 s: show wrong\n")
+
+
+def test_a_panel_move_counts_from_the_panels_rise(example):
+    cropped(example)
+    narrated(example)
+    video = frame.Video(describe(example, PANEL_MOVES), INVENTED, None)
+    assert pixel(rendered(video, "A", 4.5), 202, 346) != ACCENT          # cue 2 + 0.8 s: covered, before its show
+    assert pixel(rendered(video, "A", 5.3), 202, 346) == ACCENT          # cue 2 + 1.6 s: shown
+
+
+SAME_AS_MODULE = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| pot1 | pot | 100 100 | 200 | | |
+| sign | pill | 400 100 | | text=crease size=22 fill=accent | |
+
+### Moves
+
+- cue 1: show pot1
+- cue 1, 1.0 s: show sign
+
+### Mistake
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| wrong | pot | 100 100 | 100 | | |
+
+### Right way
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| right | pill | 100 100 | | text="edge fold" fill=correct | |
+
+"""
+
+MODULE = '''"""Scene A as a module, drawing exactly what the described scene draws through the stub library."""
+
+
+def _pot(frame, x, y, w, h, alpha):
+    if alpha <= 0:
+        return
+    frame.ctx.save()
+    frame.ctx.rectangle(x, y, w, h)
+    frame.ctx.set_source_rgba(*frame.colour("accent"), alpha)
+    frame.ctx.fill()
+    frame.ctx.restore()
+
+
+def draw(frame):
+    t, tl = frame.t, frame.timeline
+    _pot(frame, 140, 218, 200, 200, tl.p(t, 1, 0.0, 0.6))
+    b = tl.p(t, 1, 1.0, 1.6)
+    if b > 0:
+        frame.tag("crease", 440, 218, size=22, fill="accent", alpha=b)
+
+
+def mistake(frame, rect):
+    x, y, w, h = rect
+    _pot(frame, x + 100, y + 100, 100, 100, 1.0)
+
+
+def right_way(frame, rect):
+    x, y, w, h = rect
+    frame.tag("edge fold", x + 100, y + 100, size=22, fill="correct")
+'''
+
+
+def test_a_described_scene_and_the_same_scene_as_a_module_give_equal_frames(example, tmp_path):
+    cropped(example)
+    narrated(example)
+    original = open(example, encoding="utf-8").read()
+    hashes = tmp_path / "described.json"
+    describe(example, SAME_AS_MODULE)
+    code, out, err = run("frame-hashes", example, "--out", hashes, "--scenes", "A", "--step", "10",
+                         "--elements", INVENTED)
+    assert (code, err) == (0, ""), err
+    open(example, "w", encoding="utf-8").write(original)                       # the coded scene instead
+    with open(os.path.join(os.path.dirname(example), "scenes", "fold_in_half.py"), "w", encoding="utf-8") as f:
+        f.write(MODULE)
+    code, out, err = run("frame-hashes", example, "--compare", hashes, "--scenes", "A", "--step", "10")
+    assert (code, err) == (0, ""), out
