@@ -104,3 +104,32 @@ def test_the_example_scripts_scenes_build_with_estimates():
     for sc in data["scenes"]:
         tl = timeline.build(st, sc, None, estimate=True)
         assert tl.frames > 0 and len(tl.estimated) == len(sc["cues"])
+
+
+def mistake_scene(mistake_on, cues=3):
+    sc = scene([(f"Cue {i}.",) for i in range(1, cues + 1)])
+    if mistake_on:
+        sc["cues"][mistake_on - 1]["mistake"] = "Wrong / Right"
+    return sc
+
+
+def test_the_curtain_rises_over_half_a_second_from_the_mistake_cue_and_lifts_around_the_next_cues_start():
+    tl = timeline.build(SETTINGS, mistake_scene(2), [1.0, 1.0, 1.0])     # starts 0.7, 2.25, 3.8
+    assert (tl.curtain(2.0), tl.curtain(2.25), tl.curtain(2.75), tl.curtain(3.4)) == (0.0, 0.0, 1.0, 1.0)
+    assert 0.0 < tl.curtain(3.65) < 1.0
+    assert tl.curtain(3.9) == 0.0 and tl.curtain(2.5) == pytest.approx(0.5)
+
+
+def test_covered_is_true_only_at_full_strength_and_before_curtain_fades_out_inside_that_time():
+    tl = timeline.build(SETTINGS, mistake_scene(2), [1.0, 1.0, 1.0])
+    assert [tl.covered(t) for t in (2.0, 2.5, 2.75, 3.3, 3.4, 3.5, 3.9)] == [False, False, True, True, True, False, False]
+    assert (tl.before_curtain(2.0), tl.before_curtain(2.75), tl.before_curtain(2.95), tl.before_curtain(5.0)) == (1.0, 1.0, 0.0, 0.0)
+    assert tl.before_curtain(2.85) == pytest.approx(0.5) and tl.covered(2.85)
+
+
+def test_a_scene_with_no_mistake_is_never_covered_and_one_whose_mistake_is_last_stays_covered_to_the_end():
+    tl = timeline.build(SETTINGS, mistake_scene(None), [1.0, 1.0, 1.0])
+    assert all((tl.curtain(t), tl.covered(t), tl.before_curtain(t)) == (0.0, False, 1.0) for t in (0.0, 2.5, 3.0, 6.0))
+    assert tl.mistake is None
+    tl = timeline.build(SETTINGS, mistake_scene(3), [1.0, 1.0, 1.0])
+    assert tl.mistake == 3 and tl.curtain(4.5) == 1.0 and tl.curtain(tl.total) == 1.0 and tl.covered(tl.total)

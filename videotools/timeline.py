@@ -47,12 +47,13 @@ class Timeline:
     """A scene's timing: cue starts and lengths (by the script's cue numbers, from 1), the
     total in seconds and frames, and which cues were estimated rather than measured."""
 
-    def __init__(self, starts, lengths, total, fps, estimated=()):
+    def __init__(self, starts, lengths, total, fps, estimated=(), mistake=None):
         self._starts, self._lengths = list(starts), list(lengths)
         self.fps = fps
         self.frames = int(round(total * fps))
         self.total = self.frames / fps
         self.estimated = list(estimated)
+        self.mistake = mistake          # the mistake cue's number, or None
 
     def start(self, cue):
         return self._starts[cue - 1]
@@ -72,6 +73,33 @@ class Timeline:
         """Eased progress of t between a and b seconds after the start of `cue`."""
         s = self.start(cue)
         return ep(t, s + a, s + b)
+
+    # ---- the curtain: the mistake panels' strength, in one place (PLAN.md item 14)
+
+    def curtain(self, t):
+        """The mistake panels' strength at t, 0–1: rising over 0.5 s from the mistake cue's
+        start, lifting from 0.4 s before the next cue's start to 0.1 s after it (staying up to
+        the end when the mistake cue is the last); 0 for a scene with no mistake cue."""
+        n = self.mistake
+        if n is None:
+            return 0.0
+        strength = self.p(t, n, 0.0, 0.5)
+        if n < len(self._starts):
+            strength *= 1 - self.p(t, n + 1, -0.4, 0.1)
+        return strength
+
+    def covered(self, t):
+        """True while the panels are at full strength: the scenery behind them cannot be seen."""
+        return self.curtain(t) >= 1.0
+
+    def before_curtain(self, t):
+        """1.0 until the panels have covered the area, then a fade to 0.0 between 0.5 and 0.7 s
+        after the mistake cue's start, inside the covered time: multiply what belongs to the
+        picture before the mistake by this, and it changes while nobody can see it. 1.0 always
+        for a scene with no mistake cue."""
+        if self.mistake is None:
+            return 1.0
+        return 1 - self.p(t, self.mistake, 0.5, 0.7)
 
 
 def clips_for(timing, scene):
@@ -107,4 +135,5 @@ def build(settings, scene, clips, estimate=False):
         lengths.append(length)
         t += length
     total = t + settings["tail"] + script.extra(scene)
-    return Timeline(starts, lengths, total, settings["fps"], estimated)
+    mistake = next((cue["n"] for cue in cues if "mistake" in cue), None)
+    return Timeline(starts, lengths, total, settings["fps"], estimated, mistake)

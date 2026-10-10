@@ -257,12 +257,7 @@ def mistake_panels(ctx, video, scene, tl, t, frame):
     cue = next((c for c in scene["cues"] if "mistake" in c), None)
     if not cue:
         return
-    n = cue["n"]
-    if t < tl.start(n) - 0.1:
-        return
-    p = tl.p(t, n, 0.0, 0.5)
-    if n < len(scene["cues"]):
-        p *= 1 - tl.p(t, n + 1, -0.4, 0.1)
+    p = tl.curtain(t)               # the one place the panels' timing lives (timeline.Timeline)
     if p <= 0:
         return
     wrong, right = script.mistake(cue)

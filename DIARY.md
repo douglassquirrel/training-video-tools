@@ -1588,3 +1588,24 @@ see every cue change with a warning for the glimpse. Checked the panel's formula
 go ahead". PLAN.md item 14, build step 13, "Settled" 23; the item moved to `inbox/done/`.
 
 **State.** Next: the curtain functions on the timeline, test-first.
+
+### 10 October 2026 — Request 12, item 1: the curtain on the timeline
+
+**Goal.** `Timeline.curtain(t)` (the mistake panels' strength, the formula moved from
+`frame.mistake_panels`), `covered(t)`, `before_curtain(t)` (1.0, then a fade 0.5–0.7 s after
+the mistake cue's start, inside the covered time), `mistake` (the cue number or None); the
+panels drawn from `curtain`, so there is one place for the timing.
+
+**Test.** Three in `tests/tier1/test_timeline.py` on a three-cue scene with 1 s clips (starts
+0.7, 2.25, 3.8): the curtain 0 at the mistake cue's start, 1 at +0.5 and at the next start
+−0.4, between at −0.15, 0 at +0.1; `covered` true only at full strength; `before_curtain` 1 at
++0.5, 0.5 at +0.6 while covered, 0 at +0.7; no mistake: never covered, 1.0 always; the mistake
+cue last: covered to the scene's end.
+
+**Red.** `3 failed`: `'Timeline' object has no attribute 'curtain'` (and `covered`).
+
+**Green.** `42 passed` for the timeline, frame and frame-method files: the eight stored frames
+are unchanged with the panels drawn from `tl.curtain(t)`, which is the proof the formula moved
+without changing.
+
+**State.** Item 1 done. Next: `draw_frame(..., curtain=False)`, then `stills --cue-changes`.
