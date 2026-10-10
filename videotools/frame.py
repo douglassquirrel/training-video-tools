@@ -404,6 +404,8 @@ def draw_frame(ctx, video, scene, tl, t, curtain=True):
         ctx.rectangle(*lay.card)
         ctx.clip()
         title_card(ctx, video, scene, tl, t)
+        if scene["cast"]:                       # a card's cast: over its text, in the frame's own pixels
+            perform.draw_scene(frame, video, scene, tl, t, area=(0, 0, lay.width, lay.height))
         if video.module(scene):
             video.module(scene).draw(frame)
         ctx.restore()
@@ -413,6 +415,8 @@ def draw_frame(ctx, video, scene, tl, t, curtain=True):
         ctx.rectangle(0, 0, lay.width, lay.height)
         ctx.clip()
         end_card(ctx, video, scene, tl, t)
+        if scene["cast"]:
+            perform.draw_scene(frame, video, scene, tl, t, area=(0, 0, lay.width, lay.height))
         if video.module(scene):
             video.module(scene).draw(frame)
         ctx.restore()

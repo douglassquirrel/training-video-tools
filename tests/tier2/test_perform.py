@@ -641,3 +641,56 @@ def test_a_member_with_a_colour_of_its_own_is_drawn_in_it_and_its_neighbour_in_t
     assert pixel(s, 150, 228) == hex_rgb("#3E7D4F")          # pot1 in the paperboat kit's `correct`
     assert pixel(s, 550, 428) == ACCENT                      # pot2 as ever
 
+
+
+# ---- item 19 (request 17), 4: a cast on the title and end cards, in frame pixels
+
+TITLE_CAST = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| sheet | pot | 1400 500 | 200 | | frame pixels: the rect is 1400 500, 200 x 200 |
+
+### Moves
+
+- cue 1, -0.3–0.7 s: show sheet
+
+"""
+
+END_CAST = """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| sheet | pot | 100 700 | 200 | | |
+
+### Moves
+
+- 0.5–1.0 s: show sheet
+- end-1.0–end-0.5 s: hide sheet
+"""
+
+
+def carded(example):
+    """The example copy with a cast on its title card and on its end card (which has no cues)."""
+    cropped(example)
+    narrated(example)
+    text = open(example, encoding="utf-8").read()
+    notes, last = "## Notes\n\nProse between scenes", "the website, the credit lines.\n"
+    assert text.count(notes) == 1 and text.endswith(last)
+    open(example, "w", encoding="utf-8").write(text.replace(notes, TITLE_CAST + notes) + END_CAST)
+    return frame.Video(example, INVENTED, None)
+
+
+def test_a_title_cards_cast_is_drawn_over_the_card_in_frame_pixels_from_before_cue_1(example):
+    video = carded(example)                                  # cue 1 starts at 0.7 s: the show is 0.4 to 1.4 s
+    assert pixel(rendered(video, "title", 0.3), 1500, 600) != ACCENT
+    assert pixel(rendered(video, "title", 1.6), 1500, 600) == ACCENT
+    assert video.library.draws[-1]["rect"] == (1400.0, 500.0, 200.0, 200.0)
+
+
+def test_an_end_cards_cast_is_drawn_and_its_moves_count_from_the_scenes_start_and_end(example):
+    video = carded(example)                                  # the end card lasts 0.7 + 1.0 + 4.0 = 5.7 s
+    assert pixel(rendered(video, "end", 0.4), 200, 800) != ACCENT
+    assert pixel(rendered(video, "end", 2.0), 200, 800) == ACCENT
+    assert pixel(rendered(video, "end", 5.3), 200, 800) != ACCENT      # hidden from 4.7 to 5.2 s

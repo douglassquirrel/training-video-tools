@@ -202,7 +202,7 @@ just prose
     assert problems == [
         "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
-        "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves have no cue)",
+        "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have none)",
         "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue]: ACTION",
         "line 34: scene A2, moves: Where 'nowhere' is not X Y in area pixels, a region (left, right, centre, "
         "top-left, top-right, bottom-left, bottom-right, full) or a member's anchor like sample.row.3 + 40 -12",
@@ -255,3 +255,48 @@ def test_a_colour_role_is_a_parameter_named_colour_dot_the_role():
                         "line 25: scene A2, cast: Parameters: 'colour.Fill=doc' is not name=value"]
     assert scene["cast"][0]["params"] == {"colour.fill": "doc", "colour.line-2": "sheet-tab", "state": "plain"}
 
+
+
+# ---- item 19 (request 17), 4: a cast on a card; a scene with no cues writes its moves without `cue N`
+
+NO_CUES = """# A video
+
+## Scene end: End card
+
+| Key | Value | Notes |
+|---|---|---|
+| kind | end | |
+| extra | 4.0 | |
+
+### Narration
+
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | badge | 1500 300 | | ok=yes | frame pixels on a card |
+
+### Moves
+
+- 0.4–1.4 s: show a
+- end-1–end s: hide a
+- show a
+- cue 1: show a
+"""
+
+
+def test_a_scene_with_no_cues_writes_its_moves_without_a_cue_timed_from_its_start():
+    scene, problems = _scene(NO_CUES)
+    assert problems == ["line 23: scene end, moves: the scene has no cues, so its moves have no 'cue N': times "
+                        "count from the scene's start"]
+    assert [(m["cue"], m["start"], m["end"]) for m in scene["moves"]] == [
+        (None, ("start", 0.4), ("start", 1.4)),
+        (None, ("end", -1.0), ("end", 0.0)),
+        (None, ("start", 0.0), ("start", 0.6)),
+    ]
+
+
+def test_a_scene_with_cues_still_needs_cue_n_on_every_move():
+    scene, problems = _scene(HEAD + "\n### Moves\n\n- 0.4–1.4 s: show a\n")
+    assert problems == ["line 22: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a "
+                        "scene with no cues have none)"]

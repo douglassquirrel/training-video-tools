@@ -62,11 +62,11 @@ def box_anchors(rect):
             "centre": (x + w / 2, y + h / 2)}
 
 
-def window(move, tl, panel_start):
-    """(from, to) in scene seconds for a move: its span against its cue's start and length, or
-    against the panel's rise."""
+def window(move, tl, panel_start, panel=True):
+    """(from, to) in scene seconds for a move: its span against its cue's start and length; or,
+    with no cue, against the panel's rise, or (not in a panel) the scene's own start and end."""
     if move["cue"] is None:
-        base, length = panel_start, 0.0
+        base, length = (panel_start, 0.0) if panel else (0.0, tl.total)
     else:
         base, length = tl.start(move["cue"]), tl.length(move["cue"])
 
@@ -93,7 +93,7 @@ class Performance:
         for mv in self.moves:
             act = mv["action"]
             if act["kind"] in kinds and name in act.get("names", [act.get("name")]):
-                out.append((window(mv, self.tl, self.panel_start), mv))
+                out.append((window(mv, self.tl, self.panel_start, self.panel), mv))
         return sorted(out, key=lambda item: item[0])
 
     def alpha(self, name):
@@ -317,9 +317,11 @@ class Performance:
         return (x + where["dx"], y + where["dy"])
 
 
-def draw_scene(frame, video, scene, tl, t):
-    """The scene's described cast at t, before the module's draw (if any)."""
-    Performance(scene["cast"], scene["moves"], frame.area, tl, t, video.library, folder=video.folder).draw(frame)
+def draw_scene(frame, video, scene, tl, t, area=None):
+    """The scene's described cast at t, before the module's draw (if any): in the animation
+    area's pixels, or in `area`'s (the whole frame, for a title or end card)."""
+    Performance(scene["cast"], scene["moves"], area or frame.area, tl, t, video.library,
+                folder=video.folder).draw(frame)
 
 
 def draw_panel(frame, video, scene, panel, rect, tl, t):

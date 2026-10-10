@@ -473,3 +473,17 @@ def test_an_arrows_via_is_two_points_and_its_dash_two_numbers_above_0():
         "line 30: scene A2, cast: 'solid': 'dash' should be two numbers above 0, the dash and the gap, not '12'",
         "line 31: scene A2, cast: 'none': 'dash' should be two numbers above 0, the dash and the gap, not '12 0'",
     ]
+
+
+# ---- item 19 (request 17), 4: the moves of a scene with no cues are timed from its start
+
+def test_a_scene_with_no_cues_has_its_moves_checked_against_its_own_length():
+    from tests.tier1.test_choreography_parse import NO_CUES
+    text = NO_CUES.replace("- show a\n- cue 1: show a\n", "- 5.0–6.0 s: show a\n").replace(
+        "| a | badge | 1500 300 | | ok=yes | frame pixels on a card |",
+        "| a | badge | 1500 300 | | ok=yes | frame pixels on a card |\n| b | badge | 100 100 | | ok=no | |")
+    tl = timeline.Timeline([], [], 5.7, 30, estimated=[], mistake=None)
+    assert _check(text, tl=tl) == [
+        "line 17: scene end, cast: 'b' is never shown",
+        "line 23: scene end, moves: 6 s is past the end of the scene, which is 5.7 s long",
+    ]

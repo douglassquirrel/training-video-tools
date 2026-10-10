@@ -151,18 +151,24 @@ def parse_span(text):
     return a, (a[0], a[1] + DEFAULT_SPAN)
 
 
-def parse_move(text, in_panel):
-    """({cue, start, end, action}, problem) for the text of one move list item."""
-    if in_panel:
+CUELESS = {"panel": "a panel's moves have no 'cue N': times count from the panel's rise",
+           "scene": "the scene has no cues, so its moves have no 'cue N': times count from the scene's start"}
+
+
+def parse_move(text, cueless=None):
+    """({cue, start, end, action}, problem) for the text of one move list item. `cueless` is
+    'panel' or 'scene' where moves are written without a cue (a panel; a scene that has none)."""
+    if cueless:
         if text.startswith("cue "):
-            return None, "a panel's moves have no 'cue N': times count from the panel's rise"
+            return None, CUELESS[cueless]
         m = _PANEL_MOVE_RE.match(text)
         cue, span, action = None, m.group(1), m.group(2)
     else:
         m = _SCENE_MOVE_RE.match(text)
         if not m:
             if ":" in text and not text.startswith("cue "):
-                return None, "a scene's move starts 'cue N' (a panel's moves have no cue)"
+                return None, ("a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues "
+                              "have none)")
             return None, f"'{text}' is not cue N[, A s | A–B s | over the cue]: ACTION"
         cue, span, action = int(m.group(1)), m.group(2), m.group(3)
     start, end = parse_span(span)
@@ -229,14 +235,14 @@ def parse_cast_rows(lines, where, problems):
     return cast
 
 
-def parse_moves(lines, where, in_panel, problems):
+def parse_moves(lines, where, cueless, problems):
     moves = []
     for n, line in lines:
         m = _LIST_RE.match(line.strip())
         if not m:
             problems.append(f"line {n}: {where}: not a move (a list item '- cue N[, TIME]: ACTION'): {line.strip()}")
             continue
-        move, problem = parse_move(m.group(1).strip(), in_panel)
+        move, problem = parse_move(m.group(1).strip(), cueless)
         if problem:
             problems.append(f"line {n}: {where}: {problem}")
             continue
@@ -255,7 +261,7 @@ def parse_sections(scene, sections, problems):
                                         f"scene {key}, cast", problems)
     if "moves" in sections:
         scene["moves"] = parse_moves([(n, ln) for n, ln in sections["moves"]["lines"] if ln.strip()],
-                                     f"scene {key}, moves", False, problems)
+                                     f"scene {key}, moves", None if scene["cues"] else "scene", problems)
     for panel in ("mistake", "right way"):
         if panel not in sections:
             continue
@@ -268,7 +274,7 @@ def parse_sections(scene, sections, problems):
             (table if s.startswith("|") else moves if s.startswith("-") else _reject(problems, n, where, s)).append(
                 (n, ln))
         scene["panels"][panel] = {"line": sections[panel]["line"], "cast": parse_cast_rows(table, where, problems),
-                                 "moves": parse_moves(moves, where, True, problems)}
+                                 "moves": parse_moves(moves, where, "panel", problems)}
 
 
 def _reject(problems, n, where, s):
@@ -656,6 +662,12 @@ def _resolve(tl, cue, when):
     return offset if ref == "start" else tl.length(cue) + offset
 
 
+def _in_scene(tl, when):
+    """Seconds into a scene with no cues for a move's time: from its start, or back from its end."""
+    ref, offset = when
+    return offset if ref == "start" else tl.total + offset
+
+
 def _check_moves(scene, ctx, moves, where, tl, panel):
     """([members never shown], [problems]) for a cast's moves."""
     members, lib = ctx["members"], ctx["lib"]
@@ -663,7 +675,13 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
     for mv in moves:
         at = f"line {mv['line']}: {where}: "
         cue, act = mv["cue"], mv["action"]
-        if not panel:
+        if cue is None and not panel:           # a scene with no cues: times from its start, `end` its end
+            for when in (mv["start"], mv["end"]):
+                if _in_scene(tl, when) > tl.total + 1e-9:
+                    problems.append(f"{at}{_secs(_in_scene(tl, when))} s is past the end of the scene, which is "
+                                    f"{tl.total:.1f} s long")
+                    break
+        elif not panel:
             if not 1 <= cue <= len(scene["cues"]):
                 problems.append(f"{at}cue {cue}: the scene has {len(scene['cues'])} cues")
                 continue
@@ -684,7 +702,8 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         if act["kind"] == "keep":           # names the members, so the curtain leaves them; nothing else
             continue
         if act["kind"] in ("show", "hide"):
-            t = (tl.start(cue) + _resolve(tl, cue, mv["start"])) if not panel else mv["start"][1]
+            t = (mv["start"][1] if panel else _in_scene(tl, mv["start"]) if cue is None
+                 else tl.start(cue) + _resolve(tl, cue, mv["start"]))
             for n in names:
                 events.append((t, mv["line"], act["kind"], n, cue))
         elif act["kind"] == "move":
@@ -740,13 +759,13 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         if kind == "show":
             never.discard(n)
             if shown[n] is not None:        # never 0 here: a member with a show is not shown from the start
-                when = "" if panel else f" at cue {cue}"
+                when = "" if cue is None else f" at cue {cue}"
                 problems.append(f"{at}'{n}' is shown again{when} while still shown (shown at line {shown[n]}, "
                                 "not hidden since)")
             shown[n] = line
         else:
             if shown[n] is None:
-                when = "" if panel else f" at cue {cue}"
+                when = "" if cue is None else f" at cue {cue}"
                 problems.append(f"{at}'{n}' is hidden{when} but was not shown")
             shown[n] = None
     return never, sorted(problems, key=lambda p: int(p.split(":")[0].split()[1]))

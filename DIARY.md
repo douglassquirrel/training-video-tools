@@ -2930,3 +2930,70 @@ refused as "not show NAME, …" as any unknown action is.
 
 **State.** 519 green, 98%, lint clean. Next: item 19, 4 (its tests are written, set aside
 while this is committed).
+
+### 11 October 2026 — The eighteenth request arrives; read and commented on, not started
+
+**What arrived.** `inbox/request-from-training-video-2026-10-11-18.md` (00:22), from four of the
+seven things in our reply to that project (its Squirrel, 00:22: "make new request 18 for 1, 2,
+4, and 5"): (1) choosing a CSV's columns and rows beside `rows=FILE`; (2) a move marked
+`linear`; (4) a span that ends in a later cue, and a time as a percentage of its cue's length;
+(5) dimming a member to a level. Squirrel here (00:24): "When you get to a good stopping place,
+check the inbox for new requests and comment on them before continuing." Read at the stopping
+place after item 19, 3; **nothing done**; the item stays in `inbox/`.
+
+**Comment given to Squirrel.** All four are sayable and none needs video-elements. (2), (4) and
+(5) all change the moves' grammar and timing (`parse_move`, `perform.window`,
+`_check_moves`), as item 19, 4 (a scene with no cues) is changing now, so they are best built
+after item 19 is finished, in the order linear, dim, spans and percentages, then the CSV.
+Proposed: the CSV's choices written as `rows.columns`, `rows.where`, `rows.first`, named after
+the parameter they qualify, so that they cannot collide with an element's own parameter names
+(`columns`, `where`, `first` bare would be reserved on every element for ever); columns
+separated by commas, a name or a number from 1; `where` then `first` then `columns`. `dim NAME
+to LEVEL` as an action beside `show` and `hide`. In a span across cues, the member counts as
+named at the later cue for the curtain rule.
+
+**State.** 519 green, pushed. Continuing item 19, 4.
+
+### 11 October 2026 — Item 19, 4: a cast on the title and end cards; a scene with no cues
+
+**Goal.** `### Cast` and `### Moves` on a title or end scene, in frame pixels, drawn over the
+card; a scene with no cues writes its moves without `cue N` (request 17, item 1; Squirrel,
+00:13).
+
+**Tests, red and green, in order.**
+
+1. `test_a_scene_with_no_cues_writes_its_moves_without_a_cue_timed_from_its_start` and
+   `test_a_scene_with_cues_still_needs_cue_n_on_every_move` (tier 1, the parser). Red:
+   ```
+   E   At index 0 diff: "line 20: scene end, moves: a scene's move starts 'cue N' (a panel's moves have no cue)" != "line 22: scene end, moves: the scene has no cues, so its moves have no 'cue N': times count from the scene's start"
+   ```
+   Green: `11 passed in 0.02s`.
+2. `test_a_scene_with_no_cues_has_its_moves_checked_against_its_own_length` (tier 1, the check:
+   a time past the scene's end, a member never shown). Red: `TypeError: '<=' not supported
+   between instances of 'int' and 'NoneType'` at `choreography.py:673`, the check comparing a
+   cue that is not there. Green: `42 passed in 0.15s` (the three tier 1 choreography files).
+3. `test_a_title_cards_cast_is_drawn_over_the_card_in_frame_pixels_from_before_cue_1` and
+   `test_an_end_cards_cast_is_drawn_and_its_moves_count_from_the_scenes_start_and_end` (tier 2,
+   by pixels and the rect the stub was handed). Red, nothing of the cast drawn:
+   ```
+   E       assert (158, 156, 153) == (31, 111, 139)
+   E       assert (247, 243, 234) == (31, 111, 139)
+   ```
+   Green: `38 passed in 10.80s`.
+
+Full suite: `524 passed in 145.49s (0:02:25)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** Two expectations changed with a reason. My new test's line number was
+a miscount (the refused move is the script's line 23, not 22): the test was wrong. And an
+existing test's message changed on purpose, since the words now have to cover a scene with no
+cues: "a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have
+none)". `parse_move` takes `cueless` (`'panel'`, `'scene'` or None) in place of `in_panel`;
+`perform.window` times a cue-less scene's move from 0 with `end` at the scene's total, a
+panel's from its rise as before. On a card `draw_scene` is given the whole frame as its area;
+the title card's own clip (the card, above the caption band) still applies, so a cast member
+placed below 948 would be cut there.
+
+**State.** 524 green, 98%, lint clean. Request 18 OK'd meanwhile (Squirrel, 00:28: "1. and 2.
+both yes": after request 17, in the order linear, dim, spans and percentages, CSV, with
+`rows.columns`, `rows.where`, `rows.first`); it goes into PLAN.md when request 17 is finished.
+Next: item 19, 5, turning a member.
