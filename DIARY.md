@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 19:05. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 19:55. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -43,26 +43,29 @@ described scene's problems before drawing, and the four drawing commands pass th
 every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
 (`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
 span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): 1–11** (8, 17:40: computed anchors
+far of item 15's twelve increments (the list of 15:00): all twelve: item 15 is complete** (8, 17:40: computed anchors
 after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
 extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; 10, 18:25: a
 panel's moves from its rise, and the proof that a described scene and the same scene as a
 module give equal frames through `frame-hashes`; 11, 19:00: the README's "Describing a scene
 in the script" with a real run against the real library, and a library refusal at draw time
-now one line in words; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then
-request 14"). **Next**: 12 (the Tier 3 on the real second video's scene A2, in a scratch copy,
-`compare-frames` against v4, by eye), then request 14 (item 16) as increments 13–15: the
-`element-credits` setting, the collection and `check-script`'s `credits:` lines; the end card;
-the credits file by `assemble`. Then 11 (README: the format under "Writing a video's script", the
+now one line in words; 12, 19:40: the Tier 3 on the real second video's scene A2 in a scratch
+copy against the real library, `compare-frames` against v4 the same picture, with three finds
+fixed or recorded: the check's ordering of end-relative times, the `keep` action, a data-driven
+element's Size; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then request 14").
+**Next**: request 14 (item 16) as increments 13–15: the `element-credits` setting, the
+collection and `check-script`'s `credits:` lines; the end card; the credits file by `assemble`.
+The training-video project's side of item 15 (re-describing its scenes in its own script,
+comparing, retiring modules) is theirs. Then 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-19:05; anything at its top level other than README.md is new and is reported to Squirrel, never
+19:55; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 461 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 464 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -79,7 +82,9 @@ re-render with one colour changed, `brand-preview` on the real kit read-only (th
 21:46), a still with ✓ and ✗ in its pills, `check-script` on the two real scripts, read-only, clean, and
 the phoneme spans with the real model: the unchanged script's clips byte-identical, a changed
 phoneme changing the clip, and `stills --cue-changes` on every scene plus a faulty three-cue
-copy that warns (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
+copy that warns (10 October); and the described scenes against the real video-elements library
+(19:00 and 19:40: the example's scene A with a person, a sun, a gauge and a calendar; the real
+second video's scene A2 in a scratch copy compared with v4, the entries below). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
 copies live only in the session's scratchpad, never in the repository. Linux was tried by the
 training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
 other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
@@ -92,7 +97,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–11 built, 12 and request 14 OK'd at 18:45); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+item 15 complete; request 14 OK'd at 18:45, under way); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) is **finished through its step 7** (17:20, commit
 `8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
 from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
@@ -2243,3 +2248,51 @@ the cell, so the worked example in PLAN.md item 15 (which put ticks 40 px right 
 if it were the right end) is adjusted when A2 is described for real (increment 12).
 
 **State.** 461 green, 98%, lint clean, pushed. Next: increment 12.
+
+### 10 October 2026 — Item 15, increment 12: the Tier 3 on the real scene A2, and three finds
+
+**Goal.** The request's proof on the real thing: scene A2 of the training-video project's
+second video described in the format, drawn from the real library, compared with v4.
+
+**Done.** A scratch copy in the session's scratchpad (the script, `assets/`, `scenes/`,
+`sources/`, `work/narration/timing.json`, the douglassquirrel brand kit; v4 read in place;
+nothing written into that project). A2 described from its module and PLAN.md's worked example,
+adapted to the real library: `spreadsheet` at its natural size (`564x262`: 34 + 530 wide,
+24 + 4 × 58 + 6 high), `numeric=B`, `row.N` being the left end of a data row so the ticks sit
+at `+ 570 0` and the hand at `+ 680 11`, the working as `text` pieces, the landing total moved
+to `cell.3.2` and hidden while `cell-alpha.3.2` rises, the panels' cell text as `text` pieces
+(no `formula-bar`) and their sheets from a scratch CSV of `=...` cells, `highlight` rather than
+a cell box. `check-script` "No problems found."; `stills` at 1.5, 7.0, 15.0, 16.6, 19.0, 23.5,
+24.3 and 25.5 s; `compare-frames` against v4 at 7.0, 16.6 and 24.3 s:
+
+```
+A2          7.00 s  old  110.60 s  mean difference   2.3
+A2         16.60 s  old  120.20 s  mean difference   2.5
+A2         24.30 s  old  127.90 s  mean difference   2.9
+```
+
+By eye: the same picture, sheet, highlight, working lines, the landed total, ticks, hand and
+"checked ✓" pill in place; the panels as designed. The sheets stay in the scratchpad.
+
+**Finds.** (1) The first run refused: `'total' is hidden at cue 2 but was not shown`. The
+check ordered shows and hides by `tl.start(cue) + offset`, ignoring a time written from the
+cue's end, so `end-1.2 s` (10.2 s in) sorted before `7.7 s`. Test first
+(`test_a_time_counted_from_the_cues_end_is_ordered_by_where_it_falls_not_by_its_offset`):
+red `assert ['line 30: …'] == []`, green after `_check_moves` resolves the time; its second
+case first picked `end-0.3 s`, which also ran past the cue's end (a correct second problem),
+now `end-0.9 s`. (2) The first comparison (mean differences 3.7, 3.8, 3.2) showed the
+"Sample output" tag gone after the mistake: the curtain rule hid it, as the request asked,
+but v4 keeps it and the format could not say so without a fake move. The `keep NAME[, …]`
+action was added test-first (parser, check: its names must exist; curtain: a keep at a later
+cue leaves the member; red on the parser's grammar message, green with `keep` in `_SHOW_RE`
+and skipped by the check's move branches), documented in README and PLAN.md. (3) The yellow
+highlight was the script's `highlight` colour, which the description had to name
+(`sample.highlight-colour.3 highlight`); and a data-driven element is fitted into its Size, so
+a `spreadsheet` must be given its natural size or it is scaled into the description's nominal
+400 × 300 (README). After (2) and (3): 2.3, 2.5, 2.9.
+
+**Green.** Full suite `464 passed in 135.31s (0:02:15)`, `TOTAL … 98%`, `ruff check .` clean.
+The commit `71293d0` went out without this entry (my script's search string was stale); this
+entry follows in its own commit.
+
+**State.** Item 15 complete on this side. Next: request 14, item 16.
