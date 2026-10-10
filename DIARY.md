@@ -2,19 +2,21 @@
 
 ## Where things stand
 
-10 October 2026, 08:56 (from the clock), at the end of request 11. **Requests 1 to 11 are built in
+10 October 2026, 09:07 (from the clock), at the end of request 12. **Requests 1 to 12 are built in
 full: the eight commands of the first request, the four checking commands of the ninth
 (`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
 20), the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
 report of characters a font lacks (item 12, "Settled" 21), and the eleventh's `[[…]]` phoneme
 spans in `say:` lines with `narrate --dry-run --phonemes` and `check-script`'s span report
-(item 13, "Settled" 22), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (empty at 08:56; anything at its top level other than README.md
+(item 13, "Settled" 22), and the twelfth's curtain on the timeline (`covered`, `before_curtain`,
+`curtain`) with `stills --cue-changes` and its warning (item 14, "Settled" 23), each in the
+README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
+and this section, then `inbox/` (empty at 09:07; anything at its top level other than README.md
 is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
 (request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
 roundel and icon) was not asked for and is not done.
 
-Green: 376 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 386 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -28,7 +30,8 @@ against real ffmpeg (the entry of 21:34); the four checking commands on that vid
 re-render with one colour changed, `brand-preview` on the real kit read-only (the entries after
 21:46), a still with ✓ and ✗ in its pills, `check-script` on the two real scripts, read-only, clean, and
 the phoneme spans with the real model: the unchanged script's clips byte-identical, a changed
-phoneme changing the clip (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
+phoneme changing the clip, and `stills --cue-changes` on every scene plus a faulty three-cue
+copy that warns (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
 copies live only in the session's scratchpad, never in the repository. Linux was tried by the
 training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
 other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
@@ -40,10 +43,11 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: nothing. The inbox is empty (requests 1–11 are in `inbox/done/`). What
-comes next is the training-video project's: writing its six phoneme spans and re-making its
-clips, re-making its second video's stills on the standard ✓ drawing and retiring its own
-`tag()` helper, and any request it sends here. The stub speech model now has a `tokenizer`
+Waiting on Squirrel: nothing. The inbox is empty (requests 1–12 are in `inbox/done/`). What
+comes next is the training-video project's: its six phoneme spans and re-made clips, its three
+scenes on `before_curtain` with `stills --cue-changes` in its routine, its second video's
+stills on the standard ✓ drawing with its own `tag()` helper retired, and any request it sends
+here. The stub speech model now has a `tokenizer`
 submodule (upper-cases) and records `is_phonemes`.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
@@ -1609,3 +1613,52 @@ are unchanged with the panels drawn from `tl.curtain(t)`, which is the proof the
 without changing.
 
 **State.** Item 1 done. Next: `draw_frame(..., curtain=False)`, then `stills --cue-changes`.
+
+### 10 October 2026 — Request 12, item 2: `stills --cue-changes` and the curtain warning; request 12 complete
+
+**Goal.** `draw_frame(..., curtain=False)`; `stills --cue-changes [--scenes]`: the frames at
+−0.3, 0, +0.3 s around every cue start and +0.6 s for the cue after a mistake, on numbered
+sheets when they outnumber the grid, each refused if it exists; and the warning: the area drawn
+without the panels at the lift's start and end, pixels drawn then and background after counted,
+more than 0.2 % of the area a warning naming the scene and cues, exit 0.
+
+**Test.** `test_frame.py`: a frame at the mistake cue without the curtain has no MISTAKE header
+where the one with it does, and the same header above. `test_stills.py` (six): B2's one cue
+gives three frames on the one sheet as named; a copy whose scene A has a third cue after the
+mistake (its module replaced by a tiny one, timings written for three 1 s clips: starts 0.7,
+3.7, 7.7) gives ten frames at the predicted times on `sheet-1/2/3.png`; `--cue-changes` with
+SCENE:SECONDS, and neither, are usage errors; a numbered sheet that exists is refused before
+anything is drawn; the faulty module (the rectangle goes at cue 3's start) warns naming scene A
+and cues 2 and 3 with a pixel count; the same module on `before_curtain` does not.
+
+**Red.** `7 failed`: `unrecognized arguments: --cue-changes` and `draw_frame() got an unexpected
+keyword argument 'curtain'`.
+
+**Green.** `2 failed, 40 passed` after implementing, both my expectations: the old help test's
+usage line (new flags, and argparse wraps it), and I had put the three `Wrote` lines last when
+each sheet prints its own after its frames, which is the better order. Corrected; `15 passed`;
+the suite:
+```
+TOTAL                           2888     31    976     41    98%
+386 passed in 120.81s (0:02:00)
+All checks passed!
+```
+
+**Tier 3.** The scratch example, every scene: 33 frames on three 4×3 sheets, the first looked
+at (the title's two cues and scene A's, the mistake panels rising at 4.53 and 4.83 s); no
+warning, since the example's mistake cue is the last in its scene. A second scratch copy with a
+third cue after scene A's mistake and a module that keeps a 500×400 rectangle until cue 3's
+start: `stills: scene A: something drawn under the panel at cue 2 vanishes as it lifts for cue
+3 (199932 pixels); fade it out while covered: frame.timeline.before_curtain`, exit 0, the
+sheets written; the same module on `tl.before_curtain(t)`: no warning. The README shows that
+line.
+
+**Decision / surprise.** The warning compares the scene code's own drawing, not the frame as
+seen: with the panels at full strength nothing behind them is visible, so the two looks are
+drawn with `curtain=False`. "Background" is the scene's background surface (grid included)
+within 8 of 255 per channel, so anti-aliased edges do not count. The first cue's −0.3 s frame
+falls in the lead; a time clipped to the scene is kept once. `--scenes` applies only with
+`--cue-changes`. The README says what the check cannot see.
+
+**State.** Request 12 complete: 386 tests, 98%, lint clean, README and PLAN.md current. Nothing
+waiting.

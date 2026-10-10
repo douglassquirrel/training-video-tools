@@ -18,7 +18,8 @@ def prepared(example):
 
 def test_help_and_usage():
     code, out, err = run("stills", "--help")
-    assert code == 0 and out.startswith("usage: stills [-h] --out SHEET.png [--grid CxR] SCRIPT FRAMES")
+    assert code == 0 and " ".join(out.split()).startswith(
+        "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png [--grid CxR] SCRIPT [FRAMES]")
     code, out, err = run("stills", "x.md")
     assert code == 2 and "usage: stills" in err
 
@@ -137,3 +138,101 @@ def test_the_label_sits_in_a_strip_under_the_frame_and_covers_no_pixel_of_it(pre
     strip = im.crop((0, h, w, 540))
     assert strip.getpixel((4, 4)) == (0x55, 0x55, 0x55)                  # the strip's fill, apart from the band
     assert strip.getcolors(10000) and any(c == (255, 255, 255) for _, c in strip.getcolors(10000))  # its white text
+
+
+# ---- --cue-changes: frames around every cue start, several sheets, and the curtain warning
+
+THIRD_CUE = "3. Then open it out.\n"
+FAULTY = '''"""A scene that keeps its old picture until the next cue's start: the glimpse."""
+from videotools import draw as d
+
+
+def draw(frame):
+    tl, t = frame.timeline, frame.t
+    a = 1 - tl.p(t, 3, 0.0, 0.1)            # goes as the panel lifts, so it shows through the lifting panel
+    d.fill_rrect(frame.ctx, 300, 300, 500, 400, 10, frame.colours["paper-edge"], alpha=a)
+
+
+def mistake(frame, rect):
+    pass
+
+
+def right_way(frame, rect):
+    pass
+'''
+FIXED = FAULTY.replace("a = 1 - tl.p(t, 3, 0.0, 0.1)", "a = tl.before_curtain(t)        ")
+
+
+def three_cues(example, module):
+    """The example copy with a third cue after scene A's mistake cue, its module replaced, and
+    timings for three 1 s clips: cue starts 0.7, 3.7 (min 3.0) and 7.7 (min 4.0)."""
+    import json
+    narrated(example)
+    text = open(example, encoding="utf-8").read()
+    anchor = "   - added: the consequence (no hull) is our inference; the figure shows only the edge fold.\n"
+    assert anchor in text
+    open(example, "w", encoding="utf-8").write(text.replace(anchor, anchor + THIRD_CUE))
+    folder = os.path.dirname(example)
+    with open(os.path.join(folder, "scenes", "fold_in_half.py"), "w", encoding="utf-8") as f:
+        f.write(module)
+    tp = os.path.join(folder, "work", "narration", "timing.json")
+    timing = json.load(open(tp))
+    timing["scenes"]["A"] = [1.0, 1.0, 1.0]
+    json.dump(timing, open(tp, "w"))
+    return example
+
+
+def test_cue_changes_draws_three_frames_around_each_cue_start_on_one_sheet_when_they_fit(prepared, tmp_path):
+    narrated(prepared)
+    sheet = tmp_path / "sheet.png"
+    code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "B2", "--out", sheet)
+    assert (code, err) == (0, "")
+    assert out.splitlines() == ["B2 at 0.400 s (of 5.300 s, no cue)", "B2 at 0.700 s (of 5.300 s, cue 1)",
+                                "B2 at 1.000 s (of 5.300 s, cue 1)", f"Wrote {sheet}: 3 frames, 2x2"]
+    assert Image.open(sheet).size == (1920, 1080)
+
+
+def test_cue_changes_adds_a_frame_after_the_curtain_has_gone_and_spreads_over_numbered_sheets(prepared, tmp_path):
+    three_cues(prepared, FIXED)
+    sheet = tmp_path / "sheet.png"
+    code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "A", "--out", sheet)
+    assert (code, err) == (0, "")
+    times = [line.split(" at ")[1].split(" s")[0] for line in out.splitlines() if line.startswith("A at ")]
+    assert times == ["0.400", "0.700", "1.000", "3.400", "3.700", "4.000", "7.400", "7.700", "8.000", "8.300"]
+    assert [line for line in out.splitlines() if line.startswith("Wrote ")] == [     # one after each sheet's frames
+        f"Wrote {tmp_path / 'sheet-1.png'}: 4 frames, 2x2",
+        f"Wrote {tmp_path / 'sheet-2.png'}: 4 frames, 2x2",
+        f"Wrote {tmp_path / 'sheet-3.png'}: 2 frames, 2x2"]
+    assert not sheet.exists() and all((tmp_path / f"sheet-{i}.png").exists() for i in (1, 2, 3))
+
+
+def test_cue_changes_with_frames_or_without_out_is_usage(prepared, tmp_path):
+    code, out, err = run("stills", prepared, "A:1", "--cue-changes", "--out", tmp_path / "s.png")
+    assert code == 2 and "--cue-changes takes no SCENE:SECONDS" in err
+    code, out, err = run("stills", prepared, "--out", tmp_path / "s.png")
+    assert code == 2 and "give SCENE:SECONDS, or --cue-changes" in err
+
+
+def test_a_numbered_sheet_that_exists_is_refused_before_anything_is_drawn(prepared, tmp_path):
+    three_cues(prepared, FIXED)
+    (tmp_path / "sheet-2.png").write_bytes(b"keep")
+    code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "A", "--out", tmp_path / "sheet.png")
+    assert (code, out) == (3, "")
+    assert err == f"stills: {tmp_path / 'sheet-2.png'} already exists; give a new name\n"
+    assert not (tmp_path / "sheet-1.png").exists() and (tmp_path / "sheet-2.png").read_bytes() == b"keep"
+
+
+def test_a_picture_that_vanishes_as_the_curtain_lifts_is_a_warning_naming_the_scene_and_cues(prepared, tmp_path):
+    import re
+    three_cues(prepared, FAULTY)
+    code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "A", "--out", tmp_path / "s.png")
+    assert code == 0
+    assert re.fullmatch(r"stills: scene A: something drawn under the panel at cue 2 vanishes as it lifts for cue 3 "
+                        r"\(\d{4,} pixels\); fade it out while covered: frame\.timeline\.before_curtain\n", err), err
+    assert (tmp_path / "s-1.png").exists()
+
+
+def test_a_picture_faded_out_under_the_curtain_gives_no_warning(prepared, tmp_path):
+    three_cues(prepared, FIXED)
+    code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "A", "--out", tmp_path / "s.png")
+    assert (code, err) == (0, "")

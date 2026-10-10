@@ -292,6 +292,7 @@ fonts/EBG-Bold.ttf  EBG Bold  (wght 700)
 ```
 
 ### `stills SCRIPT.md SCENE:SECONDS[,…] --out SHEET.png [--grid CxR]`
+### `stills SCRIPT.md --cue-changes [--scenes KEY,…] --out SHEET.png [--grid CxR]`
 
 Draws the frames at the given times (a negative time counts back from the scene's end) onto
 one 1920×1080 sheet, `--grid` columns by rows (default `2x2`; more frames than cells is
@@ -300,6 +301,26 @@ frame (the header above all) is covered. This is how a scene's layout is checked
 before rendering. It needs the insets (`crop-insets`) and, for exact times, the narration; with
 no clips it estimates the timing at 2.6 words a second and says so on stderr. Refuses an
 existing sheet and a time past the scene's end.
+
+**Every cue change, without choosing times.** `--cue-changes` draws, for every cue start of
+every scene (or of `--scenes`), the frames at 0.3 s before, at, and 0.3 s after it, and for
+the cue that follows a mistake also 0.6 s after, when the mistake panels have gone. When the
+frames outnumber the grid they go on numbered sheets, `SHEET-1.png`, `SHEET-2.png`, …, each
+refused if it exists. A cue start is where a scene's pictures change, so this is where a slip
+shows; stills taken mid-cue miss it. The run also looks for one particular slip and warns
+about it on stderr: for the cue after a mistake, the animation area is drawn twice *without*
+the panels, at the moment they start to lift and at the moment they have gone, and if
+something drawn in the first has become background in the second (more than 0.2 % of the
+area), that thing vanished exactly as the panels lifted, and viewers saw it through them:
+
+```
+stills: scene A: something drawn under the panel at cue 2 vanishes as it lifts for cue 3 (199932 pixels); fade it out while covered: frame.timeline.before_curtain
+```
+
+(That run: a copy of the example whose scene A keeps a 500×400 rectangle until the next cue's
+start.) The fix is the curtain helper under "Writing a video's scene code". The check sees only that
+one moment: a change that happens later than the lift, or a picture that fades under the
+panels and comes back, is not reported. The sheets are written either way (exit 0).
 
 ### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run]`
 
@@ -335,6 +356,18 @@ script), `colours` (the script's Colours as red-green-blue triples in 0–1), `b
 text after checking it is in the scene's "On screen" list and stops the run with a message if
 it is not. A scene's `side-panel-heading` property puts a small heading above a `steps` or
 `checklist` panel, or in place of KEY POINTS.
+
+**The curtain.** On the mistake cue the panels rise over the animation area in half a second
+and lift again from 0.4 s before the next cue's start to 0.1 s after it (they stay up to the end
+when the mistake cue is the last). A picture from before the mistake that the scene code fades
+out at the *next* cue's start goes while the panels are lifting, so viewers glimpse it through
+them. Change the scenery while nobody can see it instead: `frame.timeline.covered(t)` is true
+while the panels are at full strength; `frame.timeline.before_curtain(t)` is 1.0 until they
+are, then fades to 0.0 between 0.5 and 0.7 s after the mistake cue's start, inside the covered
+time, so multiply the old picture's alpha by it and it goes unseen; `frame.timeline.curtain(t)`
+is the panels' strength itself, 0 to 1. For a scene with no mistake cue they are false, 1.0 and
+0. The panels' timing lives in that one place (`videotools.timeline`), so scene code written
+this way follows it if it ever changes. `stills --cue-changes` warns about the glimpse.
 
 Draw words and pills through the frame, which fills in what the brand and script already say
 (the font by role, the size multiplied by the brand's `font-size-scale`, colours by name, the
@@ -551,7 +584,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(376 tests, lint clean).
+(386 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -598,6 +631,10 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 10 October 2026 (morning, last): `frame.timeline.covered`, `before_curtain` and `curtain` tell
+  scene code when the mistake panels hide the area, so a pre-mistake picture can be changed
+  unseen; `stills --cue-changes` draws the frames around every cue start on numbered sheets and
+  warns about a picture that vanishes as the panels lift.
 - 10 October 2026 (later): a `say:` line may hold `[[…]]` spans of phonemes for the voice, where
   respelling cannot fix a word's stress; `narrate --dry-run --phonemes` shows what the voice is
   given; `check-script` reports bad spans. A `say:` without spans is sent exactly as before.

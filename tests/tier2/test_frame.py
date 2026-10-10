@@ -210,3 +210,14 @@ def test_a_side_panel_heading_replaces_key_points_without_moving_the_list(video)
     square_x = cx + 6
     assert first_row_of(plain, "#1F6F8B", square_x, 300) == first_row_of(headed, "#1F6F8B", square_x, 300)
     assert as_image(plain).tobytes() != as_image(headed).tobytes()   # KEY POINTS became TIPS
+
+
+def test_a_frame_can_be_drawn_without_the_curtain_to_see_what_the_scene_code_draws_under_it(video):
+    from videotools import frame as frame_
+    with_panels = rendered(video, "A", 5.0)                       # cue 2, the mistake: the panels are up
+    assert pixel(with_panels, 300, 160) == hex_rgb("#A33A2E")      # the MISTAKE card's header, in the mistake colour
+    scene, tl = video.scene("A"), video.timeline(video.scene("A"))
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1920, 1080)
+    frame_.draw_frame(cairo.Context(surface), video, scene, tl, 5.0, curtain=False)
+    assert pixel(surface, 300, 160) != hex_rgb("#A33A2E")
+    assert pixel(surface, 1600, 60) == pixel(with_panels, 1600, 60)   # the header is drawn either way

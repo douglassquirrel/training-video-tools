@@ -662,7 +662,9 @@ remote ("Settled" 7).
 13. **Request 12** (10 October 2026, 08:53; OK'd 09:00): item 14, test-first in this order: the
    curtain functions on the timeline and `mistake_panels` on them (stored frames unchanged);
    `draw_frame(..., curtain=False)`; `stills --cue-changes` with its sheets; the warning; README,
-   "Notes for users", lint as its own pass.
+   "Notes for users", lint as its own pass. **Done 10 October 2026, 09:00–09:07**: both items built
+   and in the README with real runs; the training-video project switches its three scenes to
+   `before_curtain` and adds the check to its routine (their side).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the

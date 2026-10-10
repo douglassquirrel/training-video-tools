@@ -358,8 +358,9 @@ def end_card(ctx, video, scene, tl, t):
             y += 36
 
 
-def draw_frame(ctx, video, scene, tl, t):
-    """One frame of `scene` at `t` seconds, on a 1920x1080 context."""
+def draw_frame(ctx, video, scene, tl, t, curtain=True):
+    """One frame of `scene` at `t` seconds, on a 1920x1080 context. With `curtain` False the
+    mistake panels are left out, to see what the scene code draws under them."""
     kit, lay = video.brand, video.layout
     kind = script.kind(scene)
     ctx.set_source_surface(video.background(), 0, 0)
@@ -389,7 +390,8 @@ def draw_frame(ctx, video, scene, tl, t):
         ctx.rectangle(ax - 20, ay, aw + 40, ah + 10)
         ctx.clip()
         video.module(scene).draw(frame)
-        mistake_panels(ctx, video, scene, tl, t, frame)
+        if curtain:
+            mistake_panels(ctx, video, scene, tl, t, frame)
         ctx.restore()
         reference_column(ctx, video, scene, tl, t, frame)
         caption(ctx, video, scene, tl, t)
