@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 14:15. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 14:45. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -24,18 +24,24 @@ library** `tests/stubs/video-elements/` (a stub `videoelements` package that rea
 `PROVENANCE.md` and `licenses/SOURCES.md` in the settled rows into the real reader's plain
 data; elements `pot`, an svg with fixed anchors, and `table`, a code element with `rows`,
 `label`, indexed parameters and computed anchors; its README says what it checks and what it
-does not). Nothing calls `open_library` yet. **The next step** is item 15's third increment:
-the Cast and Moves parser in `videotools.script` (the two `###` sections and the two panel
-sections into plain data) with every `check-script` check of item 15 "Checks", test-first,
-standard library, Python 3.9; the stub library gains a `draw` only when the interpreter
-increment needs it. A new session
+does not); and **the third increment** (Squirrel, 14:20: "continue with increments 3-5"):
+`videotools.choreography` parses the Cast table, the Moves list and the Mistake and Right way
+sections into plain data on every scene (`cast`, `moves`, `panels`), every malformed line a
+problem by line (PLAN.md item 15, "Built"). Nothing calls `open_library` yet, and nothing checks
+what a cast row means. **The next step** is increment 4, the `check-script` checks of item 15
+"Checks" against the invented library, in three parts: structure (cues, times, names, shown
+twice or never, panels without a mistake cue, the pieces' parameters and labels), the library
+(elements, anchors, parameters with types and ranges, data files and indices, states, label
+parameters), and the wiring in `check-script` (the library opened from the settings, one
+problem when it cannot be, cue lengths from `timing.json` or the estimate); then increment 5,
+the scene-loading rule. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-14:15; anything at its top level other than README.md is new and is reported to Squirrel, never
+14:45; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 404 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 411 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -65,10 +71,13 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-first two increments OK'd and built; the third, the parser, follows on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
-video-elements (read-only from here) has its step 3 of 8 done plus our four asks (its commit
-`4dd19c8`: the reader, checks, `credits`, the new types; `el.draw` is its step 4, next); our
-Tier 3 on real elements waits on its step 4 and first elements. The one write made into that
+increments 1–3 built, 4 and 5 OK'd in advance at 14:20: "stop if you need anything from me
+else keep going"); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+video-elements (read-only from here) has its steps 1–5 of 8 done (14:35, commits `c12033a`,
+`ee9e553`: the reader, checks and `credits`, our four asks, `Element.draw` for svg elements
+with a render cache and cross-fades, and an `elements-preview` command; 80 tests green; code
+elements still refused as "not built yet"; no elements in `elements/` yet); its step 6, the
+starter set, waits on Squirrel. Our Tier 3 on real elements waits on that first batch. The one write made into that
 repository was the request file of 13:05, at Squirrel's word; it is in its `inbox/done/` now. Also the
 training-video project's: its six phoneme spans and re-made clips, its three scenes on
 `before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
@@ -1897,3 +1906,41 @@ class, so video-tools never imports from `videoelements` directly; any other exc
 
 **State.** 404 green, 98%, lint clean, pushed. Nothing calls `open_library` yet. Next:
 increment 3, the Cast and Moves parser with `check-script`'s checks.
+
+### 10 October 2026 — Item 15, increment 3: the Cast and Moves parser
+
+**Goal.** The four choreography sections read into plain data by `script.parse`, every
+malformed line a problem naming it (Squirrel, 14:20: "continue with increments 3-5, stop if you
+need anything from me else keep going").
+
+**Test.** `tests/tier1/test_choreography_parse.py`, seven tests on an invented scene: no
+sections give empty `cast`, `moves`, `panels`; cast rows read back with Where (pixels, a region,
+a member's anchor with and without an offset), Size (blank, W, WxH) and Parameters (quoted
+values with spaces, file values, indexed names) parsed; moves with every time form (none, `A s`,
+`A–B s`, `over the cue`, `end-1.2–end-0.4 s`, a negative start) and every action (show of two
+names, hide, move to an anchor, a parameter animated with `→` and with `->`, a parameter set, a
+state change); the two panels each with a cast and moves without a cue; a mis-headed table one
+problem with its rows unread; a bad name, a repeated name, a Where, a Size, a parameter without
+`=` and a short row each a problem; an action not understood, a scene move without `cue`, a time
+not understood, a `move` to nowhere, a list item that is no move, a non-list line, a panel move
+with a cue and a panel line that is neither, each a problem.
+
+**Red.** `7 failed in 0.03s`: `KeyError: 'cast'`, `'moves'`, `'panels'` on the data, and `assert
+[] == ['line 22: …']` for the problems.
+
+**Green.** `videotools/choreography.py` (standard library, 3.9) and three lines in `script.py`
+(`_new_scene` gains the keys; the four sub-headings' lines are collected and handed over after
+the loop). Then `7 passed in 0.02s`; the full suite `411 passed in 124.53s (0:02:04)`, `TOTAL …
+98%`, `ruff check .` clean.
+
+**Decision / surprise.** My test text's line numbers were off by one throughout (the heredoc's
+leading blank line), corrected against the parser's output once the parser was seen to be right;
+and three expectations were wrong, each changed with a reason: `sample.row` is a well-formed
+anchor (whether `row` exists is increment 4's check); a list item under Moves or in a panel is a
+move, so one that is not understood gets the move grammar's message, and only a non-list line
+gets "not a move"; and a table with the wrong header is now skipped whole, since its columns
+cannot be trusted, which was a design change rather than a test fix. A row with any problem is
+left out of the cast, so increment 4 never checks a half-read row. Squirrel noted video-elements'
+progress mid-increment (its steps 4 and 5); nothing in our inbox.
+
+**State.** 411 green, 98%, lint clean, pushed. Next: increment 4, the checks.

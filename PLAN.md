@@ -561,6 +561,15 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   `cli.Failure` (exit 3; the library's `.problems` listed under one line); tested against the
   invented library `tests/stubs/video-elements/` (a stub `videoelements` package reading the
   settled rows, elements `pot` (svg) and `table` (code), a register). Nothing calls it yet.
+  **Increment 3, 14:40**: `videotools.choreography` reads the four sections (`script.parse`
+  hands it their raw lines) into `scene["cast"]`, `scene["moves"]` and `scene["panels"]`
+  (`{"mistake"|"right way": {"cast", "moves"}}`): a cast row `{name, element, where, size,
+  params, line}` with Where as `{kind: pixels|region|anchor, …}`, Size as `None` or `{w, h}`
+  and Parameters as `{name: value}` (shlex-split, quotes removed); a move `{cue (None in a
+  panel), start, end, action, line}` with times as `("start"|"end", offset)` pairs and the
+  action as `{kind: show|hide|move|param|set|state, …}`. Every malformed line is a problem
+  naming it; a row with any problem is left out of the cast; a table with the wrong header is
+  one problem and its rows are not read. What a row means is increment 4.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

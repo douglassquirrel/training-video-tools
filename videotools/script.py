@@ -9,6 +9,8 @@ else is prose for people and is skipped. Standard library only; runs on Python 3
 import os
 import re
 
+from videotools import choreography
+
 # The Settings table: key -> required?
 SETTINGS = {"title": True, "subtitle": False, "eyebrow": False, "brand": True, "voice": True,
             "speed": True, "language": True, "speech-model": True, "size": True, "fps": True,
@@ -27,6 +29,7 @@ INSET = re.compile(r"^\d+ \d+ \d+ \d+$")
 NUMBER = re.compile(r"^\d+(\.\d+)?$")
 SIZE = re.compile(r"^\d+x\d+$")
 
+CHOREOGRAPHY_SECTIONS = ("cast", "moves", "mistake", "right way")   # read by videotools.choreography
 SCENE_HEADING = re.compile(r"^## Scene ([A-Za-z0-9-]+): (.+)$")
 TABLE_SECTIONS = {"Settings": "settings", "Colours": "colours", "Insets": "insets"}
 LIST_ITEM = re.compile(r"^(?:-|\d+\.)\s+(.+)$")
@@ -43,7 +46,8 @@ def _table_row(line):
 
 
 def _new_scene(key, name, line):
-    return {"key": key, "name": name, "line": line, "props": {}, "cues": [], "side": [], "screen": []}
+    return {"key": key, "name": name, "line": line, "props": {}, "cues": [], "side": [], "screen": [],
+            "cast": [], "moves": [], "panels": {}, "_sections": {}}
 
 
 def parse(text):
@@ -111,6 +115,9 @@ def parse(text):
             if line.strip():
                 problems.append(f"line {n}: scene {scene['key']}: not a cue or a cue's sub-bullet: {line.strip()[:60]}")
             continue
+        if sub in CHOREOGRAPHY_SECTIONS:
+            scene["_sections"].setdefault(sub, []).append((n, line))
+            continue
         if sub in ("side panel", "on screen"):
             dest = scene["side"] if sub == "side panel" else scene["screen"]
             m = LIST_ITEM.match(line)
@@ -124,6 +131,8 @@ def parse(text):
                 continue
             if line.strip():
                 problems.append(f"line {n}: scene {scene['key']}, {sub}: not a list item: {line.strip()[:60]}")
+    for scene in data["scenes"]:
+        choreography.parse_sections(scene, scene.pop("_sections"), problems)
     return data, problems
 
 
