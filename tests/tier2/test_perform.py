@@ -492,3 +492,25 @@ def test_an_arrow_with_a_blank_where_has_the_box_its_two_ends_span(example):
     rendered(video, "A", 2.0)
     small = [d["rect"] for d in video.library.draws if d["rect"][2] == 20.0]
     assert small == [(240.0, 318.0, 20.0, 20.0), (590.0, 468.0, 20.0, 20.0), (415.0, 393.0, 20.0, 20.0)]
+
+
+SHAPED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| wide | pot | 100 100 | 200x80 | | a 24 x 24 element given another shape |
+| tall | table | right | 100x300 | rows=assets/sample.csv | a 300 x 200 element; the right half is 711 x 818 at 751, 118 |
+
+### Moves
+
+- cue 1: show wide, tall
+
+"""
+
+
+def test_a_size_given_as_w_by_h_reaches_the_element_as_its_rect_whatever_its_own_proportions(example):
+    video = pointed(example, SHAPED)
+    rendered(video, "A", 2.0)
+    rects = {d["name"]: d["rect"] for d in video.library.draws}
+    assert rects["pot"] == (140.0, 218.0, 200.0, 80.0)
+    assert rects["table"] == (751.0 + (711.0 - 100.0) / 2, 118.0 + (818.0 - 300.0) / 2, 100.0, 300.0)

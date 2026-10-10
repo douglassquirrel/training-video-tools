@@ -2517,3 +2517,31 @@ built on either yet; the warning reads the note, which is what tells for `diff` 
 `ratio`) in any case. PLAN.md "Open questions" 1 says so.
 
 **State.** 498 green, 98%, lint clean. Next: item 17, 4.
+
+### 10 October 2026 — Item 17, 4: a `WxH` Size reaches the element as its rect
+
+**Goal.** Pin that a Size written `WxH` is the rect the element is handed, whatever the
+element's own proportions, so an element video-elements marks as stretching gets the shape the
+script says (request 15, item 4: "nothing to do if that is already so").
+
+**Test.** `test_a_size_given_as_w_by_h_reaches_the_element_as_its_rect_whatever_its_own_proportions`
+(tier 2): the 24 × 24 pot at `200x80`, and the 300 × 200 table in the `right` region at
+`100x300`, centred there and not fitted.
+
+**Red / green.** It was already so, so no red-then-green for the code; the characterising
+discipline instead. Passing as written: `1 passed, 25 deselected in 0.38s`. With `own_size`
+broken on purpose (the `WxH` branch removed, so the height came from the element's ratio):
+
+```
+E       assert (140.0, 218.0, 200.0, 200.0) == (140.0, 218.0, 200.0, 80.0)
+E         At index 3 diff: 200.0 != 80.0
+1 failed, 25 deselected in 0.34s
+```
+
+Restored: `1 passed`; suite `498 passed in 143.76s (0:02:23)`.
+
+**Decision / surprise.** `test_the_library_is_asked_to_draw_with_the_rect_state_params_and_alpha`
+had pinned one such case in passing (the table at `300x100`); this one is named for the rule.
+What an element does with the rect (stretch, or fit keeping its ratio) is the library's.
+
+**State.** 498 green, 98%, lint clean. Next: the README, then the Tier 3 against the real library.
