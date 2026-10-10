@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 10:22 (from the clock), at the handover ending the session that built requests 9 to 12. **Requests 1 to 12 are built in
+10 October 2026, 10:23 (from the clock), at the handover ending the session that built requests 9 to 12. **Requests 1 to 12 are built in
 full: the eight commands of the first request, the four checking commands of the ninth
 (`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
 20), the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
@@ -11,7 +11,7 @@ spans in `say:` lines with `narrate --dry-run --phonemes` and `check-script`'s s
 (item 13, "Settled" 22), and the twelfth's curtain on the timeline (`covered`, `before_curtain`,
 `curtain`) with `stills --cue-changes` and its warning (item 14, "Settled" 23), each in the
 README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (empty at 10:22; anything at its top level other than README.md
+and this section, then `inbox/` (at 10:23 holding requests 13 and 14, read and reported, not acted on; anything at its top level other than README.md
 is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
 (request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
 roundel and icon) was not asked for and is not done.
@@ -43,8 +43,13 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: nothing. The inbox is empty (requests 1–12 are in `inbox/done/`). What
-comes next is the training-video project's: its six phoneme spans and re-made clips, its three
+Waiting on Squirrel: his OK on requests 13 and 14, which arrived at 10:09 and 10:20 and sit at
+the top of `inbox/` (requests 1–12 are in `inbox/done/`): 13, choreography described in the
+script and drawn from a new `video-elements` library (a companion request went to that
+repository; the interface between the two is proposed in the item); 14, credits for external
+art on the end card and a credits file beside the finished video, building on 13. Both reported
+to Squirrel at the handover with a first comment (the entry "Requests 13 and 14 arrive"); a new
+session starts by re-reading them and waiting for his word. Also the training-video project's: its six phoneme spans and re-made clips, its three
 scenes on `before_curtain` with `stills --cue-changes` in its routine, its second video's
 stills on the standard ✓ drawing with its own `tag()` helper retired, and any request it sends
 here. The stub speech model now has a `tokenizer`
@@ -1680,3 +1685,24 @@ session's scratchpad. "Where things stand" above is the handover.
 
 **State.** Green: 386 tests, 98%, lint clean, pushed at `124413e` plus this entry. Inbox empty.
 Nothing waiting on Squirrel.
+
+### 10 October 2026 — Requests 13 and 14 arrive at the handover
+
+**Decision / surprise.** The previous entry's "Inbox empty" was true at 09:07 and wrong by the
+time it was committed at 10:22: `inbox/request-from-training-video-2026-10-10-13.md` (10:09)
+and `…-14.md` (10:20) had arrived. 13: choreography (a cast and moves by cue) described in a
+scene's section of the script and drawn by video-tools from a new, separate repository
+`~/projects/code/video-elements/` (a library of drawn elements, its own request sent there), with
+a config setting for the library's folder, `check-script` checks on the choreography, the
+curtain applied automatically to pre-mistake elements, and a proposed Python interface between
+the two repositories (`library.open`, `lib.element(name).draw(frame, rect, state, params,
+alpha)` returning anchors). 14: the elements' sources credited on the end card (`element-credits`
+setting: `auto`, `none`, or wording), printed by `check-script` for approval, and a
+`<output>.credits.txt` written by `assemble`. Both read and reported to Squirrel at 10:23 with a
+first comment; **nothing done**: no PLAN.md change, no code. "Where things stand" corrected in
+this commit. Observations for the next session: 13 is the biggest change since the first
+request (a script format for choreography, a reader, an interpreter in the frame, and a
+dependency on a repository that does not yet have its reader), and its order of work depends
+on video-elements; the interface text must stay the same in both READMEs, through Squirrel.
+
+**State.** Green and pushed as before. Waiting on Squirrel for 13 and 14.
