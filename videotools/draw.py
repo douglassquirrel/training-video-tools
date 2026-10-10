@@ -33,11 +33,52 @@ def font(ctx, family, size):
     ctx.set_font_size(size)
 
 
+# ✓ and ✗ a font lacks are drawn as strokes (the badge's marks without the circle), MARK_WIDTH
+# of the font size wide, so a brand whose text face has no tick still gets one in every label.
+MARKS = {"✓": "tick", "✗": "cross"}
+MARK_WIDTH = 0.8
+
+
+def _runs(s, family):
+    """s split into (text, mark) runs: mark is None for text the font draws, else the mark to
+    stroke in its place."""
+    from videotools import glyphs
+    runs, current = [], ""
+    for ch in s:
+        if ch in MARKS and not glyphs.has(family, ch):
+            if current:
+                runs.append((current, None))
+                current = ""
+            runs.append((ch, MARKS[ch]))
+        else:
+            current += ch
+    if current:
+        runs.append((current, None))
+    return runs
+
+
+def _advance(ctx, run, mark, size):
+    return MARK_WIDTH * size if mark else ctx.text_extents(run).x_advance
+
+
+def _mark(ctx, mark, x, y, size, colour, alpha):
+    """A tick or cross stroked at the baseline point (x, y), MARK_WIDTH × size wide."""
+    s = size
+    lw = max(1.5, 0.11 * s)
+    if mark == "tick":
+        tick = [(x + 0.08 * s, y - 0.30 * s), (x + 0.32 * s, y - 0.06 * s), (x + 0.72 * s, y - 0.60 * s)]
+        line(ctx, tick, colour, lw, alpha)
+    else:
+        line(ctx, [(x + 0.12 * s, y - 0.62 * s), (x + 0.68 * s, y - 0.06 * s)], colour, lw, alpha)
+        line(ctx, [(x + 0.68 * s, y - 0.62 * s), (x + 0.12 * s, y - 0.06 * s)], colour, lw, alpha)
+
+
 def text_width(ctx, s, family, size, track=0):
     font(ctx, family, size)
     if track:
-        return sum(ctx.text_extents(ch).x_advance for ch in s) + track * max(0, len(s) - 1)
-    return ctx.text_extents(s).x_advance
+        return sum(_advance(ctx, ch, mark, size) for run, mark in _runs(s, family) for ch in run) \
+            + track * max(0, len(s) - 1)
+    return sum(_advance(ctx, run, mark, size) for run, mark in _runs(s, family))
 
 
 def text(ctx, s, x, y, family, size, colour, anchor="l", alpha=1.0, track=0):
@@ -48,15 +89,22 @@ def text(ctx, s, x, y, family, size, colour, anchor="l", alpha=1.0, track=0):
         x -= w / 2
     elif anchor == "r":
         x -= w
-    ctx.set_source_rgba(*colour, alpha)
-    if track:
-        for ch in s:
+    for run, mark in _runs(s, family):
+        if mark:
+            _mark(ctx, mark, x, y, size, colour, alpha)
+            font(ctx, family, size)                 # line() changed the context's source and width
+            x += MARK_WIDTH * size + (track if track else 0)
+            continue
+        ctx.set_source_rgba(*colour, alpha)
+        if track:
+            for ch in run:
+                ctx.move_to(x, y)
+                ctx.show_text(ch)
+                x += ctx.text_extents(ch).x_advance + track
+        else:
             ctx.move_to(x, y)
-            ctx.show_text(ch)
-            x += ctx.text_extents(ch).x_advance + track
-    else:
-        ctx.move_to(x, y)
-        ctx.show_text(s)
+            ctx.show_text(run)
+            x += ctx.text_extents(run).x_advance
     return w
 
 

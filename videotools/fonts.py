@@ -16,6 +16,9 @@ _registered = set()
 def load(kit, work_folder, platform=None):
     """Make the kit's fonts findable by name. Returns the files newly made available."""
     platform = platform or sys.platform
+    from videotools import glyphs
+    for role, path in kit["font_files"].items():
+        glyphs.register(kit["fonts"][role], path)       # so draw.text knows which characters each family lacks
     files = sorted(set(kit["font_files"].values()))
     if platform == "darwin":
         return [f for f in files if _register_with_coretext(f)]

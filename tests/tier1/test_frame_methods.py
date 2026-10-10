@@ -109,3 +109,17 @@ def test_callout_and_dimension_draw_their_pills_with_named_colours(kit):
     assert pixel(s, 200, 250) == rgb255(kit["colours"]["accent"])              # the line itself
     assert pixel(s, 200, 220) == rgb255(kit["colours"]["accent"])              # the pill, 30 px to the side
     assert math.isclose(1, 1)
+
+
+def test_a_label_ending_in_a_tick_the_brand_font_lacks_is_a_wider_pill_with_the_tick_drawn(kit, tmp_path):
+    from videotools import fonts
+    fonts.load(kit, str(tmp_path / "work"), platform="linux")     # registers the families with the glyph registry
+    scene = dict(SCENE, screen=[{"text": "done", "line": 2}, {"text": "done ✓", "line": 3}])
+    f, surface = frame(kit)
+    f.scene = scene
+    _, _, plain, _ = f.tag("done", 10, 100, size=30)
+    bx, by, ticked, bh = f.tag("done ✓", 10, 200, size=30)
+    assert ticked > plain + 20                                      # the tick is counted
+    size = 30 * kit["settings"]["font-size-scale"]
+    tick_x = bx + 14 + (ticked - 28) - 0.8 * size                   # the tick starts 0.8 × size before the text's end
+    assert pixel(surface, tick_x + 0.32 * size, 200 + 0.2 * size) == rgb255(kit["colours"]["on-accent"])

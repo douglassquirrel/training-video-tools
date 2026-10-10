@@ -56,3 +56,12 @@ def test_loading_twice_registers_each_file_once(tmp_path):
     first = fonts.load(kit, str(tmp_path / "work"), platform="darwin")
     second = fonts.load(kit, str(tmp_path / "work"), platform="darwin")
     assert len(first) == 3 and second == []
+
+
+def test_loading_a_kit_registers_each_family_with_the_glyph_registry(tmp_path):
+    from videotools import glyphs
+    kit = brand.read(EXAMPLE)
+    fonts.load(kit, str(tmp_path / "work"), platform="linux")
+    assert glyphs.has(kit["fonts"]["body"], "é") is True
+    assert glyphs.has(kit["fonts"]["body"], "✓") is False
+    assert glyphs.has(kit["fonts"]["display"], "✗") is False

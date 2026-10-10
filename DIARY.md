@@ -1412,3 +1412,45 @@ font); (07:50): "display font only. go ahead". PLAN.md item 12, build step 11, "
 the item moved to `inbox/done/`.
 
 **State.** Next: `videotools.glyphs`, test-first.
+
+### 10 October 2026 — Request 10, item 1: the character-map reader, and ✓ and ✗ drawn as strokes
+
+**Goal.** `videotools.glyphs` (standard library): a font file's `cmap` (formats 4 and 12) as
+a set of code points, cached; `register(family, file)` and `has(family, ch)`, an unregistered
+family assumed to have everything. `fonts.load` registers the kit's families. In `draw.text`
+and `draw.text_width`, a ✓ or ✗ the family lacks is drawn as a tick or cross stroke in the
+text's colour and alpha, 0.8 × size wide, anywhere in the string, counted in the width, so pills,
+centring, tracking and wrapping follow.
+
+**Test.** `tests/tier1/test_glyphs.py` (three: the fixture font has `Aé—…·“”` and lacks `✓✗€Ω`,
+200 code points; a file that is not a font is a useful Failure; the registry), 
+`tests/tier2/test_glyphs_against_fonttools.py` (two: the reader equals fontTools' `getBestCmap`
+on every fixture font; a tiny invented font with a format 12 table and glyphs for ✓, ✗ and
+U+1F600 reads back exactly), `tests/tier1/test_draw_marks.py` (five: widths, strokes and no box
+past the advance, anchor and alpha, a font that has the glyph is left alone, pills and wrap),
+`test_fonts.py` (loading a kit registers each family) and `test_frame_methods.py` (a label
+ending in ✓ through `frame.tag` is a wider pill with the tick in the label colour).
+
+**Red.** Reader: `5 failed`, `NotImplementedError`. Drawing: `5 failed`: widths short by the
+fallback glyph (`94.09 == 99.07`), `(255, 255, 255) == (0, 0, 0)` where the stroke should be,
+`has('PBS Regular', '✓')` True because nothing registered. Two of the seven passed before the
+implementation (the anchored-and-alpha pixel test, because the fallback font's own ✓ happens to
+land on those pixels; and the font-has-the-glyph test, which cannot fail before). After the
+green, `_mark` was made to return at once: `3 failed, 10 passed`, the anchored test among them,
+so it does detect a missing stroke; restored.
+
+**Green.** `34 passed` for the five tier 1 files; the suite `354 passed`, 98%; lint one long
+line, wrapped, then clean.
+
+**Tier 3.** The scratch example with "edge fold ✓" and "diagonal fold ✗" in scene A's On
+screen list and its scene code: `check-script` clean; `stills A:5`: both pills show the mark,
+stroked in the label colour, the pills wider by the mark; looked at.
+
+**Decision / surprise.** The mark's geometry is in size units (tick through (0.08, −0.30),
+(0.32, −0.06), (0.72, −0.60); cross between 0.12–0.68 and −0.62 to −0.06; stroke 0.11, at
+least 1.5 px) rather than scaled from `draw.badge`, so a mark sits on the baseline like a
+glyph. `line()` changes the context's source and line width, so `text` re-selects the font
+after each mark. The reader keeps a code point only when it maps to a non-zero glyph, as
+fontTools does, which is why the two agree exactly. A `.ttc` collection reads its first font.
+
+**State.** Item 1 done. Next: item 2, `check-script` reports characters a font lacks.
