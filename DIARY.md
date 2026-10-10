@@ -2,141 +2,82 @@
 
 ## Where things stand
 
-10 October 2026, 21:05. **Requests 1 to 14 are built in full** (the eight commands of the first
-request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
-characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
-the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
-real run. **Requests 13 and 14 are recorded** (PLAN.md items 15 and 16, "Settled" 24 and 25,
-the two files in `inbox/done/`) **and item 15 is under way**: its choreography format is **approved** (Squirrel, 13:24;
-"Settled" 27), with scene A2 of the training-video project's second video as a worked example,
-video-elements' reply fixed the element description's rows (`rows` and `label` types, `*` for
-an index, indices from 1, `"computed"` anchors) that the invented test library and
-`check-script` are written to, and **the first increment is built** (Squirrel, 13:32: "go ahead
-with the config settings"): `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT` in `config.KEYS`, the flags
-`--elements DIR` and `--renderer PATH` on `check-script`, `stills`, `render`, `frame-hashes` and
-`compare-frames` through `videotools.elements.add_arguments`, and `elements.settings(args, conf)`
-resolving them flag-first; and **the second increment** (Squirrel, 13:55: "go ahead with
-increment 2"): `elements.open_library(folder, renderer)` puts the root on the import path once,
-imports `videoelements.library` from it and opens the library, with five refusals in words
-(no setting and no flag, folder missing, no `videoelements/` package, a package that cannot be
-imported, a library that refuses with its problems listed), tested against **the invented
-library** `tests/stubs/video-elements/` (a stub `videoelements` package that reads `ELEMENT.md`,
-`PROVENANCE.md` and `licenses/SOURCES.md` in the settled rows into the real reader's plain
-data; elements `pot`, an svg with fixed anchors, and `table`, a code element with `rows`,
-`label`, indexed parameters and computed anchors; its README says what it checks and what it
-does not); and **the third increment** (Squirrel, 14:20: "continue with increments 3-5"):
-`videotools.choreography` parses the Cast table, the Moves list and the Mistake and Right way
-sections into plain data on every scene (`cast`, `moves`, `panels`), every malformed line a
-problem by line (PLAN.md item 15, "Built"); and **the fourth increment**:
-`choreography.check` lists every problem of item 15 "Checks" (structure, the pieces, the
-library's elements, anchors, parameters, data files, states, labels, cues and times, shown twice
-or never), and `check-script` runs it on every described scene, opening the library from the
-settings only when a cast names a library element; and **the fifth increment**, the
-scene-loading rule: a described step scene needs no `code` (`load` gives None), a described
-panel no `mistake`/`right_way`, a step scene with neither is refused naming both, and the frame
-draws what a module has and skips what it has not; and **the sixth increment** (Squirrel,
-16:00: "proceed with increments 6-7"): `videotools.perform` draws a described cast frame by
-frame (show, hide, move, placement by pixels, region or another member's corner, the pieces and
-the library's elements), `frame.Video` opens the library when a cast needs it and refuses a
-described scene's problems before drawing, and the four drawing commands pass the settings
-(PLAN.md item 15, "Built"). The invented library's stub draws a filled rectangle and records
-every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
-(`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
-span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): all twelve: item 15 is complete** (8, 17:40: computed anchors
-after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
-extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; 10, 18:25: a
-panel's moves from its rise, and the proof that a described scene and the same scene as a
-module give equal frames through `frame-hashes`; 11, 19:00: the README's "Describing a scene
-in the script" with a real run against the real library, and a library refusal at draw time
-now one line in words; 12, 19:40: the Tier 3 on the real second video's scene A2 in a scratch
-copy against the real library, `compare-frames` against v4 the same picture, with three finds
-fixed or recorded: the check's ordering of end-relative times, the `keep` action, a data-driven
-element's Size; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then request 14").
-**Request 14 (item 16) is complete**: 13 (20:20: the `element-credits` setting,
-`videotools.credits`, `check-script`'s `Credits on the end card:` block and its font check), 14
-(20:35: the lines drawn on the end card, wrapped, the block moved up rather than off the
-bottom; `none` and a video with no library elements byte for byte today's card) and 15 (20:55:
-`assemble` writes `<output stem>.credits.txt` beside the video, refused if it exists, never
-replaced, with `--elements`/`--renderer`; checked against the real library's register). **Nothing
-is in progress.** What waits: the training-video project's side of item 15 (re-describing its
-scenes, comparing, retiring modules, a `formula-bar` request to video-elements if it wants one),
-and any request it sends here. "Open questions" is empty: the credits file is never replaced
-("Settled" 28; Squirrel, 21:10: "default is fine").
-The training-video project's side of item 15 (re-describing its scenes in its own script,
-comparing, retiring modules) is theirs. Then 11 (README: the format under "Writing a video's script", the
-flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
-32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
-starts by reading CLAUDE.md, PLAN.md (items 15 and 16 in full) and this section, then `inbox/` (empty at
-21:05; anything at its top level other than README.md is new and is reported to Squirrel, never
-acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
-(request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
-done.
+10 October 2026, 23:10 (session end; handover written at Squirrel's word). **Requests 1 to 14 are
+built in full**: the eight commands of the first request; the four checking commands (PLAN.md
+item 11); ✓ and ✗ as strokes and the characters-a-font-lacks report (12); phoneme spans in
+`say:` lines (13); the curtain on the timeline and `stills --cue-changes` (14); **choreography
+described in the script and drawn from the video-elements library (15, request 13: the Cast,
+Moves, Mistake and Right way sections, the checks in `check-script`, `videotools.perform`
+drawing a cast through the library's `el.draw` and the frame's own pieces, the curtain for
+free, the `keep` action, the README's "Describing a scene in the script")**; and **credits for
+the library's art (16, request 14: the `element-credits` setting, the lines on the end card and
+in `check-script`, the credits file `assemble` writes beside the video)**. Each is in the README
+with a real run. A new session starts by reading CLAUDE.md, PLAN.md (items 15 and 16 in full) and
+this section, then `inbox/`.
 
-Green: 480 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
-pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
-external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
-`tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
-and serves raw audio (`tone` spans) and raw frames (`colours` by time) from fake media; the
-video-elements library is the invented one in `tests/stubs/video-elements/`, never the real
-repository. One test
-is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1, and with
-`VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_env()`).
+**In the inbox, unacted on: request 15** (`inbox/request-from-training-video-2026-10-10-15.md`,
+22:59), read and reported to Squirrel at the handover (the entry below): four small items found
+by the training-video project while describing its scenes A2 and B for real: (1) a bug: the
+offset in `from`, `to` and `target` (`export.right + 21 8`) is dropped by `perform._point`; (2) an
+arrow that draws on (`progress` and `head` parameters) and may have a blank Where; (3) a blank
+Size drawn at an element's natural size once video-elements offers `el.natural_size` (its request
+3), and until then a `check-script` warning for a code element with a nominal size and no Size;
+(4) a test that a `WxH` rect reaches a stretching element as given. Nothing done; it waits for
+Squirrel's OK, then goes into PLAN.md as item 17 before any code. That project reports requests
+13 and 14 verified on Linux (479 passed, 1 skipped) and A2 described matching v4 at 1.1 on every
+step frame; its report and sheets are in its `videos/app-for-that/checks/elements-check-2026-10-10/`,
+read-only from here.
 
-Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
-video, `check-video` clean (the same SHA-256 on every run since the first); `assemble --replace`
-against real ffmpeg (the entry of 21:34); the four checking commands on that video, on a
-re-render with one colour changed, `brand-preview` on the real kit read-only (the entries after
-21:46), a still with ✓ and ✗ in its pills, `check-script` on the two real scripts, read-only, clean, and
-the phoneme spans with the real model: the unchanged script's clips byte-identical, a changed
-phoneme changing the clip, and `stills --cue-changes` on every scene plus a faulty three-cue
-copy that warns (10 October); and the described scenes against the real video-elements library
-(19:00 and 19:40: the example's scene A with a person, a sun, a gauge and a calendar; the real
-second video's scene A2 in a scratch copy compared with v4, the entries below). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
-copies live only in the session's scratchpad, never in the repository. Linux was tried by the
-training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
-other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
+Green: 480 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
+`origin/main` (last commit `08076e3`). PLAN.md "Open questions" is empty; "Settled" runs to 28.
 
-Known limits worth knowing: the stored-image frame tests pin layout, not fonts (the fresh-process
-font test pins fonts); `brand-preview`'s layout is checked by eye, not by a test; `check-script`
-sees only a module's own top-level `def`s; the checklist rows are 60 px apart where the
-prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal when the
-finished video exists says "give a new name" and not that `--replace` never covers it (raised at
-21:34, not changed).
+The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
+programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
+model are stubs in `tests/stubs/` (the stub ffmpeg refuses an existing output without `-y` and
+serves raw audio and raw frames from fake media), and **the video-elements library is the
+invented one at `tests/stubs/video-elements/`** (a stub `videoelements` package reading the
+settled `ELEMENT.md` rows; elements `pot` (svg, two states, fixed anchors, from "Invented
+Icons") and `table` (code, `rows`, a `label`, indexed parameters, computed anchors, an `explode`
+parameter that makes its draw refuse, from "Invented Peeps"); its draw fills the rect with the
+brand's accent and records every call in `lib.draws`; its README says what it checks and what
+it does not). One test is skipped off macOS (CoreText). The suite also passes with tier 2 run
+before tier 1 and with `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported.
 
-Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-items 15 and 16 complete); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
-video-elements (read-only from here) is **finished through its step 7** (17:20, commit
-`8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
-from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
-letters), `header`, `numbers`, `tabs`, `row-height`, `text-size`, `rows-shown`, `highlight.*`,
-`highlight-colour.*`, `cell-alpha.*.*` (our worked example's guesses were close; no `box.*.*`,
-no `formula-bar`). Its step 8 is Squirrel's first real run. Our Tier 3 against it is increment
-12. The one write made into that
-repository was the request file of 13:05, at Squirrel's word; it is in its `inbox/done/` now. Also the
-training-video project's: its six phoneme spans and re-made clips, its three scenes on
-`before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
-standard ✓ drawing with its own `tag()` helper retired, and any request it sends here. The stub
-speech model has a `tokenizer` submodule (upper-cases) and records `is_phonemes`.
+How the tests work: `tests/tier1/` pure functions (`test_choreography_parse.py`, `_check.py`,
+`_library.py`, `test_perform_curtain.py`, `test_credits.py`, `test_elements_*.py` for item 15
+and 16); `tests/tier2/` runs each command as a subprocess through `conftest.run()` under the
+venv's Python, with the `speech` and `ffstub` fixtures, `example` (a copy of `examples/`),
+`narrated()` and `rendered()`; `test_frame.py` compares drawn frames with `tests/tier2/frames/`
+at 192×108; `test_perform.py` and `test_end_card_credits.py` draw frames in-process on scene A
+of the example described (`describe()`, `CAST`, `three_cues()`) and sample pixels or
+`lib.draws`; `test_check_script_choreography.py` and `test_assemble.py` run the commands with
+`--elements tests/stubs/video-elements`. One tier: `.venv/bin/pytest tests/tier1`. Never
+`git add -A` while a suite is running (coverage fragments).
 
-Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
-passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30. The
-`compare-video` commit (`65a20b5`) swept in 215 coverage fragments; the `compare-frames` commit
-removed them and `.gitignore` now has `.coverage.*`.
+Tier 3 done on this Mac, in the session's scratchpad, read-only on everything real: the whole
+chain on the example (9–10 October); the described scenes against the **real** video-elements
+library (`~/projects/code/video-elements`, complete: 32 elements, its README): the example's
+scene A with `person`, `sun`, `gauge` and `calendar` (the README's run), and the real second
+video's scene A2 in a scratch copy of that video, `compare-frames` against v4 at 2.3–2.9 mean
+difference, the same picture by eye (the entry of 19:40); the credit lines and credits file
+against the real register (20:55). Real elements: a data-driven element (the spreadsheet) must
+be given its natural Size or it is fitted into the description's nominal size (request 15 item
+3 asks for better); `row.N` of the real spreadsheet is the left end of a data row.
+`~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR` only; the Tier 3 runs passed
+`--elements` on the command line.
 
-How the tests work: `tests/tier1/` pure functions (pycairo for `test_draw*.py` and
-`test_fonts.py`); `tests/tier2/` runs each command as a subprocess through `conftest.run()`
-under the venv's Python (a variable given as `None` is unset), with `tests/stubs/kokoro_onnx/`
-(fake speech model, on `PYTHONPATH` by the `speech` fixture) and `tests/stubs/ffstub.py` (fake
-ffmpeg and ffprobe on PATH by the `ffstub` fixture: media as `key=value` text files, every call
-logged, `FFSTUB_FAIL`/`FFSTUB_DIE`/`FFSTUB_DROP` to make a job fail, an existing output refused
-without `-y`). `example` copies `examples/` to a temporary folder; `narrated()` and `rendered()`
-fake the products of `narrate` and `render`; `test_frame.py` compares drawn frames with
-`tests/tier2/frames/` at 192×108 (its README says how to renew them and what the tolerance does
-not see); `test_missing_packages.py` hides a package with a module on `PYTHONPATH`. One tier:
-`.venv/bin/pytest tests/tier1`. Coverage of the subprocesses comes through
-`COVERAGE_PROCESS_START`, which `run()` sets. Never `git add -A` while a suite is running: the
-coverage fragments it writes would be swept in.
+Known limits worth knowing: a described scene is flat (no camera); a text piece's box for its
+corners is approximate (its width by its type size above the baseline); a fixed anchor of an
+element not yet drawn assumes uniform, centred fitting (confirmed on the real library's SVG
+icons); `check-script` sees only a module's own top-level `def`s; the stored-image frame tests
+pin layout, not fonts; `brand-preview`'s layout is checked by eye. Known-wrong in past entries:
+the `check-video` entry says `180 passed` (it was 179); an early "21:30" was 18:30; commit
+`71293d0` went out without its diary entry, which followed in `6dd4704`.
+
+Waiting on Squirrel: his OK on request 15 (then PLAN.md item 17, test-first, in the request's
+order: the offset bug first). Also the other projects': the training-video project describing
+its scenes in its own script and retiring modules; video-elements' answer to its request 3
+(`natural_size`, stretching elements), which item 3 of request 15 depends on in part.
 
 ## Log
 
@@ -2390,3 +2331,23 @@ video ("Settled" 28); "Open questions" is empty. Nothing changes in the code, wh
 that way and is pinned by `test_an_existing_credits_file_is_refused_before_anything_is_written_even_with_replace`.
 
 **State.** 480 green, 98%, lint clean, pushed. Nothing in progress.
+
+### 10 October 2026 — Session end: request 15 arrives; handover
+
+**Decision / surprise.** At 22:59, while the handover was being written, request 15 arrived
+from the training-video project (`inbox/request-from-training-video-2026-10-10-15.md`): four
+items found by describing its scenes A2 and B for real against `08076e3`. Read and reported to
+Squirrel with a first comment; **nothing done**. (1) is a real bug of ours: `perform._point`
+parses `member.anchor + X Y` with `parse_where` and drops `dx`, `dy`, so an arrow's `from`/`to`
+and a callout's `target` land on the bare anchor (a one-line fix with a test; it escaped the
+tests because none used an offset there). (2) `progress` and `head` on `arrow`, animatable, and
+a blank Where for an arrow (its box from its ends): small, test-first. (3) a blank Size at the
+element's natural size needs video-elements' `el.natural_size` (its request 3) through the shared
+interface, so the words must be the same in both READMEs through Squirrel; the `check-script`
+warning for a nominal-sized code element with no Size can be built now. (4) a pinning test
+only. That project also verified requests 13 and 14 on Linux (479 passed, 1 skipped) and A2
+described against v4 at 1.1 on every step frame, better than our 2.3–2.9 here (their
+description, not ours). "Where things stand" rewritten above as the handover.
+
+**State.** 480 green, 98%, lint clean, pushed. Nothing in progress; request 15 waits for
+Squirrel's OK.
