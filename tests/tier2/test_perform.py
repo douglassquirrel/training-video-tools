@@ -761,3 +761,22 @@ def test_a_turned_member_with_a_blank_size_is_sized_without_its_turn_among_the_e
     rendered(video, "A", 2.0)
     assert "rotate" not in video.library.sizes[0]["params"] and "rotate" not in video.library.draws[0]["params"]
     assert video.library.draws[0]["rect"] == (140.0, 518.0, 240.0, 120.0)
+
+
+# ---- item 20 (request 18), 1: a move marked linear
+
+STEADY = CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", """- cue 1, 2.6–2.9 s: hide pot1, corner
+- cue 1, 1.0–2.0 s, linear: sheet.highlight.2 0 → 1
+- cue 1, 1.0–2.0 s: sheet.highlight.3 0 → 1
+""").replace("- cue 1, 1.0 s: show sign\n- cue 1, 0.5 s: show sheet\n",
+             "- cue 1, 1.0 s: show sign\n- cue 1, 1.0–2.0 s, linear: show sheet\n")
+
+
+def test_a_linear_move_changes_at_a_steady_rate_and_an_unmarked_one_eases(example):
+    cropped(example)
+    narrated(example)
+    video = frame.Video(describe(example, STEADY), INVENTED, None)
+    _s, quarter = _draw(video, "table", 1.95)              # a quarter of the way through 1.7–2.7 s
+    assert quarter["params"]["highlight.2"] == pytest.approx(0.25)          # steady
+    assert quarter["params"]["highlight.3"] == pytest.approx(0.15625)       # eased: 3p² − 2p³
+    assert quarter["alpha"] == pytest.approx(0.25)                          # a linear show

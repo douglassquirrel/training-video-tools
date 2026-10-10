@@ -203,10 +203,10 @@ just prose
         "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have none)",
-        "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue]: ACTION",
+        "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
         "line 34: scene A2, moves: Where 'nowhere' is not X Y in area pixels, a region (left, right, centre, "
         "top-left, top-right, bottom-left, bottom-right, full) or a member's anchor like sample.row.3 + 40 -12",
-        "line 35: scene A2, moves: 'prose in the list' is not cue N[, A s | A–B s | over the cue]: ACTION",
+        "line 35: scene A2, moves: 'prose in the list' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
         "line 36: scene A2, moves: not a move (a list item '- cue N[, TIME]: ACTION'): just prose",
         "line 44: scene A2, mistake: a panel's moves have no 'cue N': times count from the panel's rise",
         "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
@@ -300,3 +300,24 @@ def test_a_scene_with_cues_still_needs_cue_n_on_every_move():
     scene, problems = _scene(HEAD + "\n### Moves\n\n- 0.4–1.4 s: show a\n")
     assert problems == ["line 22: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a "
                         "scene with no cues have none)"]
+
+
+# ---- item 20 (request 18), 1: a move marked linear
+
+def test_a_moves_time_may_end_linear_in_a_scene_and_in_a_panel():
+    text = HEAD + CAST + """
+### Moves
+
+- cue 1, 0.5–1.7 s, linear: sample.rows-shown 0 → 3
+- cue 1, linear: show sample
+- cue 2: show pot
+- cue 2, 1.0 s, steady: show pot
+""" + PANELS.replace("- 0.4–0.8 s: show wrong", "- 0.4–0.8 s, linear: show wrong\n- linear: hide wrong")
+    scene, problems = _scene(text)
+    assert problems == ["line 34: scene A2, moves: 'cue 2, 1.0 s, steady: show pot' is not cue N[, A s | A–B s | "
+                        "over the cue][, linear]: ACTION"]
+    assert [(m.get("linear", False), m["start"], m["end"]) for m in scene["moves"]] == [
+        (True, ("start", 0.5), ("start", 1.7)), (True, ("start", 0.0), ("start", 0.6)),
+        (False, ("start", 0.0), ("start", 0.6))]
+    assert [(m.get("linear", False), m["start"], m["end"]) for m in scene["panels"]["mistake"]["moves"]] == [
+        (True, ("start", 0.4), ("start", 0.8)), (True, ("start", 0.0), ("start", 0.6))]

@@ -156,9 +156,13 @@ CUELESS = {"panel": "a panel's moves have no 'cue N': times count from the panel
            "scene": "the scene has no cues, so its moves have no 'cue N': times count from the scene's start"}
 
 
+MOVE_HELP = "is not cue N[, A s | A–B s | over the cue][, linear]: ACTION"
+
+
 def parse_move(text, cueless=None):
     """({cue, start, end, action}, problem) for the text of one move list item. `cueless` is
-    'panel' or 'scene' where moves are written without a cue (a panel; a scene that has none)."""
+    'panel' or 'scene' where moves are written without a cue (a panel; a scene that has none).
+    The move also has `linear: True` when its time ends ', linear': a steady rate, not eased."""
     if cueless:
         if text.startswith("cue "):
             return None, CUELESS[cueless]
@@ -170,15 +174,23 @@ def parse_move(text, cueless=None):
             if ":" in text and not text.startswith("cue "):
                 return None, ("a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues "
                               "have none)")
-            return None, f"'{text}' is not cue N[, A s | A–B s | over the cue]: ACTION"
+            return None, f"'{text}' {MOVE_HELP}"
         cue, span, action = int(m.group(1)), m.group(2), m.group(3)
+    linear = False
+    if span is not None:
+        parts = [part.strip() for part in span.split(",")]
+        if parts[-1] == "linear":
+            linear, span = True, ", ".join(parts[:-1]) or None
     start, end = parse_span(span)
     if start is None:
-        return None, f"'{text}' is not cue N[, A s | A–B s | over the cue]: ACTION"
+        return None, f"'{text}' {MOVE_HELP}"
     act, problem = parse_action(action.strip())
     if problem:
         return None, problem
-    return {"cue": cue, "start": start, "end": end, "action": act}, None
+    move = {"cue": cue, "start": start, "end": end, "action": act}
+    if linear:
+        move["linear"] = True
+    return move, None
 
 
 def _cells(line):

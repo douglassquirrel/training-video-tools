@@ -70,6 +70,12 @@ def turn(point, centre, degrees):
     return (centre[0] + dx * math.cos(a) - dy * math.sin(a), centre[1] + dx * math.sin(a) + dy * math.cos(a))
 
 
+def progress(t, a, b, move):
+    """How far a move has got at t over its span a to b, 0 to 1: eased, or at a steady rate when
+    the move is marked linear."""
+    return (timeline.prog if move.get("linear") else timeline.ep)(t, a, b)
+
+
 def window(move, tl, panel_start, panel=True):
     """(from, to) in scene seconds for a move: its span against its cue's start and length; or,
     with no cue, against the panel's rise, or (not in a panel) the scene's own start and end."""
@@ -111,7 +117,7 @@ class Performance:
             if self.t < a:
                 break
             target = 1.0 if mv["action"]["kind"] == "show" else 0.0
-            value = timeline.lerp(value, target, timeline.ep(self.t, a, b))
+            value = timeline.lerp(value, target, progress(self.t, a, b, mv))
         if self._under_curtain(name, shows):
             value *= self.tl.before_curtain(self.t)
         return value
@@ -179,7 +185,7 @@ class Performance:
                 break
             to = dict(member, where=mv["action"]["to"])
             tx, ty, _tw, _th = base_rect(to, self.area, self.lib, self.anchors_of, natural)
-            p = timeline.ep(self.t, a, b)
+            p = progress(self.t, a, b, mv)
             x, y = timeline.lerp(x, tx, p), timeline.lerp(y, ty, p)
         self._busy.discard(name)
         self._rects[name] = (x, y, w, h)
@@ -247,7 +253,7 @@ class Performance:
         for (a, b), mv in self._moves_of(name, ("param", "set", "state")):
             if self.t < a:
                 break
-            p, act = timeline.ep(self.t, a, b), mv["action"]
+            p, act = progress(self.t, a, b, mv), mv["action"]
             if act["kind"] == "state":
                 state = act["to"] if p >= 1 else (act["from"], act["to"], p) if p > 0 else state
                 continue

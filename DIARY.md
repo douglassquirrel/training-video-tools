@@ -3090,3 +3090,28 @@ deciding a member's opacity. One change to something already there: in a panel, 
 means the mistake cue's end (it meant the panel's rise, the same as 0, which said nothing).
 
 **State.** 531 green as left. Next: item 20, 1, `linear`, test first.
+
+### 11 October 2026 — Item 20, 1: a move marked linear
+
+**Goal.** A move whose time ends `, linear` changes at a steady rate (request 18, item 2).
+
+**Tests.** `test_a_moves_time_may_end_linear_in_a_scene_and_in_a_panel` (tier 1, the parser:
+with a span, with none, in a panel, and `steady` refused);
+`test_a_linear_move_changes_at_a_steady_rate_and_an_unmarked_one_eases` (tier 2: a quarter of
+the way through, a linear parameter is at 0.25 and an eased one at 0.15625; a linear show at
+0.25).
+
+**Red.** `'cue 1, 0.5–1.7 s, linear: sample.rows-shown 0 → 3' is not cue N[, A s | A–B s | over
+the cue]: ACTION`, from the parser and from the script the drawing test builds.
+
+**Green.** `301 passed in 13.39s` (tier 1 and `test_perform.py`); suite `533 passed in 155.57s
+(0:02:35)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** A parsed move has `linear: True` only when it is marked; my first
+version gave every move the key, which broke nine existing tests that compare whole moves, for
+no gain, so the shape was left as it was. Two expectations changed with a reason: the refusal's
+help text now ends `[, linear]: ACTION` (two existing tests), and my new test's line number was
+a miscount (34, not 39). `perform.progress(t, a, b, move)` is the one place that chooses eased
+or steady, used for opacity, place, parameters and a state's progress.
+
+**State.** 533 green, 98%, lint clean. Next: item 20, 2, `dim`.
