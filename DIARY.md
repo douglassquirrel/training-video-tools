@@ -61,8 +61,8 @@ bottom; `none` and a video with no library elements byte for byte today's card) 
 replaced, with `--elements`/`--renderer`; checked against the real library's register). **Nothing
 is in progress.** What waits: the training-video project's side of item 15 (re-describing its
 scenes, comparing, retiring modules, a `formula-bar` request to video-elements if it wants one),
-any request it sends here, and Squirrel's word on "Open questions" 1 (the credits file is never
-replaced: built as the default).
+and any request it sends here. "Open questions" is empty: the credits file is never replaced
+("Settled" 28; Squirrel, 21:10: "default is fine").
 The training-video project's side of item 15 (re-describing its scenes in its own script,
 comparing, retiring modules) is theirs. Then 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
@@ -2382,3 +2382,11 @@ corrected). The source name in the file is the credit line itself, since the int
 `lib.credits` gives category, credit line and licence and not the register's key.
 
 **State.** 480 green, 98%, lint clean, pushed. Items 15 and 16 complete. Nothing in progress.
+
+### 10 October 2026 — The credits file's default settled
+
+**Decision.** Squirrel (21:10): "default is fine": the credits file is never replaced, like the
+video ("Settled" 28); "Open questions" is empty. Nothing changes in the code, which was built
+that way and is pinned by `test_an_existing_credits_file_is_refused_before_anything_is_written_even_with_replace`.
+
+**State.** 480 green, 98%, lint clean, pushed. Nothing in progress.

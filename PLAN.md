@@ -1140,8 +1140,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
-   Claude's default; Squirrel's word moves it to "Settled".
+None.
 
 ## Settled
 
@@ -1237,3 +1236,6 @@ README): each command for real on the example video.
     `videoelements.cli.Failure` with `.problems` (its request of 12:59). Recorded in item 15,
     "The cast". The spreadsheet's final parameter names come with video-elements' step 6; the
     example's are guesses until then (Squirrel, 13:24: "record and move reply to done").
+28. The credits file `assemble` writes beside the finished video is treated like the video: never
+    replaced, `--replace` or not; `assemble` refuses before starting if it exists (item 16, 5;
+    Squirrel, 10 October 2026, 21:10: "default is fine").
