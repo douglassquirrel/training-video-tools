@@ -599,8 +599,15 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   and refuses a described scene's problems (`choreography.check`, exit 3) before anything is
   drawn; `draw_frame` performs the scene's cast before the module's `draw`, `mistake_panels` a
   described panel's cast in the panel body's pixels before the module's body. The four drawing
-  commands pass `--elements`/`--renderer` or the config through `elements.from_args`. Parameter
-  and state changes in moves are increment 7.
+  commands pass `--elements`/`--renderer` or the config through `elements.from_args`.
+  **Increment 7, 16:55**: `Performance.params` gives a member's parameters and state at t: the
+  cast row's values converted by the description (the pieces' numbers as numbers), then its
+  moves in time order: `NAME.PARAM A → B` eased over the span for a number (an integer stays
+  whole; before the span the parameter is absent, so the element's default or the cast's value
+  holds), a set of a number eased from its current value, a set of a word at the span's start,
+  `NAME STATE → STATE` the name after and `(from, to, progress)` part-way; the pieces' own
+  parameters (a badge's `r`, a pill's `size`) animate the same way. The computed anchors and the
+  pieces' real extents are increment 8.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

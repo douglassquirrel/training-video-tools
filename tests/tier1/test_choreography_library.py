@@ -147,18 +147,18 @@ def test_a_state_must_be_one_the_element_has_and_a_code_element_without_states_t
 
 | Name | Element | Where | Size | Parameters | Notes |
 |---|---|---|---|---|---|
-| p | pot | 10 10 | | state=cracked | |
+| p | pot | 10 10 | | state=broken | |
 | t | table | 10 10 | | rows=assets/sample.csv state=plain | |
 
 ### Moves
 
 - cue 1: show p, t
-- cue 2: p plain → cracked
+- cue 2: p plain → broken
 - cue 2: t plain → cracked
 """
     assert _check(text, lib, folder) == [
-        "line 25: scene A2, cast: 'p': a pot has no state 'cracked' (its states are plain)",
+        "line 25: scene A2, cast: 'p': a pot has no state 'broken' (its states are plain, cracked)",
         "line 26: scene A2, cast: 't': a table has no states",
-        "line 31: scene A2, moves: 'p': a pot has no state 'cracked' (its states are plain)",
+        "line 31: scene A2, moves: 'p': a pot has no state 'broken' (its states are plain, cracked)",
         "line 32: scene A2, moves: 't': a table has no states",
     ]

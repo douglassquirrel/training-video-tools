@@ -80,6 +80,7 @@ def test_the_invented_library_opens_with_its_two_elements_and_the_renderer_given
     assert lib.element("table")["params"]["highlight.*"] == {"type": "number", "min": 0.0, "max": 1.0, "default": 0.0}
     assert lib.element("table")["anchors"]["row.*"] == "computed"
     assert lib.element("pot")["anchors"]["rim"] == (12.0, 4.0)
+    assert list(lib.element("pot")["states"]) == ["plain", "cracked"]
     assert lib.credits(["pot", "table"]) == [{"category": "Icons", "credit": "Invented Icons", "licence": "MIT"}]
 
 

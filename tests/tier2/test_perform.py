@@ -134,3 +134,83 @@ def test_stills_and_render_take_the_library_from_the_flag_and_refuse_without_it(
     assert (code, err) == (0, "")
     code, out, err = run("render", script, "--scenes", "A", "--dry-run", env={"VIDEO_TOOLS_CONF": "/nowhere/c"})
     assert code == 3 and err.startswith("render: VIDEO_ELEMENTS_DIR is not set in /nowhere/c and no --elements")
+
+
+# ---- increment 7: parameters and states change in moves
+
+ANIMATED = CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", """- cue 1, 2.6–2.9 s: hide pot1, corner
+- cue 1, 1.0–2.0 s: sheet.rows-shown 0 → 3
+- cue 1, 1.0–2.0 s: sheet.highlight.2 0 → 1
+- cue 1, 1.0 s: sheet.highlight-colour.2 correct
+- cue 1, 1.0–1.5 s: pot1 plain → cracked
+- cue 1, 1.0–2.0 s: corner.r 40
+""").replace("| sheet | table | 100 400 | 300x100 | rows=assets/sample.csv | frame rect 140 518 |",
+             "| sheet | table | 100 400 | 300x100 | rows=assets/sample.csv rows-shown=0 striped=yes | frame rect 140 518 |")
+
+
+@pytest.fixture
+def animated(example):
+    cropped(example)
+    narrated(example)
+    return frame.Video(describe(example, ANIMATED), INVENTED, None)
+
+
+def _draw(video, name, t):
+    video.library.draws.clear()
+    s = rendered(video, "A", t)
+    return s, next(d for d in video.library.draws if d["name"] == name)
+
+
+def test_a_parameter_animates_over_its_span_eased_and_a_whole_number_stays_whole(animated):
+    _s, before = _draw(animated, "table", 1.4)             # the span is 1.7–2.7 s
+    assert before["params"]["rows-shown"] == 0 and "highlight.2" not in before["params"]   # the element's default
+    assert before["params"]["striped"] is True
+    _s, mid = _draw(animated, "table", 2.2)                # half way: eased progress 0.5
+    assert mid["params"]["highlight.2"] == pytest.approx(0.5) and mid["params"]["rows-shown"] == 2
+    _s, after = _draw(animated, "table", 3.0)
+    assert after["params"]["highlight.2"] == 1.0 and after["params"]["rows-shown"] == 3
+
+
+def test_a_set_takes_effect_at_its_start_for_words_and_eases_for_numbers(animated):
+    _s, before = _draw(animated, "table", 1.4)
+    assert "highlight-colour.2" not in before["params"]
+    _s, after = _draw(animated, "table", 1.8)
+    assert after["params"]["highlight-colour.2"] == "correct"
+    s = rendered(animated, "A", 1.4)                       # corner: a badge of r 20, growing to 40 over 1.7–2.7 s
+    assert pixel(s, 370 + 30, 218) != hex_rgb("#3E7D4F")
+    s = rendered(animated, "A", 2.6)                       # r about 39, before pot1 starts to move at 2.7 s
+    assert pixel(s, 370 + 30, 218) == hex_rgb("#3E7D4F")
+
+
+def test_a_state_change_is_handed_to_the_element_part_way_as_from_to_and_progress(animated):
+    assert _draw(animated, "pot", 1.4)[1]["state"] == "plain"                       # the span is 1.7–2.2 s
+    assert _draw(animated, "pot", 1.95)[1]["state"] == ("plain", "cracked", pytest.approx(0.5))
+    assert _draw(animated, "pot", 2.5)[1]["state"] == "cracked"
+
+
+PIECES = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| pot1 | pot | centre | | | fitted into the middle of the area |
+| word | text | 100 100 | | text=crease size=30 | |
+| hand1 | hand | 100 300 | | angle=1.2 scale=0.8 mirror=yes label=B | |
+| note | callout | 400 600 | | text="edge fold" target=pot1.centre | |
+| line | arrow | 100 500 | | from=word.bottom-left to=hand1.top-left width=4 | |
+
+### Moves
+
+- cue 1: show pot1, word, hand1, note, line
+
+"""
+
+
+def test_the_other_pieces_draw_and_a_region_fits_the_element_inside_it(example):
+    cropped(example)
+    narrated(example)
+    text = open(example, encoding="utf-8").read().replace("- edge fold\n", "- edge fold\n- B\n")
+    open(example, "w", encoding="utf-8").write(text)
+    video = frame.Video(describe(example, PIECES), INVENTED, None)
+    _s, pot = _draw(video, "pot", 2.0)
+    x, y, w, h = pot["rect"]                       # the centre region is 711 x 409 at 395.5, 322.5: a 24 x 24 pot fits to 409
+    assert (round(w), round(h)) == (409, 409) and (round(x), round(y)) == (546, 322)

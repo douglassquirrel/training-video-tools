@@ -664,7 +664,8 @@ with ffmpeg 4.4.
   member shown, hidden and moved over its eased spans, placed in area pixels, in a region or by
   another member's corner, the pieces through the frame's methods and the library's elements
   through the library (opened from `--elements` or `VIDEO_ELEMENTS_DIR`, refused in words when
-  it cannot be); parameter and state changes in moves follow. The refusal for a step scene with
+  it cannot be); a move that changes a parameter or a state takes effect over its span, a number
+  eased, a word at the start, a state part-way as a cross-fade or morph. The refusal for a step scene with
   no `code` now reads "has no 'code' property and no Cast, so nothing can draw it".
 - 10 October 2026 (afternoon): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,

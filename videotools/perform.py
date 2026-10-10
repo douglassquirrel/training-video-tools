@@ -135,29 +135,55 @@ class Performance:
         self._rects[name] = (x, y, w, h)
         return self._rects[name]
 
+    def _kind(self, member, name):
+        """The type of a parameter: the library description's, or the piece's (number or a word)."""
+        if member["element"] in choreography.PIECES:
+            return "number" if choreography.PIECE_PARAMS[member["element"]][name] == "number" else "text"
+        return choreography._param_match(name, self.lib.element(member["element"])["params"])["type"]
+
+    def _convert(self, kind, value):
+        if kind == "rows":
+            with open(os.path.join(self.folder, value), encoding="utf-8", newline="") as f:
+                return [row for row in csv.reader(f)]
+        if kind == "number":
+            return float(value)
+        if kind == "integer":
+            return int(value)
+        if kind == "boolean":
+            return value in YES
+        return value
+
     def params(self, member):
-        """The cast row's parameters converted by the element's description (a data file read
-        into rows; numbers, booleans), with `state` taken out."""
-        el = self.lib.element(member["element"])
+        """The member's parameters at t: the cast row's, converted by the element's description
+        (a data file read into rows; numbers, booleans), then its moves in time order: a number
+        animated or set eases over the span (an integer stays whole), a word is set at the
+        span's start, a state change is the name after, or (from, to, progress) part-way.
+        Returns (params, state) with `state` taken out of the parameters."""
+        name = member["name"]
         out, state = {}, None
-        for name, value in member["params"].items():
-            if name == "state":
+        for pname, value in member["params"].items():
+            if pname == "state":
                 state = value
-                continue
-            desc = choreography._param_match(name, el["params"])
-            kind = desc["type"]
-            if kind == "rows":
-                with open(os.path.join(self.folder, value), encoding="utf-8", newline="") as f:
-                    out[name] = [row for row in csv.reader(f)]
-            elif kind == "number":
-                out[name] = float(value)
-            elif kind == "integer":
-                out[name] = int(value)
-            elif kind == "boolean":
-                out[name] = value in YES
             else:
-                out[name] = value
-        return out, state or el.get("default-state")
+                out[pname] = self._convert(self._kind(member, pname), value)
+        if state is None and member["element"] not in choreography.PIECES:
+            state = self.lib.element(member["element"]).get("default-state")
+        for (a, b), mv in self._moves_of(name, ("param", "set", "state")):
+            if self.t < a:
+                break
+            p, act = timeline.ep(self.t, a, b), mv["action"]
+            if act["kind"] == "state":
+                state = act["to"] if p >= 1 else (act["from"], act["to"], p) if p > 0 else state
+                continue
+            kind = self._kind(member, act["param"])
+            if kind in ("number", "integer"):
+                start = float(act["from"]) if act["kind"] == "param" else float(out.get(act["param"], act["value"]))
+                end = float(act["to"] if act["kind"] == "param" else act["value"])
+                value = timeline.lerp(start, end, p)
+                out[act["param"]] = int(round(value)) if kind == "integer" else value
+            else:
+                out[act["param"]] = act["to"] if act["kind"] == "param" else act["value"]
+        return out, state
 
     def draw(self, frame):
         for name, member in self.cast.items():
@@ -165,7 +191,8 @@ class Performance:
             if alpha <= 0:
                 continue
             x, y, w, h = self.rect(name)
-            element, p = member["element"], member["params"]
+            element = member["element"]
+            p, state = self.params(member)
             if element == "pill":
                 frame.tag(p["text"], x, y, size=float(p.get("size", 22)), fill=p.get("fill", "ink"),
                           colour=p.get("colour", "on-accent"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
@@ -187,9 +214,8 @@ class Performance:
                 draw.arrow(frame.ctx, [self._point(p["from"]), self._point(p["to"])],
                            frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)), alpha=alpha)
             else:
-                params, state = self.params(member)
                 el = self.lib.element(element)
-                self._anchors[name] = el.draw(frame, (x, y, w, h), state=state, params=params, alpha=alpha)
+                self._anchors[name] = el.draw(frame, (x, y, w, h), state=state, params=p, alpha=alpha)
 
     def _point(self, text):
         where = choreography.parse_where(text)

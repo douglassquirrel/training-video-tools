@@ -2,7 +2,8 @@
 
 ## Where things stand
 
-10 October 2026, 16:35. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 17:05 (session end, at Squirrel's word: "running low on session usage, come to a
+stopping place"). **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -40,18 +41,25 @@ frame (show, hide, move, placement by pixels, region or another member's corner,
 the library's elements), `frame.Video` opens the library when a cast needs it and refuses a
 described scene's problems before drawing, and the four drawing commands pass the settings
 (PLAN.md item 15, "Built"). The invented library's stub draws a filled rectangle and records
-every call in `lib.draws`. **The next step** is increment 7: parameter and state changes in
-moves (`NAME.PARAM A → B` eased for numbers, a set as a step or an eased change, `NAME STATE →
-STATE` as `(from, to, p)` part-way), for the pieces' parameters too; then increment 8, computed
-anchors after a member is drawn and the pieces' real rects for their box anchors. A new session
+every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
+(`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
+span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
+far of item 15's twelve increments (the list of 15:00): 1–7.** **The next step** is increment
+8: computed anchors (a row, a cell) usable by members later in the cast, with `check-script`
+refusing a member placed by a computed anchor of a member earlier or later as the rule needs,
+and the pieces' real extents for their box anchors (a pill's rect from `draw.tag`, a text's
+width); then 9 (the curtain rule), 10 (panels' moves and the equivalence through
+`frame-hashes`), 11 (README: the format under "Writing a video's script", the flags, a dated
+note), 12 (Tier 3 against the real library's nineteen elements: scene A2 described and compared
+with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-16:35; anything at its top level other than README.md is new and is reported to Squirrel, never
+17:05; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 445 tests, coverage 97% (perform.py's untested branches, the pieces
-and the refusals, are covered by increments 7 and 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 449 tests, coverage 97% (perform.py's two refusals and a few conversions untested
+until increment 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -81,7 +89,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–6 built, 7 OK'd at 16:00); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+increments 1–7 built; 8 onward on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) has its steps 1–5 of 8 done and the starter set three
 batches in (16:00, commit `8e4aede`): nineteen real elements including the six screens as code
 elements (`spreadsheet` with `rows`, `widths`, `numeric` (column letters), `header`, `numbers`,
@@ -2068,3 +2076,35 @@ into a refusal, so the four commands never see `ConfigError`. Coverage dipped to
 the two refusals in `perform.py` have no test yet; 7 and 8 bring them.
 
 **State.** 445 green, 97%, lint clean, pushed. Next: increment 7.
+
+### 10 October 2026 — Item 15, increment 7: parameters and states change in moves
+
+**Goal.** `NAME.PARAM A → B`, `NAME.PARAM VALUE` and `NAME STATE → STATE` take effect over their
+spans, for the library's elements and the pieces alike.
+
+**Test.** `test_perform.py`, four more tests on scene A described with moves: an animated number
+absent before its span (the element's default holds), eased half way at the middle, whole for an
+integer, final after; a word set at the span's start, a number set eased (a badge's `r` 20 → 40
+seen in pixels); a state `plain` before, `("plain", "cracked", 0.5)` half way, `cracked` after;
+and the other pieces (`text`, `hand`, `callout`, `arrow`) drawn with a pot fitted into the
+`centre` region (409 × 409 at 546, 322). The stub `pot` gained a second state, `cracked`, for
+the state test, which moved two expectations (`test_elements_open`, and the states test in
+`test_choreography_library`, which now asks for `broken`, a state the pot truly lacks).
+
+**Red.** `KeyError: 'highlight.2'`, `KeyError: 'highlight-colour.2'`, `assert 'plain' ==
+('plain', 'cracked', 0.5)`; the pieces test failed only on my rounding (Python rounds 546.5
+to 546).
+
+**Green.** `12 passed in 3.67s` for `test_perform.py`; the full suite `449 passed in 133.07s
+(0:02:13)`, coverage 97%, `ruff check .` clean.
+
+**Decision / surprise.** Before a parameter's first move the cast's value or the element's
+default holds, not the move's `A`: a script that wants `A` from the start says so in the cast.
+A set of a number eases from the current value over the span, so a bare `cue 2: tick.r 40`
+grows the badge over 0.6 s rather than jumping; a set of a word is a step at the span's start.
+Three expectations of mine were corrected against the code once read: the "before" value is
+absent, not 0; the badge sampled at 2.9 s met the pot mid-move (sampled at 2.6 s); float
+progress needs `approx`.
+
+**State.** 449 green, 97%, lint clean, pushed. Session ended here at Squirrel's word. Next:
+increment 8.

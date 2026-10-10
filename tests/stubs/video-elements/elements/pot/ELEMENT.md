@@ -21,3 +21,4 @@
 | Key | Value | Notes |
 |---|---|---|
 | plain | element.plain.svg | |
+| cracked | element.cracked.svg | the same drawing: the stub cross-fades nothing |
