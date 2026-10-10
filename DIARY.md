@@ -58,8 +58,7 @@ acted on without his OK). The bed video is accepted (request 4) and rebuilt on t
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 449 tests, coverage 97% (perform.py's two refusals and a few conversions untested
-until increment 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 449 tests, coverage 98% (perform.py's two refusals untested until increment 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -2096,7 +2095,7 @@ the state test, which moved two expectations (`test_elements_open`, and the stat
 to 546).
 
 **Green.** `12 passed in 3.67s` for `test_perform.py`; the full suite `449 passed in 133.07s
-(0:02:13)`, coverage 97%, `ruff check .` clean.
+(0:02:13)`, `TOTAL … 98%`, `ruff check .` clean.
 
 **Decision / surprise.** Before a parameter's first move the cast's value or the element's
 default holds, not the move's `A`: a script that wants `A` from the start says so in the cast.
@@ -2106,5 +2105,5 @@ Three expectations of mine were corrected against the code once read: the "befor
 absent, not 0; the badge sampled at 2.9 s met the pot mid-move (sampled at 2.6 s); float
 progress needs `approx`.
 
-**State.** 449 green, 97%, lint clean, pushed. Session ended here at Squirrel's word. Next:
+**State.** 449 green, 98%, lint clean, pushed. Session ended here at Squirrel's word. Next:
 increment 8.
