@@ -555,7 +555,10 @@ one under 3 `fails (under 3)`.
 
 The last two can also be given as flags, `--elements DIR` and `--renderer PATH`, on
 `check-script`, `stills`, `render`, `frame-hashes` and `compare-frames`; a flag wins over the
-file. Until a script can describe a scene, the settings and flags are read and nothing uses them.
+file. The folder is put on Python's import path when a command needs the library, which is
+imported from there (never installed into the venv) and opened; a missing setting or folder,
+a folder without the package, or a library that refuses are each one line in words (exit 3).
+Until a script can describe a scene, nothing calls for the library.
 
 ## Errors and exit codes
 
@@ -566,7 +569,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
 | 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, or the library itself refuses to open (its problems listed), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -586,7 +589,7 @@ device-shell settings exported.
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
 primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
-as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and `ffstub.py`
+as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, and `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
@@ -639,8 +642,10 @@ with ffmpeg 4.4.
   roundel scales with it), so scene code can pass the brand-scaled size.
 - 10 October 2026 (afternoon, last): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,
-  for the video-elements library (PLAN.md item 15, in progress); accepted now, used once a
-  script can describe a scene's cast. A config file with another key is still refused.
+  for the video-elements library (PLAN.md item 15, in progress): the root named goes on the
+  import path at the point of use and the library is opened through its interface, each
+  refusal one line in words (exit 3); nothing calls for it until a script can describe a
+  scene's cast. A config file with another key is still refused.
 - 10 October 2026 (morning): `frame.timeline.covered`, `before_curtain` and `curtain` tell
   scene code when the mistake panels hide the area, so a pre-mistake picture can be changed
   unseen; `stills --cue-changes` draws the frames around every cue start on numbered sheets and

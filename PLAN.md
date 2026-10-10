@@ -554,8 +554,13 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   project's Linux shell runs one extracted from a package, not on PATH.
   **Built 10 October 2026, 13:45**: `config.KEYS` has both (`~` expanded in the folder),
   `videotools.elements.add_arguments` puts the flags on the five commands and
-  `elements.settings(args, conf)` resolves them, flag first; nothing opens the library yet (the
-  next increment).
+  `elements.settings(args, conf)` resolves them, flag first. **Increment 2, 14:10**:
+  `elements.open_library(folder, renderer)` puts the root on `sys.path` once, imports
+  `videoelements.library` and calls `open(folder, renderer=…)` (no renderer: the library's
+  default), with the four refusals above plus a package that cannot be imported, each one
+  `cli.Failure` (exit 3; the library's `.problems` listed under one line); tested against the
+  invented library `tests/stubs/video-elements/` (a stub `videoelements` package reading the
+  settled rows, elements `pot` (svg) and `table` (code), a register). Nothing calls it yet.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 13:50. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 14:15. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -15,23 +15,33 @@ an index, indices from 1, `"computed"` anchors) that the invented test library a
 with the config settings"): `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT` in `config.KEYS`, the flags
 `--elements DIR` and `--renderer PATH` on `check-script`, `stills`, `render`, `frame-hashes` and
 `compare-frames` through `videotools.elements.add_arguments`, and `elements.settings(args, conf)`
-resolving them flag-first; nothing opens the library yet. **The next step** is item 15's second
-increment: putting the root on the import path at the point of use, `library.open(DIR,
-renderer=…)`, and the one-line refusals (no setting, no folder, no `videoelements/` or
-`elements/` in it, a library that will not open), test-first against an invented library in
-`tests/` (two tiny elements with `ELEMENT.md` files in the rows of "Settled" 27, a stub
-`rsvg-convert`). A new session
+resolving them flag-first; and **the second increment** (Squirrel, 13:55: "go ahead with
+increment 2"): `elements.open_library(folder, renderer)` puts the root on the import path once,
+imports `videoelements.library` from it and opens the library, with five refusals in words
+(no setting and no flag, folder missing, no `videoelements/` package, a package that cannot be
+imported, a library that refuses with its problems listed), tested against **the invented
+library** `tests/stubs/video-elements/` (a stub `videoelements` package that reads `ELEMENT.md`,
+`PROVENANCE.md` and `licenses/SOURCES.md` in the settled rows into the real reader's plain
+data; elements `pot`, an svg with fixed anchors, and `table`, a code element with `rows`,
+`label`, indexed parameters and computed anchors; its README says what it checks and what it
+does not). Nothing calls `open_library` yet. **The next step** is item 15's third increment:
+the Cast and Moves parser in `videotools.script` (the two `###` sections and the two panel
+sections into plain data) with every `check-script` check of item 15 "Checks", test-first,
+standard library, Python 3.9; the stub library gains a `draw` only when the interpreter
+increment needs it. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-13:50; anything at its top level other than README.md is new and is reported to Squirrel, never
+14:15; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 396 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 404 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
-and serves raw audio (`tone` spans) and raw frames (`colours` by time) from fake media. One test
+and serves raw audio (`tone` spans) and raw frames (`colours` by time) from fake media; the
+video-elements library is the invented one in `tests/stubs/video-elements/`, never the real
+repository. One test
 is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1, and with
 `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported (`conftest.clean_env()`).
 
@@ -55,7 +65,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-first increment OK'd and built; the second follows unless he says otherwise); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+first two increments OK'd and built; the third, the parser, follows on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) has its step 3 of 8 done plus our four asks (its commit
 `4dd19c8`: the reader, checks, `credits`, the new types; `el.draw` is its step 4, next); our
 Tier 3 on real elements waits on its step 4 and first elements. The one write made into that
@@ -1843,3 +1853,47 @@ the two keys commented out. `elements.settings` expands `~` in the flag too, so 
 
 **State.** 396 green, 98%, lint clean. Next: increment 2, the import and `library.open` with
 the refusals, against an invented library.
+
+### 10 October 2026 — Item 15, increment 2: the library imported from the configured root and opened
+
+**Goal.** `elements.open_library(folder, renderer)`: the root on the import path at the point
+of use, `videoelements.library.open(folder, renderer=…)`, every refusal one line in words
+(Squirrel, 13:55: "go ahead with increment 2").
+
+**Test.** `tests/tier1/test_elements_open.py`, eight tests: no setting and no flag refused
+naming both and the config path; a missing folder refused by path; a folder without
+`videoelements/` refused saying what the setting names; a package that raises on import refused
+with its error; a library that refuses (the stub package copied into a root with no `elements/`
+or register) reported with its problems listed; the invented library opens with `pot` and
+`table`, the renderer given, the settled description rows (`highlight.*` as a number 0–1,
+`row.*` computed, `rim` at (12, 4)) and one credit line; no renderer leaves the library's
+default `rsvg-convert`; the root is on `sys.path` once however often it is opened. A
+`fresh_import` fixture drops `videoelements*` from `sys.modules` and restores `sys.path`.
+
+**Red.**
+```
+E           AttributeError: module 'videotools.elements' has no attribute 'open_library'
+8 failed in 0.06s
+```
+
+**Green.** After the implementation, three still failed on the stub's own bug (`TypeError:
+open() got an unexpected keyword argument 'encoding'`: the stub's module-level `open`, named as
+the interface names it, shadowed the builtin inside its readers; fixed with `builtins.open`),
+then `12 passed in 0.03s` with the settings tests; lint found an import block to sort and a
+line of 122 characters, both fixed; the full suite `404 passed in 121.88s (0:02:01)`,
+`TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** The invented library lives at `tests/stubs/video-elements/` with the
+real repository's shape (`videoelements/`, `elements/`, `licenses/`), so the same root works for
+`--elements` in tier 2 later and for the import path now. Its stub package reads the
+`ELEMENT.md` rows video-elements settled rather than a private JSON, so the fixture files are
+in the format Squirrel will read in the real library and the stub's `element(name)` exposes
+the same keys (`name`, `kind`, `size`, `anchors`, `states`, `params`, `colours`,
+`provenance`, `folder`); it checks little, by design, and its README says so. The import stays
+on `sys.path` after `open_library` returns, since the package imports its own modules at the
+point of use. The real library's `Failure` is caught by its `.problems` attribute, not by
+class, so video-tools never imports from `videoelements` directly; any other exception from
+`open` is reported as it is, under the same one line.
+
+**State.** 404 green, 98%, lint clean, pushed. Nothing calls `open_library` yet. Next:
+increment 3, the Cast and Moves parser with `check-script`'s checks.
