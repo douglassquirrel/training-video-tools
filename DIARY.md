@@ -2710,3 +2710,29 @@ and no warning after it.
 
 **State.** 504 green as last run (documents only since), lint clean, pushed. Nothing in
 progress; the inbox is empty.
+
+### 10 October 2026 — The sixteenth request arrives and is OK'd: an empty label
+
+**What arrived.** `inbox/request-from-training-video-2026-10-10-16.md` (23:58): `check-script`
+refuses a library element's label parameter that is empty by design (`formula-bar`'s `ref=""`:
+`'bar' draws '', which is not in the script's On screen list`); it asks that an empty label not
+be checked, by `check-script` or at draw time, leaves a piece's empty text to us, and asks
+whether a label an element does not draw in some state can be skipped too. Their second check
+(`checks/elements-check-2026-10-10b/REPORT.md`, read) reports request 15 verified on Linux
+(503 passed, 1 skipped) and A2 and B re-described with the new features at 1.1 and 1.3–1.6
+against v4 on every step frame.
+
+**Decision.** Squirrel (23:59): "check inbox and do what it says", said before the item was
+read out to him: taken as his OK for it, the item being an ordinary request in this project's
+scope from the project he had told to make it. PLAN.md item 18, "Settled" 34; the item moved
+to `inbox/done/`. Two points the request leaves open are assumed and recorded as "Open
+questions" 1 and 2 (spaces only: still a label; a pill's, callout's or text's empty `text`:
+still a problem; a hand's empty `label`: none).
+
+**Surprise.** Read before any test: at draw time video-tools never checks a library element's
+label; the real elements call `frame.label` themselves (`formula-bar` skips an empty one,
+`prompt-box` passes its text whatever it is). So the refusal is `check-script`'s
+(`choreography._library_value_problem`), and for the draw-time half of the ask the place that
+makes it true whatever an element does is `Frame.label`.
+
+**State.** 504 green as left. Next: item 18, 1, test first.

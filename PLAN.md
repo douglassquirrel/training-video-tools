@@ -21,7 +21,9 @@ library, item 15 (its format a proposal awaiting approval), and credits on the e
 16; and (10 October 2026, 23:12) from the fifteenth,
 `inbox/done/request-from-training-video-2026-10-10-15.md` ("Settled" 29): offsets wherever an
 anchor is read, an arrow that draws on and needs no Where, and a warning for a blank Size on an
-element whose size is nominal, item 17. CLAUDE.md says how the work is done; this file says what
+element whose size is nominal, item 17; and (10 October 2026, 23:59) from the sixteenth,
+`inbox/done/request-from-training-video-2026-10-10-16.md` ("Settled" 34): an empty label is not
+checked, item 18. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -1024,6 +1026,36 @@ blank Where (the parser, the check, the box); the warning in `check-script`; the
 of 4 (seen to fail with the code broken on purpose); README ("Describing a scene in the
 script"), "Notes for users", lint as its own pass; a Tier 3 run against the real library.
 
+## 18. An empty label is not a label (request 16; Squirrel, 10 October 2026, 23:59: "check inbox and do what it says")
+
+A library element's `label` parameter may be empty by design: the real `formula-bar`'s `ref` is
+"empty for none", written `ref=""`. `check-script` refused it as `draws ''`, which is not on any
+On screen list. Nothing is drawn for an empty label, so there is nothing for the viewer to read
+and nothing to check.
+
+1. **A library element's label parameter that is empty** (`""`, the value after its quotes are
+   removed) is not checked against On screen: by `check-script`, in a cast row and in a move
+   that sets it, nor at draw time, where `frame.label("")` returns `""` without looking at the
+   list (an element, or a video's own scene code, that passes an empty label through the check
+   is drawing nothing). A label that is only spaces is still a label and still checked ("Open
+   questions" 1).
+2. **The pieces** ("your call, said in the README"; "Open questions" 2): the `text` of a `pill`,
+   a `callout` or a `text` is what the piece is for, so an empty one stays a problem, in plainer
+   words than before (`'text' is empty, so there is nothing to draw`), in the cast and in a
+   move. A `hand`'s `label` is optional, so `label=""` means no label, as leaving it out does:
+   not checked, and no roundel drawn.
+3. **A label an element does not draw in some state** (the `formula-bar`'s `text` when
+   `placeholder=yes`): the library's description says so only in prose, so video-tools cannot
+   tell, and `check-script` goes on checking a value that is given. It is left to the script's
+   author: leave the parameter out, or give it empty. The README says so.
+
+Order of work, test-first: the library's label in `check-script` (cast and move; a label not
+on the list and one of spaces still refused); the pieces' empty text and the hand's empty
+label; `frame.label("")`; a described scene with an empty label drawn through the invented
+library, whose stub now passes every label it is given through `frame.label` as the real
+elements do; README, "Notes for users", lint as its own pass; a Tier 3 with the real
+`formula-bar`.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1179,6 +1211,7 @@ remote ("Settled" 7).
 16. **Request 15** (10 October 2026, 22:59; OK'd 23:09): item 17, in its order of work. The
    natural-size half of its item 3 waited on video-elements, whose note came at 23:32; built
    after it.
+17. **Request 16** (10 October 2026, 23:58; OK'd 23:59): item 18, in its order of work.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1212,7 +1245,13 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+1. **A label that is only spaces** (item 18, 1; the request asks "and whitespace only?"). Assumed:
+   only the empty string is "no label"; a value of spaces is still checked against On screen
+   and so refused unless it is listed, since it is far more likely a slip than a design.
+   Claude's assumption, 10 October 2026, 23:59.
+2. **A piece's empty text** (item 18, 2; the request leaves it to video-tools). Assumed: a
+   `pill`, `callout` or `text` with `text=""` stays a problem, in plainer words; a `hand` with
+   `label=""` has no label. Claude's assumption, 10 October 2026, 23:59.
 
 ## Settled
 
@@ -1342,3 +1381,7 @@ None.
     a blank Size is drawn at that size, and `check-script` no longer warns of it; no code here
     changes. The README's example of the warning is kept and labelled as output from before that
     change, since no real element gives the warning now (Squirrel, 10 October 2026, 23:53: "yes ok").
+34. The sixteenth request (`inbox/done/request-from-training-video-2026-10-10-16.md`): an empty
+    label is not checked (item 18). Squirrel, 10 October 2026, 23:59, before the item was read
+    out to him: "check inbox and do what it says". Its two "your call" points are "Open
+    questions" 1 and 2 until he says.
