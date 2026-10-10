@@ -18,7 +18,10 @@ a curtain known to scene code, and stills at cue changes with a warning, item 14
 10:40) from the thirteenth and fourteenth, `inbox/done/request-from-training-video-2026-10-10-13.md`
 and `…-14.md` ("Settled" 24 and 25): choreography in the script drawn from the video-elements
 library, item 15 (its format a proposal awaiting approval), and credits on the end card, item
-16. CLAUDE.md says how the work is done; this file says what
+16; and (10 October 2026, 23:12) from the fifteenth,
+`inbox/done/request-from-training-video-2026-10-10-15.md` ("Settled" 29): offsets wherever an
+anchor is read, an arrow that draws on and needs no Where, and a warning for a blank Size on an
+element whose size is nominal, item 17. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -955,6 +958,53 @@ paragraph per source, `Category: credit line`, `licence:`, `elements:`) and prin
 after the sha256 line; whatever `element-credits` says, since the file is the record. Item 16
 complete.
 
+## 17. Offsets where an anchor is read, an arrow that draws on, and a blank Size (request 15; Squirrel, 10 October 2026, 23:09: "request 15 ok")
+
+Four things the training-video project found describing its scenes A2 and B for real against
+`08076e3`. Builds on item 15; the format's words there stand, with these additions.
+
+1. **The offset applied wherever an anchor is read** (a bug). An arrow's `from` and `to` and a
+   callout's `target` are written as a Where's anchor is, `member.anchor` or `member.anchor + X
+   Y`; the offset was parsed and dropped (`perform.Performance._point`), so
+   `from="export.right + 21 8"` landed on the bare anchor. The point is the anchor plus the
+   offset, as in the Where column.
+2. **An arrow that draws on, and needs no Where.** `arrow` gains two parameters: `progress`, a
+   number from 0 to 1 (default 1), how much of the arrow is drawn from its tail
+   (`draw.arrow`'s own `progress`), animated like any other (`cue 6, 1.0–1.8 s:
+   paste-arrow.progress 0 → 1`), a value outside 0 to 1 a problem in `check-script`; and `head`,
+   `yes` or `no` (default `yes`): whether the arrowhead is drawn (Squirrel, 10 October 2026,
+   23:11: "agree with your assumption about head"). As for every parameter, before an
+   animation's span the cast's value or the default holds, so an arrow shown before it grows
+   has `progress=0` in its cast row. An arrow's Where may be blank, since `from` and `to` place
+   it: its box, for the members placed by its corners and centre, is then the rectangle
+   spanned by its two ends. An arrow with a Where keeps today's box (a point at the Where). Any
+   other piece or element with a blank Where is refused as now.
+3. **A blank Size on an element whose size is nominal: a warning now, the natural size later.**
+   A code element whose description's size is nominal (the real `spreadsheet`, `prompt-box`,
+   `file-chip`, `diff`: what it draws depends on its data or text) is fitted into that nominal
+   size when the Size column is blank, silently, with tiny text. **Now:** `check-script` lists
+   a warning for each such cast member, by line, after the problems, under its own heading
+   (`N warning(s):`); warnings do not change the exit code (0 when there are no problems;
+   Squirrel, 10 October 2026, 23:11), and a member with a Size has none. video-tools learns
+   that a size is nominal from the Notes cell of the `size` row in the element's `ELEMENT.md`
+   (it begins `nominal`), read from the description's `folder`, because the description the
+   library returns does not carry it ("Open questions" 1). **Later:** when video-elements
+   offers an element's natural size for given parameters (its request 3, item 5, proposed as
+   `el.natural_size(frame, params) -> (w, h)`), a blank Size draws the element at that size and
+   the warning is given only for an element that does not offer it. This half **waits**
+   (Squirrel, 10 October 2026, 23:11: "do wait for natural-size in video-elements (it's being
+   worked on now)"): the interface is shared, so its words come from video-elements through
+   Squirrel, as the rest of the interface did.
+4. **A `WxH` Size reaches the element as its rect**, whatever the element's own proportions,
+   so an element video-elements marks as stretching (its request 3, item 4) is given the shape
+   the script says. Already so; pinned by a test of its own.
+
+Order of work, test-first against the invented library: the offset (a reproducing test for an
+arrow and for a callout, then the fix); `progress`, its range in `check-script`, `head`; the
+blank Where (the parser, the check, the box); the warning in `check-script`; the pinning test
+of 4 (seen to fail with the code broken on purpose); README ("Describing a scene in the
+script"), "Notes for users", lint as its own pass; a Tier 3 run against the real library.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1107,6 +1157,8 @@ remote ("Settled" 7).
    video-elements' step 4 and first elements.
 15. **Request 14** (10 October 2026, 10:20; OK'd 10:36): item 16, after item 15's parser, in
    item 16's order.
+16. **Request 15** (10 October 2026, 22:59; OK'd 23:09): item 17, in its order of work. The
+   natural-size half of its item 3 waits on video-elements.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1140,7 +1192,13 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+1. **How video-tools learns that an element's size is nominal** (item 17, 3). Assumed: from the
+   Notes cell of the `size` row in the element's `ELEMENT.md`, when it begins `nominal`, read
+   from the description's `folder`; the description `lib.element(name)` returns has no such
+   field. That reads a file of video-elements' directly rather than through the interface, and
+   a Notes column is prose for people. If video-elements comes to say it in the description
+   (its request 3, item 4 asks it to say which elements stretch and which keep their ratio),
+   video-tools reads it there instead. Claude's assumption, 10 October 2026, 23:12.
 
 ## Settled
 
@@ -1239,3 +1297,10 @@ None.
 28. The credits file `assemble` writes beside the finished video is treated like the video: never
     replaced, `--replace` or not; `assemble` refuses before starting if it exists (item 16, 5;
     Squirrel, 10 October 2026, 21:10: "default is fine").
+29. The fifteenth request (`inbox/done/request-from-training-video-2026-10-10-15.md`), all four
+    items (Squirrel, 10 October 2026, 23:09: "request 15 ok"), with three choices (23:11: "on
+    item 3, do wait for natural-size in video-elements (it's being worked on now). Agree with
+    your assumption about head and your plan for item 3 warning exit code"): drawing a blank
+    Size at the element's natural size waits until video-elements offers it; an arrow's `head`
+    is `yes` or `no`, whether the arrowhead is drawn, default `yes`; the `check-script` warning
+    for a blank Size on a nominal-sized element is printed and leaves the exit code as it was.

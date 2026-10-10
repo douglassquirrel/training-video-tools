@@ -2351,3 +2351,25 @@ description, not ours). "Where things stand" rewritten above as the handover.
 
 **State.** 480 green, 98%, lint clean, pushed. Nothing in progress; request 15 waits for
 Squirrel's OK.
+
+### 10 October 2026 — The fifteenth request is OK'd
+
+**Decision.** Squirrel (23:09): "request 15 ok"; then (23:11): "on item 3, do wait for
+natural-size in video-elements (it's being worked on now). Agree with your assumption about
+head and your plan for item 3 warning exit code". Recorded as PLAN.md item 17 and "Settled" 29;
+the item moved to `inbox/done/`. So: all four items, with drawing a blank Size at the element's
+natural size **waiting** on video-elements; `head` on an arrow is `yes`/`no` (whether the
+arrowhead is drawn, default `yes`); the `check-script` warning does not change the exit code.
+
+**Surprise.** Two things from reading the code before any test. `draw.arrow` already takes
+`progress` and `head`, and its `head` is a size in pixels (default 20), not a yes/no; the
+described `head=no` is built as agreed, by handing `draw.arrow` a head of 0, and a size can be
+offered later if anyone asks. And the request's "a code element whose size row says nominal"
+cannot be read through the interface: the real library's description (`lib.element(name)`) has
+`size` as two numbers and nothing of the row's note (`videoelements/element.py`, read-only),
+though the real `ELEMENT.md` files do say it there (`spreadsheet`, `prompt-box`, `file-chip`,
+`diff`: `nominal: …`; `chat-window`: `the design size; it fits whatever rectangle it is given`).
+Assumed: video-tools reads that Notes cell from the description's `folder`; recorded as PLAN.md
+"Open questions" 1 for Squirrel.
+
+**State.** 480 green as left. Next: item 17, 1, the offset bug, a reproducing test first.
