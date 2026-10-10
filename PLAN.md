@@ -1021,6 +1021,9 @@ README): each command for real on the example video.
    `videoelements.cli.Failure` with `.problems`, a list of lines each naming its file and line.
    Element names and parameter names in item 15's example are the starter set's as far as it
    goes; `formula-bar` is not in it.
+   Sent to video-elements as `inbox/request-from-video-tools-2026-10-10.md` there (10 October
+   2026, 13:05; Squirrel, 13:04: "make the requests to video-elements through its inbox"); its
+   answer comes back as a file in our inbox.
 3. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
    Claude's default; Squirrel's word moves it to "Settled".
 

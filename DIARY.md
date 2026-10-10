@@ -1757,3 +1757,22 @@ which parameters are labels, and indexed parameter names. Item moved to `inbox/d
 
 **State.** No code; suite untouched (386 green at the last run). Waiting on Squirrel's approval
 of the choreography format ("Open questions" 1).
+
+### 10 October 2026 — The request to video-elements, sent through its inbox
+
+**Goal.** Put "Open questions" 2 to video-elements as a request file in its inbox (Squirrel,
+13:04: "make the requests to video-elements through its inbox"), the one write into that
+repository he has authorised; nothing else there is touched.
+
+**Decision / surprise.** Written at 13:05 as
+`~/projects/code/video-elements/inbox/request-from-video-tools-2026-10-10.md`, four points:
+data as a named `rows` or `text` parameter read by video-tools; a mark for `text` parameters that
+are labels; a pattern form (`highlight.*`, `cell.*.*`) for indexed parameters and computed
+anchors, passed with dotted keys; and the parameter names item 15's example guesses for the
+`spreadsheet`. Its "Report" step asks for the answer as a file in our inbox in the words its
+README will carry. Reading its PLAN.md "The element files" showed its `## Parameters` types are
+`number`, `integer`, `colour`, `boolean`, `text` and its anchors fixed `X Y`, so a data-driven
+element's per-row anchors need a form it does not have yet: that is point 3.
+
+**State.** No code; suite untouched. Waiting on Squirrel's approval of the format, and on
+video-elements' answer.
