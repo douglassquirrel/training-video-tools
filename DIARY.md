@@ -1392,3 +1392,23 @@ role names the last pair.
 
 **State.** Request 9 complete: four commands, 342 tests, 98%, lint clean, README and PLAN.md
 current. Nothing waiting.
+
+### 10 October 2026 — The tenth request arrives and is OK'd: characters a font lacks
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-10.md` (07:42,
+training-video side, after their second video, made at `c782a56`, showed five labels ending in ✓
+as empty boxes: EB Garamond has no ✓ or ✗ glyph and cairo's simple text API draws the font's
+missing-glyph box, silently). Two asks: ✓ and ✗ drawn as strokes wherever a font lacks them, and
+a `check-script` report for any other character a font lacks. Checked here before reporting
+(07:44–07:48): the example's fixture fonts lack ✓ and ✗ too (and have `·`, `—`, `…`, `é`), and
+cairo gives the same width (27.4 at 30 px) for ✓, ✗ and U+FFFD, so measuring the box cannot
+tell them apart; the font's `cmap` can. Reported at 07:48 with the plan: a standard-library
+`cmap` reader shared by the drawing and by `check-script` (which stays on Python 3.9), the marks
+drawn in `draw.text` so every text path gets them, and one question: which font to check On
+screen labels against, since the script does not say the role scene code will draw them in.
+Squirrel (07:49) asked what a role is (answered: the kit's name for a font's job, `display`,
+`body`, `italic` and the optional ones, which the chrome and scene code ask for instead of a
+font); (07:50): "display font only. go ahead". PLAN.md item 12, build step 11, "Settled" 21;
+the item moved to `inbox/done/`.
+
+**State.** Next: `videotools.glyphs`, test-first.

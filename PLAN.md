@@ -8,7 +8,9 @@ third, `inbox/done/request-from-training-video-2026-10-09-3.md` ("Settled" 15), 
 the fourth, `inbox/done/request-from-training-video-2026-10-09-4.md` ("Settled" 16): the bed
 video re-made and accepted; and (20:14) from the fifth and sixth ("Settled" 17); and (21:46) from
 the ninth, `inbox/done/request-from-training-video-2026-10-09-9.md` ("Settled" 20): four checking
-commands, item 11. CLAUDE.md says how the work is done; this file says what
+commands, item 11; and (10 October 2026, 07:53) from the tenth,
+`inbox/done/request-from-training-video-2026-10-10.md` ("Settled" 21): ✓ and ✗ drawn when a font
+lacks them, and a check for characters a font lacks, item 12. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -425,6 +427,38 @@ background and surface; on-accent on accent, accent-dark, mistake and correct; t
 on `caption-band`), with the 4.5 and 3 thresholds marked. Refuses an existing output. Needs
 pycairo (cairo writes the PNG; no Pillow).
 
+## 12. Characters a font lacks (request 10; Squirrel, 10 October 2026, 07:50: "display font only. go ahead")
+
+cairo's simple text API draws a character the chosen font has no glyph for as the font's
+missing-glyph box, silently, and reports the same width for every such character. The
+training-video project's second video showed it: five labels ending in ✓, which EB Garamond
+lacks (as do the example's fixture fonts). Two parts:
+
+**`videotools.glyphs`** (standard library, Python 3.9): reads a TrueType/OpenType font file's
+`cmap` table (formats 4 and 12) once and answers which code points it covers; `fonts.load`
+registers each of the kit's files by family name, so `draw.text` and `draw.text_width` can ask
+`glyphs.has(family, ch)`. A family never registered is assumed to have everything (fallback
+fonts, the tests' plain cairo drawing: nothing changes for them).
+
+**✓ (U+2713) and ✗ (U+2717) drawn** (item 1): in `draw.text` and `draw.text_width`, the one
+place all text goes through (the chrome, the frame's methods, pills, callouts, dimension lines,
+wrapped captions), a ✓ or ✗ the family lacks is drawn as `draw.badge`'s tick or cross without
+the circle, in the text's colour and alpha, scaled to the font size (0.8 × size wide, a stroke of
+0.11 × size, centred 0.3 × size above the baseline), anywhere in the string, and its width is
+counted in the text's width, so pills, centring and wrapping stay right. Where the family has
+the glyph, the glyph is drawn. `frame.label`'s check is unchanged: the label as written.
+
+**`check-script` reports characters a font lacks** (item 2): for each text the chrome draws,
+against the resolved file of the role the chrome draws it in: captions (`body-medium`), side
+panel items and the credit (`body`), the title and eyebrow, tracker labels, the side-panel
+heading and `source-label` (`display`), the subtitle, title-image caption and the website
+(`italic`), and the On screen labels against the **display font only**, the frame methods'
+default role for pills and callouts (Squirrel, 10 October 2026, 07:50; a label drawn by scene
+code in another role, such as the training-video project's `mono`, is only as good as that
+font, and the README says so). ✓ and ✗ are excepted, since item 1 draws them. One problem per
+text, naming the script line, the text, the first character lacking with its code point, and the
+font file; listed with the kit's problems after the script's, exit 1. Nothing is drawn.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -547,6 +581,9 @@ remote ("Settled" 7).
    **Done 9 October 2026, 21:46–22:20**: all four built, each in the README with a real run;
    the training-video project checks them against its own scripts on the bed video and retires
    its copies (their side).
+11. **Request 10** (10 October 2026, 07:42; OK'd 07:50): item 12, test-first in this order: the
+   `cmap` reader and the registry; ✓ and ✗ in `draw.text` and `draw.text_width`; the
+   `check-script` report; README, "Notes for users", lint as its own pass.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -634,6 +671,9 @@ None.
     checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").
 19. The eighth request (`inbox/done/request-from-training-video-2026-10-09-8.md`): `check-video`'s
     sheet labels in a strip under each frame (Squirrel, 9 October 2026, 21:07: "go ahead").
+21. The tenth request (`inbox/done/request-from-training-video-2026-10-10.md`), both items,
+    with On screen labels checked against the display font only (Squirrel, 10 October 2026,
+    07:50: "display font only. go ahead").
 20. The ninth request (`inbox/done/request-from-training-video-2026-10-09-9.md`), all four
     commands, with three choices (Squirrel, 9 October 2026, 21:44: "1. exit 1 2. use current
     timing plus --offset. always contrast ratios", then "go ahead!"): `frame-hashes --compare`
