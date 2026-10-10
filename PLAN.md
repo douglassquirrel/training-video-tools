@@ -583,7 +583,10 @@ remote ("Settled" 7).
    its copies (their side).
 11. **Request 10** (10 October 2026, 07:42; OK'd 07:50): item 12, test-first in this order: the
    `cmap` reader and the registry; ✓ and ✗ in `draw.text` and `draw.text_width`; the
-   `check-script` report; README, "Notes for users", lint as its own pass.
+   `check-script` report; README, "Notes for users", lint as its own pass. **Done 10 October
+   2026, 07:53–08:06**: both items built and in the README; the two real scripts read clean
+   (their ✓ labels excepted); the training-video project re-makes its second video's stills and
+   retires its `tag()` helper (their side).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the

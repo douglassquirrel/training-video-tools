@@ -191,9 +191,23 @@ code without running it: a step scene with no `code`, a module that is missing o
 parse, and a module without a top-level `def` of a function the scene needs (`draw`; `mistake`
 and `right_way` for a mistake cue; `panel` for a custom side panel). So anything `stills` or
 `render` would refuse is found here first. (A function a module gets any other way than its own
-`def`, say by import, is reported as missing.) `--json OUT` also writes the parsed
+`def`, say by import, is reported as missing.) And it reports every text the chrome will draw
+that holds a character its font has no glyph for, which cairo would otherwise draw as an empty
+box without a word: captions (in the `body-medium` font), side-panel items and the credit
+(`body`), the title, eyebrow, tracker labels, side-panel heading and `source-label` (`display`),
+the subtitle, title-image caption and the kit's website (`italic`), and the On screen labels
+against the display font, the default for pills and callouts (a label your scene code draws in
+another role, such as `mono`, is only as good as that font). One problem per text, naming its
+line, the text, the first such character with its code point, and the font file. ✓ and ✗ are
+never reported: the tools draw them (below). The fonts' character maps are read with the
+standard library, so this still needs nothing installed. `--json OUT` also writes the parsed
 script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
+
+```
+1 problem:
+  - line 98: scene A cue 1 caption 'Step A. Fold the sheet in half, top edge to bottom edge, for €1.' has '€' (U+20AC), which …/brands/paperboat/fonts/PBS-Regular.ttf lacks
+```
 
 ### `narrate SCRIPT.md [--scenes KEY,…] [--voice V] [--speed S] [--replace] [--dry-run]`
 
@@ -308,6 +322,16 @@ pill's fill alike, and the On screen check on every label):
 | `frame.dimension(p0, p1, s, size=24, colour="accent", text_colour="on-accent", role="display", side=1, alpha=1.0)` | A dimension line with its (checked) measurement in a pill beside it. |
 | `frame.badge(x, y, ok, r=24, alpha=1.0)` | A ✓ or ✗ in the brand's `correct` or `mistake` colour with its `on-accent` mark. |
 | `frame.hand(x, y, angle, scale, alpha=1.0, mirror=False, label=None)` | A mitten hand in the script's `skin`, `skin-dark` and `sleeve` colours when it names them, else a neutral skin, its darker outline and a slate sleeve; the letter label in the display font on an accent roundel at 28 px scaled. |
+
+**✓ and ✗ in any text.** Most text faces (EB Garamond among them) have no glyph for ✓ (U+2713)
+or ✗ (U+2717), and cairo draws a missing glyph as an empty box. Wherever the font chosen for a
+piece of text lacks one of the two, the tools draw it as a stroke in the text's colour, the
+same tick and cross as `frame.badge` without the circle, 0.8 of the font size wide and counted
+in the text's width, so pills, centring and wrapping stay right. That holds for every text the
+tools draw: the frame's methods, the caption band, side panels, titles. Where the font has the
+glyph, the glyph is used. So a script can write `checked ✓` in a label and the scene code draws
+it with `frame.tag` like any other. (The decision comes from the font file's own character map,
+read once per font, not from measuring the box.)
 
 Shapes stay in `videotools.draw` (`poly`, `line`, `circle`, `fill_rrect`, `arrow`, `bezier`,
 `cut`, shading) with explicit colour triples, which `frame.colour` supplies, and the oblique 3D
@@ -499,7 +523,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(342 tests, lint clean).
+(361 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -546,6 +570,11 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 10 October 2026: ✓ and ✗ are drawn as strokes wherever the font lacks them, in every text the
+  tools draw, so a label can end in a tick without the video drawing its own; and
+  `check-script` reports any other character a text holds that its font lacks (captions, panels,
+  titles, labels against the display font, the kit's website and credit), naming the line, the
+  character and the font file. A script that passed before may now list such characters.
 - 9 October 2026 (late): four checking commands added at the training-video project's request:
   `brand-preview`, `frame-hashes` and `compare-frames` replace that project's
   `tools/brand-preview.py`, `frame-hashes.py` and `compare-frames.py` (`frame-hashes` with the

@@ -40,17 +40,64 @@ def summary(data):
 
 
 def brand_problems(data, script_path, script_problems):
-    """The brand kit's problems, each prefixed with its BRAND.md path; nothing if the script's
-    own check already found the kit missing (one problem, not two)."""
+    """(The brand kit's problems, each prefixed with its BRAND.md path; the kit when it read
+    cleanly, else None). Nothing if the script's own check already found the kit missing (one
+    problem, not two)."""
     name = data["settings"].get("brand")
     folder = brand.folder_for(script_path, name) if name else None
     if not folder or any(f"brand '{name}'" in p for p in script_problems):
-        return []
+        return [], None
     try:
-        brand.read(folder)
+        return [], brand.read(folder)
     except brand.BrandError as e:
-        return [f"{os.path.join(folder, 'BRAND.md')}: {p}" for p in e.problems]
-    return []
+        return [f"{os.path.join(folder, 'BRAND.md')}: {p}" for p in e.problems], None
+
+
+# Which role the chrome draws each text in (PLAN.md item 12): On screen labels in the display
+# font, the frame methods' default for pills and callouts (Squirrel, 10 October 2026).
+SETTING_ROLES = {"title": "display", "subtitle": "italic", "eyebrow": "display", "source-label": "display",
+                 "title-image-caption": "italic", "credit": "body"}
+SCENE_ROLES = {"title": "display", "eyebrow": "display", "tracker-label": "display", "side-panel-heading": "display"}
+KIT_ROLES = {"website": "italic", "illustration-credit": "body"}
+DRAWN_ANYWAY = "✓✗"          # drawn as strokes where a font lacks them (draw.text)
+
+
+def font_problems(data, kit):
+    """Every text the chrome draws that holds a character the font for its role lacks: one
+    problem per text, naming where it is, the text, the first such character and the file."""
+    from videotools import glyphs
+    problems = []
+
+    def check(where, text, role):
+        path = kit["font_files"].get(role) or kit["font_files"].get(brand.FONT_FALLBACKS.get(role, role))
+        if not text or not path:
+            return
+        have = glyphs.characters(path)
+        for ch in text:
+            if ord(ch) not in have and ch not in DRAWN_ANYWAY:
+                problems.append(f"{where} '{text}' has '{ch}' (U+{ord(ch):04X}), which {path} lacks")
+                return
+
+    def line(section, key):
+        n = data["lines"].get((section, key))
+        return f"line {n}: " if n else ""
+
+    for key, role in SETTING_ROLES.items():
+        check(f"{line('settings', key)}setting '{key}'", data["settings"].get(key, ""), role)
+    for scene in data["scenes"]:
+        k = scene["key"]
+        for key, role in SCENE_ROLES.items():
+            check(f"{line(k, key)}scene {k} '{key}'", scene["props"].get(key, ""), role)
+        for cue in scene["cues"]:
+            check(f"line {cue['line']}: scene {k} cue {cue['n']} caption", cue["text"], "body-medium")
+        for item in scene["side"]:
+            check(f"line {item['line']}: scene {k} side panel item", item["text"], "body")
+        for item in scene["screen"]:
+            check(f"line {item['line']}: scene {k} on screen label", item["text"], "display")
+    kit_file = os.path.join(kit["folder"], "BRAND.md")
+    for key, role in KIT_ROLES.items():
+        check(f"{kit_file}: Identity '{key}'", kit["identity"].get(key, ""), role)
+    return problems
 
 
 def code_problems(data, script_path):
@@ -81,7 +128,13 @@ def main(argv=None):
     with open(args.SCRIPT, encoding="utf-8") as f:
         data, problems = script.parse(f.read())
     problems += script.check(data, args.SCRIPT)
-    problems += brand_problems(data, args.SCRIPT, problems)
+    kit_problems, kit = brand_problems(data, args.SCRIPT, problems)
+    problems += kit_problems
+    if kit:
+        try:
+            problems += font_problems(data, kit)
+        except cli.Failure as f:            # a font file that is not a font: one problem, not a crash
+            problems.append(str(f))
     problems += code_problems(data, args.SCRIPT)
     print(summary(data))
     if args.json:

@@ -117,3 +117,18 @@ def test_a_step_scene_without_code_or_with_a_module_lacking_a_function_is_listed
     code, out, err = run("check-script", example)
     assert (code, err) == (1, "")
     assert out.endswith("\n1 problem:\n  - line 85: scene A: no 'code' property, so no scene code can be found for it\n")
+
+
+def test_a_caption_with_a_character_the_brand_font_lacks_is_listed_with_its_line(example):
+    text = open(example, encoding="utf-8").read()
+    old = "1. Step A. Fold the sheet in half, top edge to bottom edge."
+    assert old in text, "the example's first caption of scene A"
+    open(example, "w", encoding="utf-8").write(text.replace(old, "1. Step A. Fold the sheet in half, top edge to bottom edge, for €1."))
+    kit = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(example))), "brands", "paperboat", "fonts")
+    code, out, err = run("check-script", example)
+    assert (code, err) == (1, "")
+    line = next(n for n, text_line in enumerate(text.splitlines(), 1) if text_line.startswith(old))
+    assert out.rstrip().endswith(
+        "1 problem:\n"
+        f"  - line {line}: scene A cue 1 caption 'Step A. Fold the sheet in half, top edge to bottom edge, for €1.' "
+        f"has '€' (U+20AC), which {os.path.join(kit, 'PBS-Regular.ttf')} lacks")

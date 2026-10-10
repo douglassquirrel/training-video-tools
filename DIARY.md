@@ -2,16 +2,17 @@
 
 ## Where things stand
 
-9 October 2026, 22:20 (from the clock), at the end of request 9. **Requests 1 to 9 are built in
-full: the eight commands of the first request, and the four checking commands of the ninth
+10 October 2026, 08:06 (from the clock), at the end of request 10. **Requests 1 to 10 are built in
+full: the eight commands of the first request, the four checking commands of the ninth
 (`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
-20), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (empty at 22:20; anything at its top level other than README.md
+20), and the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
+report of characters a font lacks (item 12, "Settled" 21), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
+and this section, then `inbox/` (empty at 08:06; anything at its top level other than README.md
 is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
 (request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
 roundel and icon) was not asked for and is not done.
 
-Green: 342 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 361 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -22,8 +23,9 @@ is skipped off macOS (CoreText). The suite also passes with tier 2 run before ti
 Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made the 60 s example
 video, `check-video` clean (the same SHA-256 on every run since the first); `assemble --replace`
 against real ffmpeg (the entry of 21:34); the four checking commands on that video, on a
-re-render with one colour changed, and `brand-preview` on the real kit read-only (the entries
-after 21:46). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
+re-render with one colour changed, `brand-preview` on the real kit read-only (the entries after
+21:46), a still with ✓ and ✗ in its pills, and `check-script` on the two real scripts, read-only,
+clean (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
 copies live only in the session's scratchpad, never in the repository. Linux was tried by the
 training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
 other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
@@ -35,9 +37,10 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: nothing. The inbox is empty (requests 1–9 are in `inbox/done/`). What
-comes next is the training-video project's: checking the four commands against its own scripts
-on the bed video, the second video, and any request it sends here.
+Waiting on Squirrel: nothing. The inbox is empty (requests 1–10 are in `inbox/done/`). What
+comes next is the training-video project's: re-making its second video's stills on the standard
+✓ drawing and retiring its own `tag()` helper, running the new check on its scripts, and any
+request it sends here.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
 passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30. The
@@ -1454,3 +1457,45 @@ after each mark. The reader keeps a code point only when it maps to a non-zero g
 fontTools does, which is why the two agree exactly. A `.ttc` collection reads its first font.
 
 **State.** Item 1 done. Next: item 2, `check-script` reports characters a font lacks.
+
+### 10 October 2026 — Request 10, item 2: `check-script` reports characters a font lacks; request 10 complete
+
+**Goal.** For every text the chrome draws, against the resolved file of the role it is drawn in
+(On screen labels against the display font only: "Settled" 21), one problem per text naming the
+line, the text, the first lacking character with its code point and the file; ✓ and ✗ excepted;
+the kit's website and credit too; listed after the kit's problems, exit 1.
+
+**Test.** `tests/tier1/test_font_check.py`, six tests on the two-scene fixture script and the
+example kit (which lacks € and Ω): nothing in the plain fixture; a caption with € names line 47,
+the text, `'€' (U+20AC)` and `PBS-Regular.ttf`; ✓ and ✗ never reported; one problem each for a
+subtitle (italic), a scene title (display), a side-panel item (body) and an On screen label
+(display), with their lines; two lacking characters in one text reported once with the first;
+a kit's website with € reported with the BRAND.md path. `tests/tier2/test_check_script.py`: the
+example copy with € in a caption, exit 1, the one problem with its line.
+
+**Red.** `6 failed` with `NotImplementedError`; the tier 2 test failed first in its own set-up
+(I had guessed the caption's words; the example's cue reads "Step A. Fold the sheet…"),
+corrected, then the right failure.
+
+**Green.** `1 failed, 18 passed`: my line count again (the inserted subtitle row moves the On
+screen label to line 61, which I had left at 60; the other three shifted lines I had counted).
+Corrected, `6 passed`; the suite:
+```
+TOTAL                           2727     32    906     41    98%
+361 passed in 113.79s (0:01:53)
+All checks passed!
+```
+
+**Tier 3.** The scratch example with € in scene A's first caption: `1 problem: line 98: scene A
+cue 1 caption '…' has '€' (U+20AC), which …/PBS-Regular.ttf lacks`. The two real scripts
+(`make-bed`, `app-for-that`, read-only): no problems, exit 0; their five labels ending in ✓ are
+excepted, as item 1 draws them.
+
+**Decision / surprise.** `brand_problems` now returns the kit it read, so the kit is read once
+per run; a font file that is not a font is one problem line, not a crash (`glyphs.characters`'s
+Failure caught). The roles are a table in `check_script` (`SETTING_ROLES`, `SCENE_ROLES`,
+`KIT_ROLES`, captions `body-medium`, panels `body`, labels `display`); a fallback role resolves
+through `brand.FONT_FALLBACKS`. The `--json` output is unchanged.
+
+**State.** Request 10 complete: 361 tests, 98%, lint clean, README and PLAN.md current. Nothing
+waiting.
