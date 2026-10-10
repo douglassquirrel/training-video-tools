@@ -6,7 +6,7 @@
 |---|---|---|
 | name | table | |
 | kind | code | |
-| size | 300 200 | a design size |
+| size | 300 200 | nominal: the natural size comes from its rows |
 
 ## Anchors
 

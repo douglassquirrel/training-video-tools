@@ -2470,3 +2470,50 @@ as for every parameter, so an arrow shown before it grows needs `progress=0` in 
 README will say so.
 
 **State.** 492 green, 98%, lint clean. Next: item 17, 3, the `check-script` warning.
+
+### 10 October 2026 — Item 17, 3 (first half): a blank Size on a nominal-sized element is a warning
+
+**Goal.** `check-script` lists a warning, by line, for a cast member with a blank Size whose
+element is code with a nominal size; a warning does not change the exit code (request 15,
+item 3; Squirrel, 23:11). Drawing at the natural size waits on video-elements.
+
+**Tests.** Tier 1 (`test_choreography_library.py`):
+`test_a_blank_size_on_a_code_element_whose_size_is_nominal_is_a_warning_and_not_a_problem` (a
+scene's cast and a panel's; none for an svg element, a piece, or a member with a Size),
+`test_no_warning_without_a_library_or_for_a_code_element_whose_size_is_not_said_to_be_nominal`
+(a copy of the invented library with the note changed),
+`test_no_warning_and_no_crash_when_the_elements_file_is_not_there_or_has_no_size_row`. Tier 2
+(`test_check_script_choreography.py`):
+`test_a_blank_size_on_a_nominal_sized_element_is_listed_as_a_warning_and_the_exit_is_still_0`,
+`test_warnings_come_after_the_problems_and_the_exit_is_1_for_the_problems`.
+
+**Red.** First `AttributeError: module 'videotools.choreography' has no attribute 'warnings'`;
+with an empty `warnings` in place, the assertions:
+
+```
+E       assert [] == ['line 26: sc...ve it a Size']
+E       AssertionError: assert '| size | 300 200 | nominal: ' in '# table — an invented data-driven element…
+2 failed, 6 deselected in 0.04s
+```
+
+and for the command, the output ending at `No problems found.` with no warning after it:
+`2 failed, 1 passed, 9 deselected in 0.47s`.
+
+**Green.** `2 passed, 6 deselected in 0.10s`; `2 passed, 9 deselected in 0.31s`; suite
+`498 passed in 143.76s (0:02:23)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** The invented library's `table` now says `nominal: …` in its size row,
+as the real spreadsheet does. A third tier 2 test, "no warning when the element is given a
+Size", passed the moment it was written (tier 1 already pins that with the `sized` row), so it
+was deleted rather than kept as a test that had never failed. The third tier 1 test covers two
+defensive lines (no `ELEMENT.md`, no size row: the real reader would have refused both, but a
+traceback here would be worse); it passed against the code as written and was seen to fail with
+those lines broken on purpose (`return True` at the end, the file check removed), then the code
+restored. **video-elements moved while this was being built**: at 23:20 its repository
+(read-only) had commits `bd2b4fb` (a `fit` key: `ratio`, `stretch`, `natural`) and `41673a5`
+(`el.natural_size(frame, params)`), with its request 3 still in progress and its diary saying
+the interface change is to be told to video-tools through Squirrel at the end. Nothing here is
+built on either yet; the warning reads the note, which is what tells for `diff` (nominal, fit
+`ratio`) in any case. PLAN.md "Open questions" 1 says so.
+
+**State.** 498 green, 98%, lint clean. Next: item 17, 4.

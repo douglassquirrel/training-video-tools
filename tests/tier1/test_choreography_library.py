@@ -192,3 +192,71 @@ def test_a_member_placed_by_or_moved_to_a_computed_anchor_must_come_after_that_m
         "line 37: scene A2, moves: 'a' moves to 't'.'row.2', which is computed when 't' is drawn, so 'a' must "
         "come after 't' in the cast",
     ]
+
+
+# ---- item 17 (request 15), 3: a blank Size on an element whose size is nominal is a warning
+
+NOMINAL = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| p | pot | 10 10 | | | an svg element: its own size is its size |
+| t | table | 10 300 | | rows=assets/sample.csv | |
+| sized | table | 400 300 | 300x120 | rows=assets/sample.csv | |
+| tag | pill | 10 10 | | text="Sample output" | |
+
+### Moves
+
+- cue 1: show p, t, sized, tag
+
+### Mistake
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| wrong | table | left | | rows=assets/sample.csv | |
+"""
+
+
+def _scene(text):
+    data, problems = script.parse(text)
+    assert problems == []
+    return data["scenes"][0]
+
+
+def test_a_blank_size_on_a_code_element_whose_size_is_nominal_is_a_warning_and_not_a_problem(lib, folder):
+    scene = _scene(NOMINAL)
+    assert choreography.check(scene, TL, lib, folder) == []
+    assert choreography.warnings(scene, lib) == [
+        "line 26: scene A2, cast: 't': Size is blank and a table's own size (300 × 200) is nominal, so it will "
+        "not be drawn at the size its data or text needs; give it a Size",
+        "line 38: scene A2, mistake: 'wrong': Size is blank and a table's own size (300 × 200) is nominal, so it "
+        "will not be drawn at the size its data or text needs; give it a Size",
+    ]
+
+
+def test_no_warning_without_a_library_or_for_a_code_element_whose_size_is_not_said_to_be_nominal(tmp_path):
+    import shutil
+    assert choreography.warnings(_scene(NOMINAL), None) == []
+    copy = tmp_path / "library"
+    shutil.copytree(INVENTED, copy)
+    described = copy / "elements" / "table" / "ELEMENT.md"
+    text = described.read_text(encoding="utf-8")
+    assert "| size | 300 200 | nominal: " in text
+    described.write_text(text.replace("| size | 300 200 | nominal: ", "| size | 300 200 | a design size: "),
+                         encoding="utf-8")
+    assert choreography.warnings(_scene(NOMINAL), elements.open_library(str(copy), None)) == []
+
+
+def test_no_warning_and_no_crash_when_the_elements_file_is_not_there_or_has_no_size_row(tmp_path):
+    import shutil
+    copy = tmp_path / "library"
+    shutil.copytree(INVENTED, copy)
+    opened = elements.open_library(str(copy), None)             # read while the files were whole
+    described = copy / "elements" / "table" / "ELEMENT.md"
+    whole = described.read_text(encoding="utf-8")
+    described.write_text(whole.replace("| size | 300 200 | nominal: the natural size comes from its rows |\n", ""),
+                         encoding="utf-8")
+    assert choreography.warnings(_scene(NOMINAL), opened) == []
+    described.unlink()
+    assert choreography.warnings(_scene(NOMINAL), opened) == []

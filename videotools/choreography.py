@@ -324,6 +324,42 @@ def check(scene, tl, lib, folder):
     return problems
 
 
+def warnings(scene, lib):
+    """What is allowed but probably not meant, by line: a library member with a blank Size whose
+    element is code with a nominal size (what it draws depends on its data or text), so it is
+    fitted into that size. [] without a library."""
+    if lib is None:
+        return []
+    key, out = scene["key"], []
+    parts = [(f"scene {key}, cast", scene["cast"])]
+    parts += [(f"scene {key}, {panel}", scene["panels"][panel]["cast"]) for panel in PANELS if panel in scene["panels"]]
+    for where, cast in parts:
+        for m in cast:
+            if m["size"] is not None or _element_kind(m["element"], lib) != "library":
+                continue
+            el = lib.element(m["element"])
+            if el["kind"] == "code" and _size_is_nominal(el):
+                w, h = el["size"]
+                out.append(f"line {m['line']}: {where}: '{m['name']}': Size is blank and {_a(el['name'])}'s own size "
+                           f"({w:g} × {h:g}) is nominal, so it will not be drawn at the size its data or text "
+                           f"needs; give it a Size")
+    return out
+
+
+def _size_is_nominal(el):
+    """True when the Notes cell of the `size` row in the element's ELEMENT.md begins 'nominal': the
+    description the library returns does not carry it (PLAN.md item 17, 3; "Open questions" 1)."""
+    path = os.path.join(el.get("folder") or "", "ELEMENT.md")
+    if not os.path.isfile(path):
+        return False
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            cells = _cells(line) if line.lstrip().startswith("|") else []
+            if len(cells) >= 3 and cells[0] == "size":
+                return cells[2].lower().startswith("nominal")
+    return False
+
+
 def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel):
     members = {m["name"]: m for m in cast}
     rows_of = {m["name"]: _rows_file(m, lib, folder) for m in cast}   # name -> (file, row count) or None

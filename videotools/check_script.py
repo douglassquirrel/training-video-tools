@@ -211,6 +211,11 @@ def main(argv=None):
         print(f"\n{len(problems)} problem{'' if len(problems) == 1 else 's'}:")
         for p in problems:
             print("  - " + p)
-        return cli.PROBLEMS
-    print("\nNo problems found.")
-    return cli.OK
+    else:
+        print("\nNo problems found.")
+    warnings = [w for sc in data["scenes"] for w in choreography.warnings(sc, lib)]
+    if warnings:                            # allowed, but probably not meant: listed, the exit code unchanged
+        print(f"\n{len(warnings)} warning{'' if len(warnings) == 1 else 's'}:")
+        for w in warnings:
+            print("  - " + w)
+    return cli.PROBLEMS if problems else cli.OK

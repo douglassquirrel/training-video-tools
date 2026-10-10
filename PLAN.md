@@ -1198,7 +1198,14 @@ README): each command for real on the example video.
    field. That reads a file of video-elements' directly rather than through the interface, and
    a Notes column is prose for people. If video-elements comes to say it in the description
    (its request 3, item 4 asks it to say which elements stretch and which keep their ratio),
-   video-tools reads it there instead. Claude's assumption, 10 October 2026, 23:12.
+   video-tools reads it there instead. Claude's assumption, 10 October 2026, 23:12. **Seen
+   since (23:20, read-only):** video-elements has committed a `fit` key in the description
+   (`ratio`, `stretch` or `natural`) and `el.natural_size(frame, params)` for an element whose
+   fit is `natural` (`spreadsheet`, `prompt-box`, `file-chip`); its `diff` still says `nominal`
+   in the size row's note with fit `ratio`, so the note is the only thing that tells for it.
+   The warning is built on the note, which covers all four today. When the natural-size half of
+   item 17, 3 is built, an element whose fit is `natural` is drawn at its natural size and not
+   warned of; whether the note stays the signal for the rest is this question.
 
 ## Settled
 

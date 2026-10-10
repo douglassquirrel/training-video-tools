@@ -131,3 +131,41 @@ def test_a_credit_line_with_a_character_the_body_font_lacks_is_listed(example):
     code, out, err = run("check-script", script, "--elements", INVENTED)
     assert code == 1
     assert "end card credit line 'Art for €1' has '€' (U+20AC), which " in out
+
+
+# ---- item 17 (request 15), 3: a blank Size on a nominal-sized element is a warning; the exit code is unchanged
+
+WARNING = ("  - line 129: scene A, cast: 'data': Size is blank and a table's own size (300 × 200) is nominal, so it "
+           "will not be drawn at the size its data or text needs; give it a Size\n")
+
+
+def with_a_table(example, extra=""):
+    """`described`, with the invented library's table (code, a nominal size) in scene A's cast."""
+    script = described(example, extra)
+    text = open(script, encoding="utf-8").read()
+    row = "| data | table | right | | rows=assets/sample.csv | |\n"
+    text = text.replace("| crease | pill |", row + "| crease | pill |", 1).replace(
+        "- cue 1: show sheet\n", "- cue 1: show sheet, data\n")
+    open(script, "w", encoding="utf-8").write(text)
+    assets = os.path.join(os.path.dirname(script), "assets")
+    os.makedirs(assets, exist_ok=True)
+    with open(os.path.join(assets, "sample.csv"), "w", encoding="utf-8") as f:
+        f.write("Rep,Commission\nA,1\n")
+    return script
+
+
+def test_a_blank_size_on_a_nominal_sized_element_is_listed_as_a_warning_and_the_exit_is_still_0(example):
+    code, out, err = run("check-script", with_a_table(example), "--elements", INVENTED)
+    assert (code, err) == (0, "")
+    assert out.endswith("\nNo problems found.\n\n1 warning:\n" + WARNING)
+
+
+def test_warnings_come_after_the_problems_and_the_exit_is_1_for_the_problems(example):
+    code, out, err = run("check-script", with_a_table(example, "- cue 2: crease.text wrong\n"), "--elements", INVENTED)
+    assert (code, err) == (1, "")
+    assert out.endswith(
+        "\n1 problem:\n"
+        "  - line 137: scene A, moves: 'crease' draws 'wrong', which is not in the script's On screen list "
+        "(top edge to bottom edge, crease, diagonal fold, edge fold)\n"
+        "\n1 warning:\n" + WARNING)
+
