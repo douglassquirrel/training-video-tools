@@ -12,7 +12,9 @@ commands, item 11; and (10 October 2026, 07:53) from the tenth,
 `inbox/done/request-from-training-video-2026-10-10.md` ("Settled" 21): ✓ and ✗ drawn when a font
 lacks them, and a check for characters a font lacks, item 12; and (10 October 2026, 08:46) from the
 eleventh, `inbox/done/request-from-training-video-2026-10-10-11.md` ("Settled" 22): phonemes in
-`say:` lines, item 13. CLAUDE.md says how the work is done; this file says what
+`say:` lines, item 13; and (10 October 2026, 09:00) from the twelfth,
+`inbox/done/request-from-training-video-2026-10-10-12.md` ("Settled" 23): the mistake panel as
+a curtain known to scene code, and stills at cue changes with a warning, item 14. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -491,6 +493,37 @@ phoneme string that would be sent, spans spliced in, so a writer can see what th
 given; needs the speech package (exit 4 if missing, as `narrate` says it) but not the model
 file; writes nothing. The flag is on `narrate`, not a new command (Squirrel, 10 October 2026).
 
+## 14. The curtain, and stills at cue changes (request 12; Squirrel, 10 October 2026, 09:00: "flag on stills, warning on by default. go ahead")
+
+The mistake panels cover the animation area (the background at 0.96, then the two cards) with
+strength `p(t, n, 0.0, 0.5) × (1 − p(t, n+1, −0.4, 0.1))` for the mistake cue `n` (the panel
+stays to the scene's end when the mistake cue is the last). Scene code that fades its
+pre-mistake picture out at the *next* cue's start, the moment the panel lifts, shows a glimpse
+of it through the lifting panel (the training-video project's second video, found by ear).
+
+**The curtain in one place** (item 1): the formula moves into the timeline, which knows the
+cues; `Timeline.curtain(t)` is the panel's strength 0–1, `covered(t)` is true while it is at
+full strength, and `before_curtain(t)` is 1.0 until a fade from 0.5 to 0.7 s after the mistake
+cue's start (inside the covered time), then 0.0; for a scene with no mistake cue, `curtain` is
+0, `covered` false and `before_curtain` 1.0 always. `frame.mistake_panels` draws with
+`tl.curtain(t)`, so the stored frames are unchanged; scene code reaches them as
+`frame.timeline.before_curtain(frame.t)`. The README's "Writing a video's scene code" says why.
+
+**`stills --cue-changes`** (item 2): `stills SCRIPT.md --cue-changes [--scenes KEY,…] --out
+SHEET.png [--grid CxR]`: instead of SCENE:SECONDS, for each cue start of each scene the frames
+at −0.3, 0 and +0.3 s (clipped to the scene; the first cue's −0.3 falls in the lead), and +0.6 s
+for the cue after a mistake, labelled as `stills` labels frames; when they outnumber the grid,
+several sheets named `SHEET-1.png`, `SHEET-2.png`, … (each refused if it exists). **The warning,
+on by default** (Squirrel, 10 October 2026): for each cue after a mistake, the animation area
+is drawn twice *without* the panel (`frame.draw_frame(..., curtain=False)`), at the moment the
+panel starts to lift (next start − 0.4) and at the moment it has gone (next start + 0.1);
+pixels that differ from the background in the first and match it in the second are something
+that vanished as the panel lifted; more than 0.2 % of the area is a warning on stderr naming
+the scene and cue (`stills: scene B: something drawn under the panel at cue 2 vanishes as it
+lifts for cue 3 (N pixels); fade it out while covered: frame.timeline.before_curtain`), exit 0
+(it is a warning, the sheets are still written). It cannot see a change later than the lift,
+nor a picture that fades under the curtain and comes back; the README says so.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -626,6 +659,10 @@ remote ("Settled" 7).
    **Done 10 October 2026, 08:46–08:56**: all three items built and in the README; the proof
    done (eleven clips and `timing.json` byte-identical); the training-video project writes its
    six spans and re-makes its clips (their side).
+13. **Request 12** (10 October 2026, 08:53; OK'd 09:00): item 14, test-first in this order: the
+   curtain functions on the timeline and `mistake_panels` on them (stored frames unchanged);
+   `draw_frame(..., curtain=False)`; `stills --cue-changes` with its sheets; the warning; README,
+   "Notes for users", lint as its own pass.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -713,6 +750,9 @@ None.
     checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").
 19. The eighth request (`inbox/done/request-from-training-video-2026-10-09-8.md`): `check-video`'s
     sheet labels in a strip under each frame (Squirrel, 9 October 2026, 21:07: "go ahead").
+23. The twelfth request (`inbox/done/request-from-training-video-2026-10-10-12.md`), both items,
+    with the cue-change sheets and the warning as a flag on `stills` and the warning on by
+    default (Squirrel, 10 October 2026, 09:00: "flag on stills, warning on by default. go ahead").
 22. The eleventh request (`inbox/done/request-from-training-video-2026-10-10-11.md`), all three
     items, with the phoneme listing as a flag on `narrate --dry-run` rather than a new command
     (Squirrel, 10 October 2026, 08:46: "Right to verify. OK to put flag on narrate."). Squirrel's

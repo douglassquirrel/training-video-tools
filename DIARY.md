@@ -1575,3 +1575,16 @@ package's `config.json`: 114 symbols, the space among them.
 
 **State.** Request 11 complete: 376 tests, 98%, lint clean, README and PLAN.md current. Nothing
 waiting.
+
+### 10 October 2026 — The twelfth request arrives and is OK'd: the curtain, and stills at cue changes
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-10-12.md` (08:53,
+training-video side, after a glimpse of an old picture through the lifting mistake panel in
+their second video): a way for scene code to know when the panel covers the area, and a way to
+see every cue change with a warning for the glimpse. Checked the panel's formula in
+`frame.mistake_panels` before reporting (08:57); noted that the curtain is the background at
+0.96, not opaque, and that it stays to the scene's end when the mistake cue is last. Reported at
+08:58 with the plan and two questions. Squirrel (09:00): "flag on stills, warning on by default.
+go ahead". PLAN.md item 14, build step 13, "Settled" 23; the item moved to `inbox/done/`.
+
+**State.** Next: the curtain functions on the timeline, test-first.
