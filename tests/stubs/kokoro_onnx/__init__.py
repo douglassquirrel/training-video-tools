@@ -16,7 +16,9 @@ RATE = 24000
 
 class Kokoro:
     def __init__(self, model_path, voices_path):
+        from kokoro_onnx.tokenizer import Tokenizer
         self.model_path, self.voices_path = model_path, voices_path
+        self.tokenizer = Tokenizer()
         self._log({"init": [model_path, voices_path]})
 
     def _log(self, entry):
@@ -26,8 +28,8 @@ class Kokoro:
     def get_voices(self):
         return ["af_heart", "bm_george", "zz_test"]
 
-    def create(self, text, voice, speed, lang):
-        self._log({"create": {"text": text, "voice": voice, "speed": speed, "lang": lang}})
+    def create(self, text, voice, speed, lang, is_phonemes=False):
+        self._log({"create": {"text": text, "voice": voice, "speed": speed, "lang": lang, "is_phonemes": is_phonemes}})
         if os.environ.get("KOKORO_STUB_FAIL"):
             raise RuntimeError("stub: the model failed on purpose")
         words = len(text.split())

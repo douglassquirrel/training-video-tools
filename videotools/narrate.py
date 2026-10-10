@@ -11,7 +11,7 @@ import argparse
 import json
 import os
 
-from videotools import cli, config, script
+from videotools import cli, config, phonemes, script
 
 PROG = "narrate"
 WORDS_PER_SECOND = 2.6
@@ -40,6 +40,8 @@ def parser():
     p.add_argument("--speed", type=float, help="the speed, e.g. 0.98 (default: the script's)")
     p.add_argument("--replace", action="store_true",
                    help="write over existing clips and timing.json, listing them first")
+    p.add_argument("--phonemes", action="store_true",
+                   help="with --dry-run: also print the phoneme string each cue would be given, [[…]] spans spliced in")
     p.add_argument("--dry-run", action="store_true",
                    help="list the cues, the voice and an estimate of each clip; write nothing")
     return p
@@ -73,7 +75,24 @@ def main(argv=None):
         return cli.report(PROG, cli.Failure(str(f), getattr(f, "code", cli.REFUSED)))
 
 
+def _phonemizer(lang):
+    """text -> phonemes, through the model's own tokenizer (espeak), as create() would; needs
+    the speech package (the usual one line if it is missing) but not the model file."""
+    import importlib
+    cli.need("kokoro_onnx")
+    tokenizer = importlib.import_module("kokoro_onnx.tokenizer").Tokenizer()
+    return lambda text: tokenizer.phonemize(text, lang)
+
+
+def spoken_phonemes(cue, phonemize):
+    """The phoneme string for a cue whose say: holds a [[…]] span: text parts phonemized, spans
+    as they stand, spaces as written."""
+    return phonemes.splice(script.spoken(cue), phonemize)
+
+
 def _run(args):
+    if args.phonemes and not args.dry_run:
+        raise cli.Failure("--phonemes goes with --dry-run (it only shows what the voice would be given)", cli.USAGE)
     data = script.read(args.SCRIPT)
     settings = script.settings(data)
     conf = config.read()
@@ -85,6 +104,7 @@ def _run(args):
     timing_path = os.path.join(folder, "timing.json")
     cues = [(sc, cue) for sc in scenes for cue in sc["cues"]]
     if args.dry_run:
+        phonemize = _phonemizer(settings["language"]) if args.phonemes else None   # before anything is printed
         print("narrate (dry run): {}".format(data["title"]))
         print(f"voice {voice}, speed {speed}, language {settings['language']}, model {settings['speech-model']} "
               f"from {os.path.dirname(model)}")
@@ -93,6 +113,8 @@ def _run(args):
             n = len(script.spoken(cue).split())
             words += n
             print(f"{clip_name(sc, cue)}  ~{n / WORDS_PER_SECOND:.1f} s  {script.spoken(cue)}")
+            if phonemize:
+                print(f"    phonemes: {spoken_phonemes(cue, phonemize)}")
         print(f"{len(cues)} cues, about {round(words / WORDS_PER_SECOND)} s of speech; nothing written (dry run).")
         return cli.OK
     outputs = [os.path.join(folder, clip_name(sc, cue)) for sc, cue in cues] + [timing_path]
@@ -120,7 +142,13 @@ def _run(args):
         lengths = []
         for cue in sc["cues"]:
             try:
-                samples, rate = speech.create(script.spoken(cue), voice=voice, speed=speed, lang=settings["language"])
+                if phonemes.has_span(script.spoken(cue)):
+                    given = spoken_phonemes(cue, lambda text: speech.tokenizer.phonemize(text, settings["language"]))
+                    samples, rate = speech.create(given, voice=voice, speed=speed, lang=settings["language"],
+                                                  is_phonemes=True)
+                else:
+                    samples, rate = speech.create(script.spoken(cue), voice=voice, speed=speed,
+                                                  lang=settings["language"])
             except Exception as e:  # the model's own errors are not ours to classify
                 raise cli.Failure(f"the speech model failed on scene {sc['key']} cue {cue['n']} ({e}); "
                                   "nothing written for it", cli.EXTERNAL) from e

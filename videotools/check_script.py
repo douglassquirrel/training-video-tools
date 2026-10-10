@@ -100,6 +100,23 @@ def font_problems(data, kit):
     return problems
 
 
+def phoneme_problems(data):
+    """Bad [[…]] spans in say: lines (unclosed, empty, a symbol the voice would drop), and a
+    span in a caption, which would show on screen; each by its line."""
+    from videotools import phonemes
+    out = []
+    for scene in data["scenes"]:
+        k = scene["key"]
+        for cue in scene["cues"]:
+            if phonemes.OPEN in cue["text"]:
+                out.append(f"line {cue['line']}: scene {k} cue {cue['n']} caption '{cue['text']}' holds "
+                           f"'{phonemes.OPEN}', which would show on screen; phoneme spans go in say:")
+            if "say" in cue:
+                n = data["lines"].get((k, f"cue {cue['n']} say"), cue["line"])
+                out += [f"line {n}: scene {k} cue {cue['n']} say: {p}" for p in phonemes.problems(cue["say"])]
+    return out
+
+
 def code_problems(data, script_path):
     """The scene code's problems (scenes.check_code), once the script names a scene-code folder."""
     folder = data["settings"].get("scene-code")
@@ -135,6 +152,7 @@ def main(argv=None):
             problems += font_problems(data, kit)
         except cli.Failure as f:            # a font file that is not a font: one problem, not a crash
             problems.append(str(f))
+    problems += phoneme_problems(data)
     problems += code_problems(data, args.SCRIPT)
     print(summary(data))
     if args.json:

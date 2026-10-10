@@ -2,17 +2,19 @@
 
 ## Where things stand
 
-10 October 2026, 08:06 (from the clock), at the end of request 10. **Requests 1 to 10 are built in
+10 October 2026, 08:56 (from the clock), at the end of request 11. **Requests 1 to 11 are built in
 full: the eight commands of the first request, the four checking commands of the ninth
 (`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
-20), and the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
-report of characters a font lacks (item 12, "Settled" 21), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (empty at 08:06; anything at its top level other than README.md
+20), the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
+report of characters a font lacks (item 12, "Settled" 21), and the eleventh's `[[…]]` phoneme
+spans in `say:` lines with `narrate --dry-run --phonemes` and `check-script`'s span report
+(item 13, "Settled" 22), each in the README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
+and this section, then `inbox/` (empty at 08:56; anything at its top level other than README.md
 is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
 (request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
 roundel and icon) was not asked for and is not done.
 
-Green: 361 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
+Green: 376 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
 needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
 no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -24,8 +26,9 @@ Tier 3 done on a scratch copy of the example, on this Mac: the whole chain made 
 video, `check-video` clean (the same SHA-256 on every run since the first); `assemble --replace`
 against real ffmpeg (the entry of 21:34); the four checking commands on that video, on a
 re-render with one colour changed, `brand-preview` on the real kit read-only (the entries after
-21:46), a still with ✓ and ✗ in its pills, and `check-script` on the two real scripts, read-only,
-clean (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
+21:46), a still with ✓ and ✗ in its pills, `check-script` on the two real scripts, read-only, clean, and
+the phoneme spans with the real model: the unchanged script's clips byte-identical, a changed
+phoneme changing the clip (10 October). `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR=~/models/kokoro`. Scratch
 copies live only in the session's scratchpad, never in the repository. Linux was tried by the
 training-video project (PLAN.md "Things checked" 5), not from here. Not tried: clips at a rate
 other than 24 kHz here (dropped: `narrate` always writes 24 kHz; the Linux report covered 22,050).
@@ -37,10 +40,11 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: nothing. The inbox is empty (requests 1–10 are in `inbox/done/`). What
-comes next is the training-video project's: re-making its second video's stills on the standard
-✓ drawing and retiring its own `tag()` helper, running the new check on its scripts, and any
-request it sends here.
+Waiting on Squirrel: nothing. The inbox is empty (requests 1–11 are in `inbox/done/`). What
+comes next is the training-video project's: writing its six phoneme spans and re-making its
+clips, re-making its second video's stills on the standard ✓ drawing and retiring its own
+`tag()` helper, and any request it sends here. The stub speech model now has a `tokenizer`
+submodule (upper-cases) and records `is_phonemes`.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
 passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30. The
@@ -1516,3 +1520,58 @@ go-ahead with the flag on `narrate`. PLAN.md item 13, build step 12, "Settled" 2
 moved to `inbox/done/`.
 
 **State.** Next: `videotools.phonemes`, test-first.
+
+### 10 October 2026 — Request 11: phoneme spans in `say:` lines; request 11 complete
+
+**Goal.** Item 13: `videotools.phonemes` (`parts`, `has_span`, `problems`, `splice`, `VOCAB`);
+`narrate` sending a cue with a span as phonemes spliced from the model's own phonemizer, a cue
+without one exactly as before; `check-script` reporting bad spans and a span in a caption, each
+by the `say:` line; `--phonemes` on the dry run.
+
+**Test.** `tests/tier1/test_phonemes.py` (five), `tests/tier2/test_phonemes_vocab.py` (the fixed
+vocabulary equals the installed package's), four in `tests/tier2/test_narrate.py` against the
+stub, which gained a `tokenizer` submodule whose `phonemize` upper-cases and strips (so a splice
+is visible) and an `is_phonemes` field in its record, `tests/tier1/test_phoneme_check.py`
+(three), one in `tests/tier2/test_check_script.py`, and one in `test_script_reads.py` for the
+parser recording each cue sub-bullet's line (`data["lines"][(key, "cue 2 say")]`), which the
+report needs.
+
+**Red.** Phonemes: `6 failed`, `NotImplementedError`. Narrate: `5 failed`: `unrecognized
+arguments: --phonemes`, the create call without the splice. Check: `3 failed` and `(0, '') ==
+(1, '')`. Parser: `KeyError: ('A', 'cue 2 say')`.
+
+**Green.** Three faults of mine on the way, none in the request's logic. (1) The first splice
+test let the phonemizer keep whitespace; the model's strips it, so a span would have been glued
+to its neighbours. The test was sharpened to a stripping phonemizer (`'SAYkɑːɹpˈæθiHERE' ==
+'SAY kɑːɹpˈæθi HERE'`), and `splice` keeps each text part's own leading and trailing spaces.
+(2) `import kokoro_onnx` does not bind its `tokenizer` submodule (the real package happens to,
+the stub did not): imported by name. (3) The dry run printed two lines before finding the
+package missing with `--phonemes`; the package is now needed before anything is printed. One
+wrong guess of mine at the example's first cue text, corrected from a real dry run. Lint: the
+114-symbol literal is split across lines without breaking an escape, and one long line wrapped.
+The suite:
+```
+TOTAL                           2809     32    942     41    98%
+376 passed in 120.15s (0:02:00)
+All checks passed!
+```
+
+**Tier 3.** On the scratch example, with the real model: (1) the eleven clips from last night
+kept, `narrate --replace` run again on the unchanged script: every clip and `timing.json`
+byte-identical (`cmp`), the proof the request asked for. (2) `--dry-run --phonemes` prints
+espeak's phonemes for each cue (the README shows the title scene). (3) A span `[[fˈɪɡjɚ]]` for
+"Figure" gave a clip byte-identical to the text-only one, because espeak already gives exactly
+those phonemes, which proves the splice is character-exact; a span `[[fˈɪɡɚ]]` (one phoneme
+dropped) gave a clip 2,404 bytes shorter and different; the text restored, the clip was
+byte-identical to last night's again. (4) An unclosed span in the scratch script:
+`check-script` lists `line 67: scene title cue 2 say: '[[' at character 19 is never closed with
+']]'`, exit 1.
+
+**Decision / surprise.** The vocabulary is copied as escaped code points from the installed
+package's `config.json`, so no combining character is mangled in transcription, and the tier 2
+test will fail when an upgrade changes it. The model collapses whitespace itself, so the splice
+only has to keep the spaces as written. Kokoro's own vocabulary has no `$` pad symbol in this
+package's `config.json`: 114 symbols, the space among them.
+
+**State.** Request 11 complete: 376 tests, 98%, lint clean, README and PLAN.md current. Nothing
+waiting.

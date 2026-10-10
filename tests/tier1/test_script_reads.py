@@ -110,3 +110,12 @@ def test_scenes_read_back_with_properties_cues_lists_and_lines():
 
 def test_parse_reports_no_problems_for_a_well_formed_script():
     assert script.parse(TWO_SCENES)[1] == []
+
+
+def test_the_line_of_each_cue_sub_bullet_is_recorded_beside_the_table_rows():
+    data, problems = script.parse(TWO_SCENES)
+    assert problems == []
+    assert data["lines"][("A", "cue 2 say")] == 48
+    assert data["lines"][("A", "cue 2 mistake")] == 49
+    assert data["lines"][("A", "cue 1 min")] == 46
+    assert ("A", "cue 1 say") not in data["lines"]

@@ -200,8 +200,10 @@ against the display font, the default for pills and callouts (a label your scene
 another role, such as `mono`, is only as good as that font). One problem per text, naming its
 line, the text, the first such character with its code point, and the font file. ✓ and ✗ are
 never reported: the tools draw them (below). The fonts' character maps are read with the
-standard library, so this still needs nothing installed. `--json OUT` also writes the parsed
-script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
+standard library, so this still needs nothing installed. It also checks the `[[…]]` phoneme
+spans in `say:` lines (`narrate`, above): an unclosed `[[`, an empty span, a symbol the voice
+would drop (with its code point), and a span in a caption, each by its line. `--json OUT` also
+writes the parsed script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
 
 ```
@@ -209,7 +211,7 @@ library, so it also runs as `/usr/bin/python3 check-script …`.
   - line 98: scene A cue 1 caption 'Step A. Fold the sheet in half, top edge to bottom edge, for €1.' has '€' (U+20AC), which …/brands/paperboat/fonts/PBS-Regular.ttf lacks
 ```
 
-### `narrate SCRIPT.md [--scenes KEY,…] [--voice V] [--speed S] [--replace] [--dry-run]`
+### `narrate SCRIPT.md [--scenes KEY,…] [--voice V] [--speed S] [--replace] [--dry-run [--phonemes]]`
 
 Speaks every cue (its `say:` line if it has one, else its caption) with the local speech model,
 one clip per cue, trimmed to 30 ms before the first and 80 ms after the last sound, and writes:
@@ -227,6 +229,32 @@ writes over them, listing them first. `--dry-run` lists every cue with the voice
 estimate of its length (2.6 words a second) and writes nothing. The clips are written as the
 model makes them (24 kHz for Kokoro), one at a time, and `timing.json` is rewritten after each
 scene, so an interrupted run keeps what it did.
+
+**Phonemes, where spelling cannot fix a word.** The model turns text into phonemes with espeak
+and sometimes stresses a word wrongly ("KARpathy", "CONstruct"), and no respelling moves the
+stress. A `say:` line may then hold spans written `[[…]]` whose contents are phonemes for the
+model as they stand: the text around a span is turned into phonemes as usual, the spans are
+spliced in with the spaces as written, and the whole cue is sent as phonemes. A `say:` with no
+span is sent exactly as before, so existing clips are unchanged (checked on the example: every
+clip byte-identical). Spans go in `say:` only; a caption never shows them. To write one, see
+what the voice is given: `narrate SCRIPT.md --dry-run --phonemes` prints each cue's phoneme
+string, spans spliced in (it needs the speech package but not the model file):
+
+```
+$ ./narrate COPY/script.md --dry-run --phonemes --scenes title
+narrate (dry run): Folding a Paper Boat
+voice af_heart, speed 0.98, language en-us, model kokoro-82m from …/models/kokoro
+title_01.wav  ~2.7 s  Folding a paper boat, the Paperboat way.
+    phonemes: fˈoʊldɪŋ ɐ pˈeɪpɚ bˈoʊt, ðə pˈeɪpɚbˌoʊt wˈeɪ.
+title_02.wav  ~3.8 s  This film follows [[fˈɪɡjɚ]] seven, one fold at a time.
+    phonemes: ðɪs fˈɪlm fˈɑːloʊz fˈɪɡjɚ sˈɛvən, wˈʌn fˈoʊld æɾə tˈaɪm.
+2 cues, about 7 s of speech; nothing written (dry run).
+```
+
+The symbols a span may use are the model's own (IPA with `ˈ` and `ˌ` for stress and `ː` for
+length, plus punctuation and the space; 114 in all, listed in `videotools/phonemes.py` from
+kokoro-onnx 0.6.1's vocabulary). Anything else the model would drop silently, so
+`check-script` reports it, along with an unclosed `[[`, an empty span, and a span in a caption.
 
 ### `crop-insets SCRIPT.md [--dry-run]`
 
@@ -523,7 +551,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, and
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(361 tests, lint clean).
+(376 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -570,6 +598,9 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 10 October 2026 (later): a `say:` line may hold `[[…]]` spans of phonemes for the voice, where
+  respelling cannot fix a word's stress; `narrate --dry-run --phonemes` shows what the voice is
+  given; `check-script` reports bad spans. A `say:` without spans is sent exactly as before.
 - 10 October 2026: ✓ and ✗ are drawn as strokes wherever the font lacks them, in every text the
   tools draw, so a label can end in a tick without the video drawing its own; and
   `check-script` reports any other character a text holds that its font lacks (captions, panels,

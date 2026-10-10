@@ -24,7 +24,7 @@ def work(example):
 def test_help_names_every_flag():
     code, out, err = run("narrate", "--help")
     assert code == 0 and err == ""
-    for flag in ("--scenes", "--voice", "--speed", "--replace", "--dry-run"):
+    for flag in ("--scenes", "--voice", "--speed", "--replace", "--dry-run", "--phonemes"):
         assert flag in out
 
 
@@ -52,7 +52,7 @@ def test_one_clip_per_cue_and_timing_json_from_the_stub_model(example, speech):
     assert calls[0] == {"init": [os.path.join(speech["SPEECH_MODEL_DIR_FOR_TESTS"], "model.onnx"),
                                  os.path.join(speech["SPEECH_MODEL_DIR_FOR_TESTS"], "voices.npz")]}
     assert calls[2] == {"create": {"text": "This film follows Figure seven, one fold at a time.",
-                                   "voice": "af_heart", "speed": 0.98, "lang": "en-us"}}
+                                   "voice": "af_heart", "speed": 0.98, "lang": "en-us", "is_phonemes": False}}
     assert len(calls) == 12
     assert f"title_02.wav  {stub_length(10):.3f} s" in out
     assert out.splitlines()[-1] == "Wrote 11 clips and {}".format(os.path.join(work(example), "timing.json"))
@@ -182,3 +182,58 @@ def test_the_script_and_the_config_are_never_modified(example, speech):
 def test_a_flag_without_a_value_is_usage(flag):
     code, out, err = run("narrate", "x.md", flag)
     assert code == 2 and "usage: narrate" in err
+
+
+SAY = "   - say: This film follows Figure seven, one fold at a time."
+SAY_WITH_SPAN = "   - say: This film follows [[fˈɪɡjɚ]] seven, one fold at a time."
+SPLICED = "THIS FILM FOLLOWS fˈɪɡjɚ SEVEN, ONE FOLD AT A TIME."     # the stub phonemizer upper-cases the text parts
+
+
+def with_span(example):
+    text = open(example, encoding="utf-8").read()
+    assert SAY in text
+    open(example, "w", encoding="utf-8").write(text.replace(SAY, SAY_WITH_SPAN))
+    return example
+
+
+def test_a_say_with_a_span_is_sent_as_phonemes_spliced_from_the_models_own_phonemizer(example, speech):
+    code, out, err = run("narrate", with_span(example), "--scenes", "title", env=speech)
+    assert (code, err) == (0, "")
+    calls = stub_calls(speech)
+    assert calls[1] == {"create": {"text": "Folding a paper boat, the Paperboat way.", "voice": "af_heart", "speed": 0.98,
+                                   "lang": "en-us", "is_phonemes": False}}      # no span: sent as text, as before
+    assert calls[2] == {"phonemize": {"text": "This film follows", "lang": "en-us"}}
+    assert calls[3] == {"phonemize": {"text": "seven, one fold at a time.", "lang": "en-us"}}
+    assert calls[4] == {"create": {"text": SPLICED, "voice": "af_heart", "speed": 0.98, "lang": "en-us",
+                                   "is_phonemes": True}}
+    assert len(calls) == 5
+    assert os.path.exists(os.path.join(work(example), "title_02.wav"))
+
+
+def test_dry_run_with_phonemes_prints_what_the_voice_would_be_given_and_writes_nothing(example, speech):
+    code, out, err = run("narrate", with_span(example), "--dry-run", "--phonemes", "--scenes", "title", env=speech)
+    assert (code, err) == (0, "")
+    lines = out.splitlines()
+    assert lines[2] == "title_01.wav  ~2.7 s  Folding a paper boat, the Paperboat way."
+    assert lines[3] == "    phonemes: FOLDING A PAPER BOAT, THE PAPERBOAT WAY."
+    assert lines[4] == "title_02.wav  ~3.8 s  This film follows [[fˈɪɡjɚ]] seven, one fold at a time."
+    assert lines[5] == "    phonemes: " + SPLICED
+    assert lines[-1] == "2 cues, about 7 s of speech; nothing written (dry run)."
+    assert not os.path.exists(os.path.join(os.path.dirname(example), "work"))
+    assert all("phonemize" in c for c in stub_calls(speech))                   # the tokenizer only: no model loaded
+
+
+def test_phonemes_without_dry_run_is_a_usage_error(example, speech):
+    code, out, err = run("narrate", example, "--phonemes", env=speech)
+    assert (code, out) == (2, "")
+    assert err == "narrate: --phonemes goes with --dry-run (it only shows what the voice would be given)\n"
+    assert stub_calls(speech) == []
+
+
+def test_dry_run_with_phonemes_needs_the_speech_package_and_says_so(example, speech, tmp_path):
+    broken = tmp_path / "broken"
+    broken.mkdir()
+    (broken / "kokoro_onnx.py").write_text("raise ImportError(\"No module named 'kokoro_onnx'\")\n")
+    code, out, err = run("narrate", example, "--dry-run", "--phonemes", env=dict(speech, PYTHONPATH=str(broken)))
+    assert (code, out) == (4, "")
+    assert err.startswith("narrate: the Python package 'kokoro-onnx' is not installed in this Python")

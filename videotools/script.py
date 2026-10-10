@@ -106,6 +106,7 @@ def parse(text):
             m = SUB_BULLET.match(line)
             if m and item is not None:
                 item[m.group(1)] = m.group(2).strip()
+                data["lines"][(scene["key"], f"cue {item['n']} {m.group(1)}")] = n
                 continue
             if line.strip():
                 problems.append(f"line {n}: scene {scene['key']}: not a cue or a cue's sub-bullet: {line.strip()[:60]}")

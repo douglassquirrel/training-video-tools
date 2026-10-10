@@ -623,6 +623,9 @@ remote ("Settled" 7).
    span parser and the vocabulary copy; the splice in `narrate` with the stub's fake
    phonemizer; the `check-script` report; `--phonemes` on the dry run; README, "Notes for
    users", lint as its own pass; the byte-identical proof on the scratch example in Tier 3.
+   **Done 10 October 2026, 08:46–08:56**: all three items built and in the README; the proof
+   done (eleven clips and `timing.json` byte-identical); the training-video project writes its
+   six spans and re-makes its clips (their side).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the

@@ -132,3 +132,16 @@ def test_a_caption_with_a_character_the_brand_font_lacks_is_listed_with_its_line
         "1 problem:\n"
         f"  - line {line}: scene A cue 1 caption 'Step A. Fold the sheet in half, top edge to bottom edge, for €1.' "
         f"has '€' (U+20AC), which {os.path.join(kit, 'PBS-Regular.ttf')} lacks")
+
+
+def test_an_unclosed_phoneme_span_in_a_say_line_is_listed_with_its_line(example):
+    text = open(example, encoding="utf-8").read()
+    old = "   - say: This film follows Figure seven, one fold at a time."
+    assert old in text
+    open(example, "w", encoding="utf-8").write(text.replace(old, "   - say: This film follows [[fˈɪɡjɚ seven, one fold at a time."))
+    code, out, err = run("check-script", example)
+    assert (code, err) == (1, "")
+    line = next(n for n, text_line in enumerate(text.splitlines(), 1) if text_line == old)
+    assert out.rstrip().endswith(
+        "1 problem:\n"
+        f"  - line {line}: scene title cue 2 say: '[[' at character 19 is never closed with ']]'")
