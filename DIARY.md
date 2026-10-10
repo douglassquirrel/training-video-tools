@@ -2410,3 +2410,63 @@ here: run it with a longer timeout.
 
 **State.** 482 green, 98%. Next: item 17, 2, `progress` on an arrow (its two tests are written
 and red).
+
+### 10 October 2026 — Item 17, 2: an arrow that draws on, with or without its head, and needs no Where
+
+**Goal.** `progress` (0 to 1) and `head` (`yes`/`no`) on the `arrow` piece, and a blank Where
+allowed for an arrow, its box the span of its two ends (request 15, item 2). Five cycles.
+
+**Tests, red and green, in order.**
+
+1. `test_an_arrow_draws_on_as_its_progress_is_animated` and
+   `test_an_arrow_with_no_progress_is_drawn_whole` (tier 2; `draw.arrow` recorded). Red, the
+   parameter refused and nothing passed on:
+   ```
+   E   - line 129: scene A, cast: 'line': an arrow has no parameter 'progress' (its parameters are from, to, colour, width)
+   E       KeyError: 'progress'
+   2 failed, 1 passed, 20 deselected in 0.88s
+   ```
+   Green: `3 passed, 20 deselected in 0.86s`; suite `484 passed in 148.68s`.
+2. `test_an_arrows_progress_is_a_number_from_0_to_1_in_the_cast_and_in_a_move` (tier 1). Red,
+   only the non-number caught:
+   ```
+   E   At index 0 diff: "line 27: scene A2, cast: 'c': 'progress' should be a number, not 'half'" != "line 26: scene A2, cast: 'b': 'progress' is 0 to 1, not '1.5'"
+   ```
+   Green with a new parameter kind `unit` in `PIECE_PARAMS`: `4 passed, 31 deselected in 0.79s`.
+3. `test_an_arrows_head_is_yes_or_no` (tier 1) and
+   `test_an_arrow_with_head_no_is_drawn_without_its_head_and_with_one_otherwise` (tier 2). Red:
+   ```
+   E   At index 0 diff: "line 26: scene A2, cast: 'b': an arrow has no parameter 'head' (its parameters are from, to, colour, width, progress)" != "line 27: scene A2, cast: 'c': 'head' is yes or no, not '20'"
+   ```
+   Green: `11 passed, 36 deselected in 1.45s` (every arrow test); suite `488 passed` beside the
+   next cycle's test, already written and red.
+4. `test_an_arrow_may_have_a_blank_where_and_nothing_else_may` (tier 1, the parser),
+   `test_an_arrow_with_a_blank_where_checks_clean_and_members_may_be_placed_by_its_box` (tier 1,
+   the check), `test_an_arrow_with_a_blank_where_has_the_box_its_two_ends_span` (tier 2: pots
+   placed at the arrow's `top-left`, `bottom-right` and `centre`, the arrow written right to
+   left). Red, one after the other as each layer was done: the parser's refusal at line 25;
+   then `TypeError: 'NoneType' object is not subscriptable` at `choreography.py:339` (the check
+   reading a Where that is not there); then the same at `perform.py:44`. Green: `3 passed, 44
+   deselected in 0.36s`.
+5. `test_an_arrow_with_a_blank_where_cannot_point_from_or_to_its_own_box` (tier 1). Red:
+   `assert [] == ["line 26: … 'from' is its own anchor, but with a blank Where its two ends are what place it"]`.
+   Green: `1 passed, 14 deselected in 0.02s`.
+
+Full suite at the end: `492 passed in 145.28s (0:02:25)`, 98%; `ruff check .`: `All checks
+passed!` (one line over 120 characters found by lint, shortened).
+
+**Decision / surprise.** `draw.arrow` took `progress` and `head` already, so the piece only
+passes them on; its `head` is a size, so `head=no` hands it 0, and
+`test_an_arrow_with_a_head_of_0_is_a_line_to_its_end_and_no_head` (tier 1, `test_draw.py`)
+characterises that: it passed against the existing code once its sample pixel was moved off
+the head's antialiased edge (my first pixel, 165 56, read 255 13 13: the test's expectation
+was wrong, not the code), and was seen to fail with `draw.arrow` broken on purpose (`head =
+head or 20`: `assert (255, 0, 0) == (255, 255, 255)`), then the code restored. Cycle 5 was not
+in the request: without it a blank-Where arrow pointing at its own corner read clean and was
+refused only at draw time ("round in a circle"); an arrow with a Where pointing at its own box
+stays allowed, as before. An arrow with a Where keeps its old box, a point at the Where: only
+the blank case is new. Before an animation's span the cast's value or the default (1) holds,
+as for every parameter, so an arrow shown before it grows needs `progress=0` in its row: the
+README will say so.
+
+**State.** 492 green, 98%, lint clean. Next: item 17, 3, the `check-script` warning.

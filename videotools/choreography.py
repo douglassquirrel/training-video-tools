@@ -165,7 +165,8 @@ def _is_rule(cells):
 
 
 def parse_cast_rows(lines, where, problems):
-    """The cast rows of a table given as [(line number, text)]; problems appended with `where`."""
+    """The cast rows of a table given as [(line number, text)]; problems appended with `where`.
+    A row's `where` is None for an arrow whose Where is blank."""
     cast, seen, header_seen = [], {}, False
     for n, line in lines:
         cells = _cells(line)
@@ -191,7 +192,8 @@ def parse_cast_rows(lines, where, problems):
             problems.append(f"line {n}: {where}: '{name}' is already in the cast (line {seen[name]})")
             ok = False
         pos = parse_where(where_text)
-        if pos is None:
+        placed_by_its_ends = element == "arrow" and not where_text      # its from and to place it
+        if pos is None and not placed_by_its_ends:
             problems.append(f"line {n}: {where}: Where '{where_text}' {WHERE_HELP}")
             ok = False
         size_ok, size = parse_size(size_text)
@@ -273,8 +275,9 @@ def _tables_only(lines, where, problems):
 
 BOX_ANCHORS = ("top-left", "top-right", "bottom-left", "bottom-right", "centre")   # every member has these
 PANELS = ("mistake", "right way")
-# The pieces' parameters by name and kind: label (checked against On screen), number, colour (a name
-# frame.colour resolves), align (left, centre, right), yesno, anchor (a member's anchor, a.centre), text.
+# The pieces' parameters by name and kind: label (checked against On screen), number, unit (a number from
+# 0 to 1), colour (a name frame.colour resolves), align (left, centre, right), yesno, anchor (a member's
+# anchor, a.centre, with an optional offset), text.
 PIECE_PARAMS = {
     "pill": {"text": "label", "size": "number", "fill": "colour", "colour": "colour", "anchor": "align"},
     "callout": {"text": "label", "target": "anchor", "size": "number", "fill": "colour", "colour": "colour",
@@ -282,7 +285,8 @@ PIECE_PARAMS = {
     "text": {"text": "label", "size": "number", "role": "text", "colour": "colour", "anchor": "align"},
     "badge": {"ok": "yesno", "r": "number"},
     "hand": {"angle": "number", "scale": "number", "mirror": "yesno", "label": "label"},
-    "arrow": {"from": "anchor", "to": "anchor", "colour": "colour", "width": "number"},
+    "arrow": {"from": "anchor", "to": "anchor", "colour": "colour", "width": "number", "progress": "unit",
+              "head": "yesno"},
 }
 PIECE_REQUIRED = {"pill": ("text",), "callout": ("text", "target"), "text": ("text",), "badge": ("ok",),
                   "hand": ("angle", "scale"), "arrow": ("from", "to")}
@@ -332,7 +336,7 @@ def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, fo
         if kind is None:
             problems.append(f"{at}'{m['name']}': no element '{m['element']}': not one of video-tools' pieces "
                             f"({', '.join(PIECES)}) and not in the library ({', '.join(lib.names())})")
-        if m["where"]["kind"] == "anchor":
+        if m["where"] and m["where"]["kind"] == "anchor":      # no Where: an arrow, placed by its ends
             problem = _anchor_problem(ctx, m["where"], m["name"])
             if problem:
                 problems.append(f"{at}'{m['name']}' is placed by {problem}")
@@ -514,9 +518,11 @@ def _library_params(m, ctx):
 def _value_problem(kind, name, value, ctx, self_name):
     """The problem with a piece's parameter value of `kind`, or None."""
     labels = ctx["labels"]
-    if kind == "number":
+    if kind in ("number", "unit"):
         if not re.match(f"^{NUM}$", value):
             return f"'{name}' should be a number, not '{value}'"
+        if kind == "unit" and not 0 <= float(value) <= 1:
+            return f"'{name}' is 0 to 1, not '{value}'"
     elif kind == "align":
         if value not in ("left", "centre", "right"):
             return f"'{name}' is left, centre or right, not '{value}'"
@@ -548,6 +554,9 @@ def _piece_params(m, ctx):
                        f"(its parameters are {', '.join(params)})")
             continue
         problem = _value_problem(params[name], name, value, ctx, m["name"])
+        own = params[name] == "anchor" and m["where"] is None and not problem
+        if own and parse_where(value)["member"] == m["name"]:
+            problem = f"'{name}' is its own anchor, but with a blank Where its two ends are what place it"
         if problem:
             out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
     return out

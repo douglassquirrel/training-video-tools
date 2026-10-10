@@ -438,3 +438,57 @@ def test_a_callouts_target_is_its_anchor_plus_the_offset(example, monkeypatch):
     _arrows, targets = recorded(monkeypatch)
     rendered(pointed(example), "A", 2.0)
     assert targets == [(320.0, 248.0)]
+
+
+GROWING = POINTED.replace('to="pot2.centre + 0 -5" |', 'to="pot2.centre + 0 -5" progress=0 |').replace(
+    "- cue 1: show pot1, pot2, line, note\n",
+    "- cue 1: show pot1, pot2, line, note\n- cue 1, 1.0–2.0 s: line.progress 0 → 1\n")
+
+
+def test_an_arrow_draws_on_as_its_progress_is_animated(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    video = pointed(example, GROWING)                       # the span is 1.7–2.7 s into the scene
+    for t in (1.4, 2.2, 3.0):
+        rendered(video, "A", t)
+    assert [kw["progress"] for _ends, kw in arrows] == [0.0, pytest.approx(0.5), 1.0]
+
+
+def test_an_arrow_with_no_progress_is_drawn_whole(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    rendered(pointed(example), "A", 2.0)
+    assert arrows[0][1]["progress"] == 1.0
+
+
+def test_an_arrow_with_head_no_is_drawn_without_its_head_and_with_one_otherwise(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    headless = POINTED.replace('to="pot2.centre + 0 -5" |', 'to="pot2.centre + 0 -5" head=no |').replace(
+        "| note | callout |", '| line2 | arrow | 100 500 | | from=pot1.centre to=pot2.centre head=yes | |\n'
+        "| note | callout |").replace("show pot1, pot2, line, note", "show pot1, pot2, line, line2, note")
+    rendered(pointed(example, headless), "A", 2.0)
+    assert arrows[0][1]["head"] == 0                        # draw.arrow's head is its size in pixels
+    assert arrows[1][1].get("head", 20) == 20               # its own default
+
+
+BOXED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| pot1 | pot | 100 100 | 200 | | frame rect 140 218, 200 x 200: centre 240 318 |
+| pot2 | pot | 500 300 | 100 | | frame rect 540 418, 100 x 100: centre 590 468 |
+| line | arrow | | | from=pot2.centre to=pot1.centre | from right to left: the box is still its ends' span |
+| corner | pot | line.top-left | 20 | | |
+| far | pot | line.bottom-right | 20 | | |
+| mid | pot | line.centre | 20 | | |
+
+### Moves
+
+- cue 1: show pot1, pot2, line, corner, far, mid
+
+"""
+
+
+def test_an_arrow_with_a_blank_where_has_the_box_its_two_ends_span(example):
+    video = pointed(example, BOXED)
+    rendered(video, "A", 2.0)
+    small = [d["rect"] for d in video.library.draws if d["rect"][2] == 20.0]
+    assert small == [(240.0, 318.0, 20.0, 20.0), (590.0, 468.0, 20.0, 20.0), (415.0, 393.0, 20.0, 20.0)]

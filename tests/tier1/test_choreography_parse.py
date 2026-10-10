@@ -213,3 +213,27 @@ just prose
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert len(scene["moves"]) == 0 and scene["panels"]["mistake"]["moves"] == []
+
+
+# ---- item 17 (request 15): an arrow is placed by its from and to, so its Where may be blank
+
+def test_an_arrow_may_have_a_blank_where_and_nothing_else_may():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 1 2 | | | |
+| line | arrow | | | from=a.centre to=a.top-right | |
+| b | pill | | | | |
+| c | pot | | 100 | | |
+"""
+    scene, problems = _scene(text)
+    assert problems == [
+        "line 26: scene A2, cast: Where '' is not X Y in area pixels, a region (left, right, centre, "
+        "top-left, top-right, bottom-left, bottom-right, full) or a member's anchor like sample.row.3 + 40 -12",
+        "line 27: scene A2, cast: Where '' is not X Y in area pixels, a region (left, right, centre, "
+        "top-left, top-right, bottom-left, bottom-right, full) or a member's anchor like sample.row.3 + 40 -12",
+    ]
+    assert [(m["name"], m["where"]) for m in scene["cast"]] == [
+        ("a", {"kind": "pixels", "x": 1.0, "y": 2.0}), ("line", None)]

@@ -122,3 +122,12 @@ def test_callout_dimension_badge_and_hand_leave_their_marks():
     assert pixel(s, 160, 100) == (0, 0, 255)             # the sleeve behind the wrist
     draw.hand(c, 100, 100, angle=math.pi, scale=1.0, skin=(1, 0.8, 0.6), outline=BLACK, sleeve=BLUE,
               label="L", label_fill=RED, label_colour=WHITE, label_font="serif", alpha=0.0)
+
+
+def test_an_arrow_with_a_head_of_0_is_a_line_to_its_end_and_no_head():
+    s, c = surface()
+    draw.arrow(c, [(20, 50), (180, 50)], RED, lw=6, head=20)
+    assert pixel(s, 164, 55) == (255, 0, 0)                 # well inside the head, beside the 6 px line
+    s, c = surface()
+    draw.arrow(c, [(20, 50), (180, 50)], RED, lw=6, head=0)
+    assert pixel(s, 164, 55) == (255, 255, 255) and pixel(s, 178, 50) == (255, 0, 0)

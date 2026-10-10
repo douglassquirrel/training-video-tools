@@ -329,3 +329,84 @@ def test_a_keep_names_cast_members_and_changes_nothing_else():
 - cue 3: keep ghost
 """
     assert _check(text) == ["line 31: scene A2, moves: 'ghost' is not in the cast (a)"]
+
+
+# ---- item 17 (request 15): an arrow's progress and head, and a blank Where
+
+def test_an_arrows_progress_is_a_number_from_0_to_1_in_the_cast_and_in_a_move():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| b | arrow | 70 100 | | from=a.centre to=a.top-right progress=1.5 | |
+| c | arrow | 70 100 | | from=a.centre to=a.top-right progress=half | |
+| d | arrow | 70 100 | | from=a.centre to=a.top-right progress=0.25 | |
+
+### Moves
+
+- cue 1: show a, b, c, d
+- cue 1: d.progress 0 → 2
+- cue 1: d.progress -0.5
+- cue 1: d.progress 0 → 1
+"""
+    assert _check(text) == [
+        "line 26: scene A2, cast: 'b': 'progress' is 0 to 1, not '1.5'",
+        "line 27: scene A2, cast: 'c': 'progress' should be a number, not 'half'",
+        "line 33: scene A2, moves: 'd': 'progress' is 0 to 1, not '2'",
+        "line 34: scene A2, moves: 'd': 'progress' is 0 to 1, not '-0.5'",
+    ]
+
+
+def test_an_arrows_head_is_yes_or_no():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| b | arrow | 70 100 | | from=a.centre to=a.top-right head=no | |
+| c | arrow | 70 100 | | from=a.centre to=a.top-right head=20 | |
+
+### Moves
+
+- cue 1: show a, b, c
+"""
+    assert _check(text) == ["line 27: scene A2, cast: 'c': 'head' is yes or no, not '20'"]
+
+
+def test_an_arrow_with_a_blank_where_checks_clean_and_members_may_be_placed_by_its_box():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| b | pill | 300 200 | | text="checked ✓" | |
+| line | arrow | | | from=a.centre to="b.centre + 0 -5" | |
+| mid | badge | line.centre | | ok=yes | |
+
+### Moves
+
+- cue 1: show a, b, line, mid
+"""
+    assert _check(text) == []
+
+
+def test_an_arrow_with_a_blank_where_cannot_point_from_or_to_its_own_box():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| line | arrow | | | from=line.centre to=a.centre | |
+| placed | arrow | 10 10 | | from=placed.centre to=a.centre | its Where places it: allowed, as before |
+
+### Moves
+
+- cue 1: show a, line, placed
+"""
+    assert _check(text) == ["line 26: scene A2, cast: 'line': 'from' is its own anchor, but with a blank Where "
+                            "its two ends are what place it"]

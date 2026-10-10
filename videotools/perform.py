@@ -150,8 +150,12 @@ class Performance:
             raise cli.Failure(f"'{name}' is placed by a member placed by it, round in a circle")
         self._busy.add(name)
         member = self.cast[name]
-        rect = base_rect(member, self.area, self.lib, self.anchors_of)
-        x, y, w, h = rect
+        if member["where"] is None:             # an arrow with a blank Where: the box its two ends span
+            p, _state = self.params(member)
+            (x0, y0), (x1, y1) = self._point(p["from"]), self._point(p["to"])
+            x, y, w, h = min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)
+        else:
+            x, y, w, h = base_rect(member, self.area, self.lib, self.anchors_of)
         for (a, b), mv in self._moves_of(name, ("move",)):
             if self.t < a:
                 break
@@ -166,7 +170,7 @@ class Performance:
     def _kind(self, member, name):
         """The type of a parameter: the library description's, or the piece's (number or a word)."""
         if member["element"] in choreography.PIECES:
-            return "number" if choreography.PIECE_PARAMS[member["element"]][name] == "number" else "text"
+            return "number" if choreography.PIECE_PARAMS[member["element"]][name] in ("number", "unit") else "text"
         return choreography._param_match(name, self.lib.element(member["element"])["params"])["type"]
 
     def _convert(self, kind, value):
@@ -245,8 +249,10 @@ class Performance:
                               colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
             elif element == "arrow":
                 from videotools import draw
+                headless = {} if p.get("head", "yes") in YES else {"head": 0}     # draw.arrow's head is its size
                 draw.arrow(frame.ctx, [self._point(p["from"]), self._point(p["to"])],
-                           frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)), alpha=alpha)
+                           frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)),
+                           progress=float(p.get("progress", 1)), alpha=alpha, **headless)
             else:
                 el = self.lib.element(element)
                 try:
