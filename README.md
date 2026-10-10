@@ -212,7 +212,9 @@ anchors members are placed by, the parameters by name, kind and range (indices f
 file under the video's folder), labels against the On screen list, states, each move's cue and
 its times against the cue's length (measured from `work/narration/timing.json` when it exists,
 else the estimate, said which), members never shown or shown twice, and a Mistake or Right way
-section in a scene with no mistake cue. `--json OUT` also
+section in a scene with no mistake cue. After the problems (or `No problems found.`) it lists
+warnings under `N warning(s):`, which do not change the exit code: a blank Size on an element
+whose size is only nominal ("Describing a scene in the script", Checks). `--json OUT` also
 writes the parsed script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
 
@@ -480,9 +482,16 @@ earlier). The tools read the first five columns; Notes is for people.
   member placed by another follows it when that one moves. An anchor the element works out
   while drawing (a row, a cell, a needle's tip: "computed" in its description) exists once that
   member is drawn, so a member placed by one, moved to one, or pointing a callout or an arrow at
-  one comes **after** that member in the cast; `check-script` says so.
+  one comes **after** that member in the cast; `check-script` says so. An `arrow` may leave
+  Where blank, since its `from` and `to` place it: its box, for members placed by its corners or
+  its centre, is then the rectangle its two ends span. Nothing else may.
 - **Size**: `W` (the width in pixels, the height from the element's own proportions) or `WxH`;
-  blank for the element's own size, or, in a region, fitted to it.
+  blank for the element's own size, or, in a region, fitted to it. An element whose size comes
+  from its data or text (a `spreadsheet`, a `prompt-box`, a `file-chip`: `fit` is `natural` in
+  its description) is drawn at that natural size when Size is blank, its text at the sizes its
+  parameters say, and in a region is centred at that size rather than scaled to it. A `WxH`
+  is handed to the element as written, so one that stretches (`chat-window`, `bubble`,
+  `formula-bar`: `fit` is `stretch`) takes that shape; the others are fitted inside it.
 - **Parameters**: `name=value` pairs, space-separated, values with spaces in double quotes. The
   names are the element's, from its description; `state=standing` is a multi-state element's
   first state. A value naming a file under the video's folder (`rows=assets/sales.csv`) is read
@@ -493,8 +502,13 @@ earlier). The tools read the first five columns; Notes is for people.
   parameters: `pill` and `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`,
   `right`), and for `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`,
   `anchor`; `badge`: `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`;
-  `arrow`: `from`, `to` (anchors), `colour`, `width`. Colours by name, as `frame.colour` resolves
-  them.
+  `arrow`: `from`, `to` (anchors), `colour`, `width`, `progress` (0 to 1, default 1: how much of
+  it is drawn, from its tail), `head` (`yes`/`no`, default `yes`). An anchor in `target`, `from`
+  or `to` takes an offset as a Where does, in quotes because of the spaces:
+  `from="export.right + 21 8"`. An arrow draws on when its progress is animated,
+  `cue 6, 1.0–1.8 s: paste-arrow.progress 0 → 1`; give it `progress=0` in its cast row if it is
+  shown before that, since before a move's span the cast's value or the default holds. Colours
+  by name, as `frame.colour` resolves them.
 
 **The moves**, one a line, each `cue N[, TIME]: ACTION`. `cue N` is the cue's number in the
 scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 s), `A–B s`
@@ -522,9 +536,7 @@ scene with no `mistake:` cue is a problem.
 **The curtain for free.** A member shown before the mistake cue and not named in any move at
 or after the cue that follows it fades while the panels cover it, so the glimpse
 `stills --cue-changes` warns of cannot be written by accident. One named after the mistake
-(hidden, moved, changed or kept at a later cue) is left to its moves. A data-driven element
-whose natural size comes from its data (the spreadsheet: its column widths and rows) is fitted
-into its Size, so give it one, or its description's nominal size is used.
+(hidden, moved, changed or kept at a later cue) is left to its moves.
 
 **Checks.** `check-script` reads the choreography and lists, each with its line: a malformed
 row or move; an element that is neither a piece nor in the library; an anchor, state or
@@ -536,7 +548,22 @@ never shown, shown again while still shown, or hidden while not; a member placed
 anchor of a member not before it in the cast; a panel section with no mistake cue. The same
 problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
 drawn (exit 3), as does a library that is missing or refuses to open, or an element the
-library cannot draw (one line, in the library's words).
+library cannot draw or cannot give the natural size of (one line, in the library's words).
+
+After the problems `check-script` lists **warnings**: things that are allowed but probably not
+meant. They do not change its exit code (0 when there are no problems) and refuse nothing.
+There is one today: a blank Size on a code element whose size is only nominal and which does
+not offer its natural size (the library's `diff`: its `ELEMENT.md` says `nominal` beside its
+size), which is therefore fitted into that nominal size whatever its lines need. From a scratch
+copy of the example against the real library, 10 October 2026 (a `spreadsheet` with a blank
+Size in the same cast is not warned of: it is drawn at its natural size):
+
+```
+No problems found.
+
+1 warning:
+  - line 133: scene A, cast: 'changes': Size is blank and a diff's own size (300 × 260) is nominal, so it will not be drawn at the size its data or text needs; give it a Size
+```
 
 The example above is scene A of the example video, described in a copy, checked and drawn
 against the real library on 10 October 2026 (`stills` with four frames at 0.9, 2.3, 3.2 and
@@ -765,8 +792,8 @@ primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` ru
 as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, and `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 98% on 9 October 2026
-(386 tests, lint clean).
+192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
+(504 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -779,7 +806,12 @@ A described scene against the real video-elements library (10 October 2026, on m
 of a copy of the example with a person, a sun, a gauge and a calendar (the run under "Describing
 a scene in the script"), and the training-video project's second video's scene A2 described in
 a scratch copy and compared with its v4 frames through `compare-frames` (mean differences 2.3
-to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
+to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`. And (10 October 2026,
+night) that video's scene B, described by the training-video project, in a scratch copy with
+every Size left blank for its file chips, prompt and spreadsheets, a 790 × 790 chat window, and
+its arrow with no Where, offsets on both ends and its progress animated: `check-script` clean,
+`compare-frames` against v4 at four moments 1.8 to 4.3 per channel, the same picture by eye,
+the arrow half grown where v4's is.
 
 ## Known limitations and non-goals
 
@@ -793,6 +825,11 @@ to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
   folder, not here.
 - A described scene is flat (no camera), its text's box for anchors is approximate, and a fixed
   anchor of an element not yet drawn assumes the element is fitted uniformly and centred.
+- A Size of `W` alone takes its height from the proportions of the element's described size,
+  which for an element with a natural size is only nominal: leave Size blank for the natural
+  size, or give `WxH`. An arrow that has a Where keeps a point at that Where as its box; only
+  one with a blank Where has the box its ends span. `check-script` learns that a size is
+  nominal from the note beside it in the element's `ELEMENT.md`.
 
 ## Notes for users
 
@@ -820,6 +857,16 @@ to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 10 October 2026 (late night): in a described scene, an `arrow`'s `from` and `to` and a
+  `callout`'s `target` now land on the anchor **plus the offset written** (`from="export.right +
+  21 8"`); the offset used to be dropped, so an arrow or callout written with one moves to where
+  the script says. An `arrow` has `progress` (0 to 1, animate it to draw the arrow on) and `head`
+  (`yes`/`no`), and may leave its Where blank. A blank Size now draws a `spreadsheet`,
+  `prompt-box` or `file-chip` at its natural size (the size its data and text need) instead of
+  fitted into its nominal one, so **a cast row that left Size blank for one of these changes
+  size**; give the Size to keep the old one. This needs video-elements at `ff50009` or later
+  (an older library draws as before). `check-script` lists warnings after the problems, without
+  changing its exit code: a blank Size on an element whose size is only nominal (`diff`).
 - 10 October 2026 (night, last): the end card credits the library's art below its two credit lines
   (one line per category), governed by a new Settings key `element-credits` (`auto`, `none`, or
   wording); `check-script` prints the lines as `Credits on the end card:`; `assemble` writes

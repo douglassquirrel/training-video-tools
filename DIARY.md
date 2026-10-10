@@ -2,34 +2,37 @@
 
 ## Where things stand
 
-10 October 2026, 23:10 (session end; handover written at Squirrel's word). **Requests 1 to 14 are
-built in full**: the eight commands of the first request; the four checking commands (PLAN.md
-item 11); ✓ and ✗ as strokes and the characters-a-font-lacks report (12); phoneme spans in
-`say:` lines (13); the curtain on the timeline and `stills --cue-changes` (14); **choreography
-described in the script and drawn from the video-elements library (15, request 13: the Cast,
-Moves, Mistake and Right way sections, the checks in `check-script`, `videotools.perform`
-drawing a cast through the library's `el.draw` and the frame's own pieces, the curtain for
-free, the `keep` action, the README's "Describing a scene in the script")**; and **credits for
-the library's art (16, request 14: the `element-credits` setting, the lines on the end card and
-in `check-script`, the credits file `assemble` writes beside the video)**. Each is in the README
-with a real run. A new session starts by reading CLAUDE.md, PLAN.md (items 15 and 16 in full) and
-this section, then `inbox/`.
+10 October 2026, 23:50. **Requests 1 to 15 are built in full**: the eight commands of the first
+request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
+characters-a-font-lacks report (12); phoneme spans in `say:` lines (13); the curtain on the
+timeline and `stills --cue-changes` (14); choreography described in the script and drawn from
+the video-elements library (15); credits for the library's art (16); and **item 17 (request
+15, OK'd 23:09)**: an arrow's `from`/`to` and a callout's `target` at the anchor plus the offset
+written (a bug fixed); `progress` and `head` on the `arrow` piece and a blank Where for an
+arrow; a blank Size drawn at the element's natural size when the library offers one (`fit`
+`natural`, `el.natural_size`, video-elements' interface note of 23:32), with a `check-script`
+warning, exit code unchanged, for a nominal-sized element that offers none; and a test pinning
+that a `WxH` Size reaches the element as its rect. Each is in the README. A new session starts
+by reading CLAUDE.md, PLAN.md (items 15 to 17 in full) and this section, then `inbox/`.
 
-**In the inbox, unacted on: request 15** (`inbox/request-from-training-video-2026-10-10-15.md`,
-22:59), read and reported to Squirrel at the handover (the entry below): four small items found
-by the training-video project while describing its scenes A2 and B for real: (1) a bug: the
-offset in `from`, `to` and `target` (`export.right + 21 8`) is dropped by `perform._point`; (2) an
-arrow that draws on (`progress` and `head` parameters) and may have a blank Where; (3) a blank
-Size drawn at an element's natural size once video-elements offers `el.natural_size` (its request
-3), and until then a `check-script` warning for a code element with a nominal size and no Size;
-(4) a test that a `WxH` rect reaches a stretching element as given. Nothing done; it waits for
-Squirrel's OK, then goes into PLAN.md as item 17 before any code. That project reports requests
-13 and 14 verified on Linux (479 passed, 1 skipped) and A2 described matching v4 at 1.1 on every
-step frame; its report and sheets are in its `videos/app-for-that/checks/elements-check-2026-10-10/`,
-read-only from here.
+**Inbox: empty.** Request 15 and video-elements' note are in `inbox/done/`.
 
-Green: 480 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
-`origin/main` (last commit `08076e3`). PLAN.md "Open questions" is empty; "Settled" runs to 28.
+Green: 504 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
+`origin/main`.
+
+**Waiting on Squirrel** (PLAN.md "Open questions" 1 and 2, and "Settled" 30, none blocking):
+
+1. `check-script` learns that an element's size is nominal from the Notes cell beside `size` in
+   the element's `ELEMENT.md` (it begins `nominal`), read from the description's `folder`: a
+   file of video-elements' read directly, and prose at that. It is used only for an element
+   whose `fit` is not `natural` (today the real `diff`). Is that acceptable, or should
+   video-elements say it in the description?
+2. In a region, a natural-sized element with a blank Size is centred at its natural size and
+   not scaled to the region, where every other element with a blank Size is fitted to the
+   region. Is that what he wants?
+3. The natural-size half was built when video-elements' note arrived, on his 23:11 answer
+   ("do wait for natural-size in video-elements"), without asking again about the note itself.
+   If he wanted to see the note first, commit `10686b6` is the one to revert.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -37,47 +40,57 @@ model are stubs in `tests/stubs/` (the stub ffmpeg refuses an existing output wi
 serves raw audio and raw frames from fake media), and **the video-elements library is the
 invented one at `tests/stubs/video-elements/`** (a stub `videoelements` package reading the
 settled `ELEMENT.md` rows; elements `pot` (svg, two states, fixed anchors, from "Invented
-Icons") and `table` (code, `rows`, a `label`, indexed parameters, computed anchors, an `explode`
-parameter that makes its draw refuse, from "Invented Peeps"); its draw fills the rect with the
-brand's accent and records every call in `lib.draws`; its README says what it checks and what
-it does not). One test is skipped off macOS (CoreText). The suite also passes with tier 2 run
-before tier 1 and with `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF` exported.
+Icons") and `table` (code, `rows`, a `label`, indexed parameters, computed anchors, a size
+noted `nominal`, `fit` `natural` with a `natural_size` of 120 a column by 30 a row recorded in
+`lib.sizes`, an `explode` parameter that makes its draw and its `natural_size` refuse, from
+"Invented Peeps"); its draw fills the rect with the brand's accent and records every call in
+`lib.draws`; its README says what it checks and what it does not). The warning's tests use a
+copy of it with the table's `fit` row removed (`without_fit`). One test is skipped off macOS
+(CoreText). **The whole suite takes about 2 min 25 s**, longer than a foreground command's
+default two minutes: run it with a longer timeout or in the background.
 
 How the tests work: `tests/tier1/` pure functions (`test_choreography_parse.py`, `_check.py`,
-`_library.py`, `test_perform_curtain.py`, `test_credits.py`, `test_elements_*.py` for item 15
-and 16); `tests/tier2/` runs each command as a subprocess through `conftest.run()` under the
+`_library.py`, `test_perform_curtain.py`, `test_credits.py`, `test_elements_*.py` for items 15
+to 17); `tests/tier2/` runs each command as a subprocess through `conftest.run()` under the
 venv's Python, with the `speech` and `ffstub` fixtures, `example` (a copy of `examples/`),
 `narrated()` and `rendered()`; `test_frame.py` compares drawn frames with `tests/tier2/frames/`
 at 192×108; `test_perform.py` and `test_end_card_credits.py` draw frames in-process on scene A
-of the example described (`describe()`, `CAST`, `three_cues()`) and sample pixels or
-`lib.draws`; `test_check_script_choreography.py` and `test_assemble.py` run the commands with
-`--elements tests/stubs/video-elements`. One tier: `.venv/bin/pytest tests/tier1`. Never
-`git add -A` while a suite is running (coverage fragments).
+of the example described (`describe()`, `CAST`, `pointed()`, `three_cues()`) and sample pixels
+or `lib.draws`; for arrows and callouts `recorded(monkeypatch)` replaces `draw.arrow` and
+`Frame.callout` with recorders, so the points and keywords handed over are asserted exactly;
+`test_check_script_choreography.py` and `test_assemble.py` run the commands with `--elements
+tests/stubs/video-elements`. One tier: `.venv/bin/pytest tests/tier1`. Never `git add -A`
+while a suite is running (coverage fragments).
 
 Tier 3 done on this Mac, in the session's scratchpad, read-only on everything real: the whole
 chain on the example (9–10 October); the described scenes against the **real** video-elements
-library (`~/projects/code/video-elements`, complete: 32 elements, its README): the example's
-scene A with `person`, `sun`, `gauge` and `calendar` (the README's run), and the real second
-video's scene A2 in a scratch copy of that video, `compare-frames` against v4 at 2.3–2.9 mean
-difference, the same picture by eye (the entry of 19:40); the credit lines and credits file
-against the real register (20:55). Real elements: a data-driven element (the spreadsheet) must
-be given its natural Size or it is fitted into the description's nominal size (request 15 item
-3 asks for better); `row.N` of the real spreadsheet is the left end of a data row.
+library (`~/projects/code/video-elements`, at `65227bc`): the example's scene A with `person`,
+`sun`, `gauge` and `calendar` (the README's run); the real second video's scene A2 against v4
+(19:40); the credit lines and credits file against the real register (20:55); and for item 17
+(the entry of 23:45): arrows with offsets, a growing arrow, a headless one and a badge on a
+blank-Where arrow's centre on the example, by eye; `check-script`'s warning for a real `diff`
+with no Size and none for a `spreadsheet`; and the second video's scene B as the training-video
+project described it, with every Size blank and the arrow with no Where, against v4 through
+`compare-frames`: 1.8 to 4.3 mean difference at four moments, the same picture by eye.
 `~/.video-tools.conf` on this Mac names `SPEECH_MODEL_DIR` only; the Tier 3 runs passed
 `--elements` on the command line.
 
 Known limits worth knowing: a described scene is flat (no camera); a text piece's box for its
-corners is approximate (its width by its type size above the baseline); a fixed anchor of an
-element not yet drawn assumes uniform, centred fitting (confirmed on the real library's SVG
-icons); `check-script` sees only a module's own top-level `def`s; the stored-image frame tests
-pin layout, not fonts; `brand-preview`'s layout is checked by eye. Known-wrong in past entries:
-the `check-video` entry says `180 passed` (it was 179); an early "21:30" was 18:30; commit
-`71293d0` went out without its diary entry, which followed in `6dd4704`.
+corners is approximate; a fixed anchor of an element not yet drawn assumes uniform, centred
+fitting, which is not how a `stretch` element spreads its anchors (video-elements' note: over
+the rectangle's width and height separately), so a member placed by a stretching element's
+fixed anchor *before* that element in the cast may be a little off (after it, the drawn anchor
+is used: put it after); a Size of `W` alone takes its height from the nominal proportions even
+for a natural-sized element; an arrow with a Where keeps a point as its box; `check-script`
+sees only a module's own top-level `def`s; the stored-image frame tests pin layout, not fonts;
+`brand-preview`'s layout is checked by eye. Known-wrong in past entries: the `check-video`
+entry says `180 passed` (it was 179); an early "21:30" was 18:30; commit `71293d0` went out
+without its diary entry, which followed in `6dd4704`; the 23:10 handover named `08076e3` as the
+last commit when the handover's own commit, `713f5f3`, followed it.
 
-Waiting on Squirrel: his OK on request 15 (then PLAN.md item 17, test-first, in the request's
-order: the offset bug first). Also the other projects': the training-video project describing
-its scenes in its own script and retiring modules; video-elements' answer to its request 3
-(`natural_size`, stretching elements), which item 3 of request 15 depends on in part.
+Also the other projects': the training-video project re-describing its scenes A2 and B in its
+own script with these (blank Sizes, the arrow) and retiring modules; it is told through
+Squirrel.
 
 ## Log
 
@@ -2605,3 +2618,60 @@ natural-sized element (the library then fits the natural shape inside it).
 
 **State.** 504 green, 98%, lint clean. Next: the README, "Notes for users", the Tier 3 against
 the real library.
+
+### 10 October 2026 — Item 17: README, and the Tier 3 against the real library
+
+**Tier 3** (23:30–23:45, in the session's scratchpad; nothing written in any other project).
+
+1. A copy of the example, scene A described against the real library: a `sun`, a `gauge`, a
+   pill, an arrow with no Where `from="sun.right + 20 0" to="fuel.left + -20 0"` and
+   `progress=0` animated `0 → 1` over 0.6–1.6 s of cue 1, a second arrow with `head=no`, and a
+   badge at `link.centre`. `check-script`: `No problems found.` `stills` at 0.9, 1.8, 2.6 and
+   3.4 s, by eye: no accent arrow at 0.9 s; half of it, with its head, at 1.8 s; whole at 2.6 s,
+   starting 20 px right of the sun and stopping 20 px short of the gauge; the plain line from
+   the pill has no head; the tick sits on the middle of the arrow at 3.4 s. (First drawn with
+   the scene's module still in the script, which drew its paper over the cast: the `code` row
+   taken out of the scratch copy, as the tests' `describe` does.)
+2. The warning, real output, the same copy with a `diff` and a `spreadsheet` both without a
+   Size (exit 0):
+   ```
+   No problems found.
+
+   1 warning:
+     - line 133: scene A, cast: 'changes': Size is blank and a diff's own size (300 × 260) is nominal, so it will not be drawn at the size its data or text needs; give it a Size
+   ```
+   Before video-elements' `fit` the same run warned of the spreadsheet (`400 × 300`).
+3. The training-video project's second video, scene B, in a scratch copy (script, assets, its
+   four scratch CSVs, timing, the douglassquirrel kit), described as that project wrote it
+   (`checks/elements-check-2026-10-10/scene-B-described.md`, read) with the Sizes of the three
+   file chips, the prompt and the four spreadsheets blanked, the chat window `790x790`, and the
+   arrow given no Where, its two offsets, `progress=0` and `paste-arrow.progress 0 → 1` over
+   1.0–1.8 s of cue 6. `check-script` clean, no warnings. `compare-frames` against v4:
+   ```
+   B           2.50 s  old  131.90 s  mean difference   1.8
+   B          14.50 s  old  143.90 s  mean difference   4.3
+   B          33.00 s  old  162.40 s  mean difference   3.8
+   B          35.50 s  old  164.90 s  mean difference   4.0
+   ```
+   By eye the same picture: the chips and the sheets the size of v4's, the window square, the
+   arrow half grown at 33.0 s where v4's is and whole at 35.5 s between the same two points.
+   That project's own run with sizes by hand and the old arrow gave 4.7–8.3 in cues 1–4. What
+   still differs is not ours: the prompt wraps a few words later than v4's, the reply bubble's
+   file icon is Tabler's, and the export's last row fades in a little earlier.
+
+**README.** "Describing a scene in the script": the arrow's blank Where, `progress` and `head`,
+offsets in `from`, `to` and `target`, a blank Size at the natural size, `WxH` as written, the
+warnings with the real output above; `check-script`'s usage; three known limits; the testing
+paragraph's numbers (504 tests, 98%) and the Tier 3; a dated note for users, which says that a
+cast row with a blank Size on a spreadsheet, prompt-box or file-chip changes size.
+
+**Green.** `504 passed in 145.81s (0:02:25)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** Reading video-elements' note against our code: a `stretch` element
+spreads its fixed anchors over the rectangle's width and height separately, while
+`anchors_of` scales a fixed anchor uniformly and centred for a member placed *before* its
+element is drawn. Not touched (nobody asked, and after the element is drawn its own anchors
+are used); written into "Where things stand" as a known limit.
+
+**State.** Item 17 complete. 504 green, 98%, lint clean, pushed. Three things for Squirrel in
+"Where things stand".
