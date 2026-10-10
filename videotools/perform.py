@@ -193,8 +193,10 @@ class Performance:
         el = self.lib.element(member["element"])
         if el.get("fit") != "natural":
             return None
+        params = self.params(member)[0]
+        params.pop(choreography.ROTATE, None)       # the turn is ours, not one of the element's parameters
         try:
-            w, h = el.natural_size(self._frame, self.params(member)[0])
+            w, h = el.natural_size(self._frame, params)
         except Exception as e:              # the library refuses in words (its Failure) or fails: one line, exit 3
             raise cli.Failure(f"scene {self._frame.scene['key']}: the library could not size '{member['name']}' "
                               f"({member['element']}): {e}") from e

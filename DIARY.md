@@ -2,30 +2,33 @@
 
 ## Where things stand
 
-11 October 2026, 00:05. **Requests 1 to 16 are built in full**: the eight commands of the first
+11 October 2026, 00:39. **Requests 1 to 17 are built in full.** The eight commands of the first
 request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
-characters-a-font-lacks report (12); phoneme spans in `say:` lines (13); the curtain on the
-timeline and `stills --cue-changes` (14); choreography described in the script and drawn from
-the video-elements library (15); credits for the library's art (16); and **item 17 (request
-15, OK'd 23:09)**: an arrow's `from`/`to` and a callout's `target` at the anchor plus the offset
-written (a bug fixed); `progress` and `head` on the `arrow` piece and a blank Where for an
-arrow; a blank Size drawn at the element's natural size when the library offers one (`fit`
-`natural`, `el.natural_size`, video-elements' interface note of 23:32), with a `check-script`
-warning, exit code unchanged, for a nominal-sized element that offers none; and a test pinning
-that a `WxH` Size reaches the element as its rect; and **item 18 (request 16, OK'd 23:59)**:
-an empty label is no label (not checked by `check-script` for a library element's label
-parameter, nor by `frame.label`; a pill's, callout's or text's empty `text` a plain-worded
-problem; a hand's empty `label` none). Each is in the README. A new session starts by reading
-CLAUDE.md, PLAN.md (items 15 to 18 in full) and this section, then `inbox/`.
+characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
+(14); choreography described in the script and drawn from the video-elements library (15);
+credits for the library's art (16); offsets where an anchor is read, the arrow's `progress`,
+`head` and blank Where, a blank Size at the natural size, the blank-Size warning (17); an empty
+label is no label (18); and **item 19 (request 17, OK'd 11 October, 00:13)**: a callout's
+`leader`; an arrow's `via` (a curve) and `dash`; `colour.ROLE=NAME` on a library member;
+a Cast and Moves on title and end cards, in frame pixels, a scene with no cues writing its moves
+without `cue N`; `rotate` on any member. Each is in the README. A new session starts by reading
+CLAUDE.md, PLAN.md (items 15 to 19 in full, and whatever follows) and this section, then `inbox/`.
 
-**Inbox: empty.** Requests 15 and 16 and video-elements' two notes (23:32, 23:53) are in `inbox/done/`.
+**In the inbox, OK'd and next, in this order:** request 18
+(`inbox/request-from-training-video-2026-10-11-18.md`; Squirrel, 00:28: "1. and 2. both yes"):
+a move marked `linear`; `dim NAME to LEVEL`; a span that ends in a later cue and times as a
+percentage of a cue; a CSV's columns and rows chosen with `rows.columns`, `rows.where`,
+`rows.first`. Then request 19 (`…-19.md`; Squirrel, 00:36: "cue up work on it (if you agree)
+after 17 and 18"; agreed, with the adjustments said to him): `flash`, a repeating opacity over
+a span. Neither is in PLAN.md yet: each goes in as its own item before its first test.
 
-Green: 509 tests, coverage 98%, `ruff check .` clean, everything committed and pushed to
-`origin/main`.
+Green: 531 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
-**Waiting on Squirrel:** his OK on request 17, in the inbox (below). His answers so far are
-all in PLAN.md "Settled" (30 to 36; "Open questions" is empty); one of them is a rule for
-every session: when unsure whether an earlier OK covers a new inbox item, ask.
+**Waiting on Squirrel:** nothing. His answers are in PLAN.md "Settled" (30 to 38); one is a
+rule for every session: when unsure whether an earlier OK covers a new inbox item, ask.
+**video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled" 38; the
+folder was made on 11 October at his word) and nowhere else in that project: replies to its
+requests go there, naming the commit to check against.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -3041,3 +3044,39 @@ unturned context, so the tests look at pixels and at where the followers land.
 **State.** 530 green, 98%, lint clean. Item 19's five parts built; the README, the Tier 3 and
 the note to training-video are left. Squirrel (00:36): "check inbox for request 19 and cue up
 work on it (if you agree) after 17 and 18": next.
+
+### 11 October 2026 — Item 19: README, the Tier 3 against the real library, and a find
+
+**Tier 3** (00:40–00:50, the scratch copy of the second video; nothing written in that
+project). Its title card with its `code` row taken out and a cast in its place: the
+`spreadsheet` of April's totals at its natural size with `rotate=2.2`, a `bubble` and
+`typing-dots`, three `bricks` with `colour.brick=sheet-tab`, `doc` and `correct` (the second
+`rotate=-12`), an arrow with no Where, `via="1050 320; 1150 480"`, `dash="14 10"` and its
+progress animated, a callout with `leader=mistake`; and its end card (no cues) with a `sun`
+shown at `0.5–1.0 s` and `sun.rotate 0 → 180` over `1.0–end-0.5 s`. `check-script`: `No
+problems found.` `stills` at title 0.6, 2.0 and 3.2 s and end 3.0 s, by eye: the tilted sheet
+fading in before cue 1; the bubble and dots; three bricks in three colours, the middle one
+turned; the dashed curve half grown at 2.0 s and whole at 3.2 s with a solid head at the
+sheet's turned corner; the callout's red leader to the sheet's other turned corner; the icon
+on the end card.
+
+**Find, from that run.** The first `stills` was refused: `the library could not size 'sheet'
+(spreadsheet): element 'spreadsheet' has no parameter 'rotate'`. `_natural` handed
+`natural_size` the member's parameters with our `rotate` still among them; the invented
+library does not check parameters, so no test saw it. Reproduced first
+(`test_a_turned_member_with_a_blank_size_is_sized_without_its_turn_among_the_elements_parameters`:
+`AssertionError: assert ('rotate' not in {'rows': […], 'rotate': 2.2})`), then fixed: `43
+passed in 11.93s`. The same class of thing as item 15's increment 11: what the stub does not
+refuse, only the real library finds.
+
+**README.** The cast's Where on a card; `leader`; `via` and `dash`; a paragraph on turning and
+tinting; a paragraph on title and end cards and a scene with no cues; the checks; a dated note
+for users; three known limits; the testing paragraph (531 tests) and this Tier 3.
+
+**Also.** A second note left in the training-video project's inbox
+(`reply-from-video-tools-2026-10-11-2.md`): request 17 built, the commit to check against, the
+rules as built, and what was found.
+
+**Green.** `531 passed in 149.48s (0:02:29)`, 98%; `All checks passed!`.
+
+**State.** Item 19 complete, pushed. Next: request 18 into PLAN.md as item 20, then test-first.

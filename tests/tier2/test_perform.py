@@ -752,3 +752,12 @@ def test_a_turn_is_animated_like_any_number_and_no_turn_is_exactly_the_frame_wit
     del next(m for m in cast if m["name"] == "wide")["params"]["rotate"]
     video.scene("A")["moves"][:] = [m for m in video.scene("A")["moves"] if m["action"]["kind"] != "param"]
     assert bytes(rendered(video, "A", 2.0).get_data()) == before
+
+
+def test_a_turned_member_with_a_blank_size_is_sized_without_its_turn_among_the_elements_parameters(example):
+    turned = NATURAL.replace("| sheet | table | 100 400 | | rows=assets/sample.csv |",
+                             "| sheet | table | 100 400 | | rows=assets/sample.csv rotate=2.2 |")
+    video = pointed(example, turned)
+    rendered(video, "A", 2.0)
+    assert "rotate" not in video.library.sizes[0]["params"] and "rotate" not in video.library.draws[0]["params"]
+    assert video.library.draws[0]["rect"] == (140.0, 518.0, 240.0, 120.0)

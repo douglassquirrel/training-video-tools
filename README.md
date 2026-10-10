@@ -484,7 +484,9 @@ earlier). The tools read the first five columns; Notes is for people.
   member is drawn, so a member placed by one, moved to one, or pointing a callout or an arrow at
   one comes **after** that member in the cast; `check-script` says so. An `arrow` may leave
   Where blank, since its `from` and `to` place it: its box, for members placed by its corners or
-  its centre, is then the rectangle its two ends span. Nothing else may.
+  its centre, is then the rectangle its two ends span. Nothing else may. On a title or end card
+  (below) Where is in the **frame's** pixels, 1920 × 1080 from its top-left, and a region is a
+  half or quarter of the frame.
 - **Size**: `W` (the width in pixels, the height from the element's own proportions) or `WxH`;
   blank for the element's own size, or, in a region, fitted to it. An element whose size comes
   from its data or text (a `spreadsheet`, a `prompt-box`, a `file-chip`, a `diff`: `fit` is
@@ -506,15 +508,29 @@ earlier). The tools read the first five columns; Notes is for people.
   `placeholder=yes`) is still checked if you give it, since the tools cannot tell: leave it out
   or give it empty. An indexed parameter is written with dots: `highlight.3`, `cell-alpha.3.2`. The pieces' own
   parameters: `pill` and `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`,
-  `right`), and for `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`,
+  `right`), and for `callout` `target` (an anchor) and `leader` (the colour of its leader line
+  and dot, default `ink`); `text`: `text`, `size`, `role`, `colour`,
   `anchor`; `badge`: `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`;
   `arrow`: `from`, `to` (anchors), `colour`, `width`, `progress` (0 to 1, default 1: how much of
   it is drawn, from its tail), `head` (`yes`/`no`, default `yes`). An anchor in `target`, `from`
   or `to` takes an offset as a Where does, in quotes because of the spaces:
   `from="export.right + 21 8"`. An arrow draws on when its progress is animated,
   `cue 6, 1.0–1.8 s: paste-arrow.progress 0 → 1`; give it `progress=0` in its cast row if it is
-  shown before that, since before a move's span the cast's value or the default holds. Colours
-  by name, as `frame.colour` resolves them.
+  shown before that, since before a move's span the cast's value or the default holds. `via="X
+  Y; X Y"` makes the arrow a curve by two control points, each in the cast's pixels or a member's
+  anchor with an offset (`via="300 50; sheet.top-left + -40 0"`), and its progress then runs
+  along the curve; `dash="12 8"` dashes its line (the dash and the gap; the head stays solid).
+  Colours by name, as `frame.colour` resolves them.
+- **Turning and tinting**, in the Parameters of any member. `rotate=DEGREES` turns it clockwise
+  about the centre of its box (a library element's rectangle; what a pill, a text or a badge
+  drew; the point a hand or a callout is placed at), and is animated like any number,
+  `pile-3.rotate 0 → -20`. The member is drawn as it would be unturned and that drawing is
+  turned, and its anchors turn with it, so a member placed on one follows. (`hand` also has its
+  own `angle`, in radians, which turns the hand about its wrist.) `colour.ROLE=NAME` gives one
+  member of a library element its own colour for one of the element's colour roles, the roles
+  being the Colours table of its description and the name one the script's Colours or the brand
+  has: `colour.brick=doc`. It is fixed in the cast (a move cannot change it); the pieces keep
+  their own `fill` and `colour`.
 
 **The moves**, one a line, each `cue N[, TIME]: ACTION`. `cue N` is the cue's number in the
 scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 s), `A–B s`
@@ -532,6 +548,14 @@ scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 
 | `NAME STATE → STATE` | Changes state: `helper standing → pointing` (a cross-fade for drawn states, a morph for a coded element such as the potter's clay). |
 
 `→` may be written `->`.
+
+**Title and end cards** may have a `### Cast` and `### Moves` too. The cast is drawn over the
+card, after the card's own text and before the scene's module if it has one, with Where in the
+frame's pixels. A title card's drawing may start before its first cue: `cue 1, -0.3–0.7 s: show
+sheet`. **A scene with no cues** (an end card held for its `extra`) writes its moves without
+`cue N`, as a panel does: `0.5–1.0 s: show mark`, timed from the scene's start, with `end` the
+scene's end (`end-1.0–end-0.5 s: hide mark`). There is no curtain and there are no panels on a
+card.
 
 **The mistake panels.** `### Mistake` and `### Right way` each hold a Cast table (Where in the
 panel body's own pixels, 0 0 its top-left under the heading band, 690 × 728) and an optional
@@ -551,7 +575,11 @@ past the data's rows, a data file that is not under the video's folder; a cue th
 have; a time past the cue's length (measured from `work/narration/timing.json` when it exists,
 else estimated, said which); a label not in On screen; a move naming no cast member; a member
 never shown, shown again while still shown, or hidden while not; a member placed by a computed
-anchor of a member not before it in the cast; a panel section with no mistake cue. The same
+anchor of a member not before it in the cast; a panel section with no mistake cue; a
+`colour.ROLE` for a role the element does not have, or naming a colour that neither the
+script's Colours nor the brand has (when the brand kit read); a `rotate` that is not a number;
+a `via` that is not two points or a `dash` that is not two numbers above 0; `cue N` on a move
+of a scene that has no cues, or a time past that scene's end. The same
 problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
 drawn (exit 3), as does a library that is missing or refuses to open, or an element the
 library cannot draw or cannot give the natural size of (one line, in the library's words).
@@ -803,7 +831,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(509 tests on 11 October, lint clean).
+(531 tests on 11 October, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -821,7 +849,11 @@ night) that video's scene B, described by the training-video project, in a scrat
 every Size left blank for its file chips, prompt and spreadsheets, a 790 × 790 chat window, and
 its arrow with no Where, offsets on both ends and its progress animated: `check-script` clean,
 `compare-frames` against v4 at four moments 1.8 to 4.3 per channel, the same picture by eye,
-the arrow half grown where v4's is.
+the arrow half grown where v4's is. And (11 October 2026) that video's title and end cards
+described in the scratch copy: a spreadsheet at its natural size tilted 2.2°, a bubble with
+typing dots, three bricks in three colours of their own (one turned), a dashed curve growing
+from a brick to the sheet, a callout with a `mistake` leader, and on the end card (no cues) an
+icon shown at 0.5 s and turning to the scene's end; `check-script` clean, looked at by eye.
 
 ## Known limitations and non-goals
 
@@ -835,6 +867,10 @@ the arrow half grown where v4's is.
   folder, not here.
 - A described scene is flat (no camera), its text's box for anchors is approximate, and a fixed
   anchor of an element not yet drawn assumes the element is fitted uniformly and centred.
+- A turned member's anchors are turned with it, but a member placed on one is not itself turned;
+  and on a title card the cast is cut at the card's lower edge (948 px), above the caption band.
+  A piece's `fill` or `colour` naming a colour the video does not have is found when the frame
+  is drawn, not by `check-script`.
 - A Size of `W` alone takes its height from the proportions of the element's described size,
   which for an element with a natural size is only nominal: leave Size blank for the natural
   size, or give `WxH`. An arrow that has a Where keeps a point at that Where as its box; only
@@ -867,6 +903,12 @@ the arrow half grown where v4's is.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 11 October 2026 (later): more can be said in a described scene. A `callout` has `leader` (its
+  leader's colour); an `arrow` has `via` (two control points: a curve) and `dash`; any member has
+  `rotate` (degrees, clockwise, about its box's centre, animatable); a library member has
+  `colour.ROLE=NAME` for a colour of its own. Title and end cards may have a Cast and Moves, in
+  frame pixels, and a scene with no cues writes its moves without `cue N`. Nothing already
+  written changes: a script without these draws the frames it drew before.
 - 11 October 2026: an empty label is no label. `check-script` no longer refuses a library
   element's label parameter given as `""` (a `formula-bar` with `ref=""`), in a cast row or a
   move, and `frame.label("")` passes, for described scenes and scene code alike. A `pill`,
