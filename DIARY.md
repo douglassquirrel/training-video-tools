@@ -2545,3 +2545,63 @@ had pinned one such case in passing (the table at `300x100`); this one is named 
 What an element does with the rect (stretch, or fit keeping its ratio) is the library's.
 
 **State.** 498 green, 98%, lint clean. Next: the README, then the Tier 3 against the real library.
+
+### 10 October 2026 — video-elements' note arrives; item 17, 3 (second half): a blank Size at the natural size
+
+**What arrived.** `inbox/request-from-video-elements-2026-10-10-2.md` (23:32): the description's
+`fit` (`ratio`, `stretch`, `natural`) and `el.natural_size(frame, params)` are in the shared
+interface, in video-elements' words; it asks video-tools to use `natural_size` for a blank Size
+when `fit` is `natural`, and to put the two lines where the interface is quoted. It also lists
+changes we may notice (text measured at the brand's scale, `chat-window` and `bubble` stretching,
+the renderer called without `-`, `box.*.*` on the spreadsheet, a new `formula-bar`); none needs
+anything here (no test of ours stubs `rsvg-convert`).
+
+**Decision.** Built without asking Squirrel again, on this reading, recorded as "Settled" 30
+so that he can say if it is wrong: he OK'd request 15 (23:09), whose item 3 is this; my question
+was whether this half should wait until he had OK'd the interface on the video-elements side; his
+answer (23:11) was "do wait for natural-size in video-elements (it's being worked on now)"; he
+then settled it there (its DIARY, 23:31) and the note came. The note is moved to `inbox/done/`.
+The interface block in PLAN.md item 15 has the two lines (the README never quoted the block).
+A second assumption, PLAN.md "Open questions" 2: in a region, a natural-sized element with a
+blank Size is centred at its natural size, not scaled to the region as other elements are.
+
+**Tests.** Tier 2 (`test_perform.py`):
+`test_a_blank_size_draws_an_element_that_offers_one_at_its_natural_size` (the rect, a member
+placed by its corner, and `natural_size` asked with the rows `draw` gets),
+`test_in_a_region_it_is_centred_at_its_natural_size_and_not_fitted_to_the_region`,
+`test_a_refusal_to_give_the_natural_size_is_one_message_in_words`. The invented library's
+`table` has `fit` `natural` and a `natural_size` (120 a column by 30 a row; recorded in
+`lib.sizes`). For the warning: `test_no_warning_for_an_element_that_offers_its_natural_size`
+(tier 1 and tier 2).
+
+**Red.**
+
+```
+E       assert (140.0, 518.0, 300.0, 200.0) == (140.0, 518.0, 240.0, 120.0)
+E       assert (751.0, 290.0, 711.0, 474.0) == (986.5, 467.0, 240.0, 120.0)
+E         - stills: scene A: the library could not size 'sheet' (table): element 'table': its natural_size failed: …
+E         + stills: scene A: the library could not draw 'sheet' (table): element 'table': its draw failed: …
+```
+
+and, for the warning, still given for the natural-fit table:
+`2 failed, 5 passed, 15 deselected in 0.56s`.
+
+**Green.** `30 passed in 9.06s` (`test_perform.py`); `22 passed in 2.03s` (the warning's two
+files); suite `504 passed in 142.72s (0:02:22)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** `Performance` keeps the frame it is drawing on, since `natural_size`
+needs it to measure text, and asks with the member's parameters at that moment (now worked out
+once a frame, not once for the size and again for the draw: the data file was being read each
+time). The earlier warning tests changed their expectation on purpose, not to match output:
+the rule itself changed (PLAN.md item 17, 3: no warning for an element that offers its natural
+size), so they now run against a copy of the invented library with the table's `fit` row
+removed, which is what the real `diff` looks like. A mistake of mine caught by reading, not
+by a test: the first version left `natural` unset for an arrow with a blank Where that has a
+`move`; fixed, then `test_an_arrow_with_a_blank_where_can_be_moved_like_any_member` written
+and seen to fail with the fix undone (`UnboundLocalError: cannot access local variable
+'natural'`). Lint found one thing in the stub (a bare expression), now an assertion. Not built,
+not asked: a Size of `W` alone still takes its height from the nominal proportions, even for a
+natural-sized element (the library then fits the natural shape inside it).
+
+**State.** 504 green, 98%, lint clean. Next: the README, "Notes for users", the Tier 3 against
+the real library.

@@ -7,6 +7,7 @@
 | name | table | |
 | kind | code | |
 | size | 300 200 | nominal: the natural size comes from its rows |
+| fit | natural | the stub's `natural_size` gives 120 a column by 30 a row |
 
 ## Anchors
 

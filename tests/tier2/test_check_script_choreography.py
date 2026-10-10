@@ -154,14 +154,28 @@ def with_a_table(example, extra=""):
     return script
 
 
-def test_a_blank_size_on_a_nominal_sized_element_is_listed_as_a_warning_and_the_exit_is_still_0(example):
-    code, out, err = run("check-script", with_a_table(example), "--elements", INVENTED)
+def without_fit(tmp_path):
+    """A copy of the invented library whose table does not offer its natural size (no `fit` row)."""
+    import shutil
+    copy = tmp_path / "library"
+    shutil.copytree(INVENTED, copy)
+    described = copy / "elements" / "table" / "ELEMENT.md"
+    text = described.read_text(encoding="utf-8")
+    row = "| fit | natural | the stub's `natural_size` gives 120 a column by 30 a row |\n"
+    assert row in text
+    described.write_text(text.replace(row, ""), encoding="utf-8")
+    return str(copy)
+
+
+def test_a_blank_size_on_a_nominal_sized_element_is_listed_as_a_warning_and_the_exit_is_still_0(example, tmp_path):
+    code, out, err = run("check-script", with_a_table(example), "--elements", without_fit(tmp_path))
     assert (code, err) == (0, "")
     assert out.endswith("\nNo problems found.\n\n1 warning:\n" + WARNING)
 
 
-def test_warnings_come_after_the_problems_and_the_exit_is_1_for_the_problems(example):
-    code, out, err = run("check-script", with_a_table(example, "- cue 2: crease.text wrong\n"), "--elements", INVENTED)
+def test_warnings_come_after_the_problems_and_the_exit_is_1_for_the_problems(example, tmp_path):
+    code, out, err = run("check-script", with_a_table(example, "- cue 2: crease.text wrong\n"), "--elements",
+                         without_fit(tmp_path))
     assert (code, err) == (1, "")
     assert out.endswith(
         "\n1 problem:\n"
@@ -169,3 +183,9 @@ def test_warnings_come_after_the_problems_and_the_exit_is_1_for_the_problems(exa
         "(top edge to bottom edge, crease, diagonal fold, edge fold)\n"
         "\n1 warning:\n" + WARNING)
 
+
+
+def test_no_warning_for_an_element_that_offers_its_natural_size(example):
+    code, out, err = run("check-script", with_a_table(example), "--elements", INVENTED)
+    assert (code, err) == (0, "")
+    assert out.endswith("\nNo problems found.\n")

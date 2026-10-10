@@ -666,12 +666,22 @@ lib = library.open(path, renderer="rsvg-convert")   # the library's root folder 
 el = lib.element("spreadsheet")               # description: size, anchors, states, params, colours
 anchors = el.draw(frame, rect, state=None, params=None, alpha=1.0)
 #   frame: video-tools' scenes.Frame (ctx, brand, colours, label(), text(), …)
-#   rect:  (x, y, w, h) in frame pixels
+#   rect:  (x, y, w, h) in frame pixels; the element is fitted into it keeping its proportions,
+#          or, when its description's `fit` is `stretch`, drawn to that width and height
 #   state: a name, or (from, to, p) for a change part-way (a cross-fade, or a morph for code)
 #   params: the element's animatable parameters by name; unknown or out-of-range ones refused
 #   returns {anchor name: (x, y)} in frame pixels, for labels, hands and arrows
+el["fit"]                                     # "ratio", "stretch" or "natural" (request 3)
+el.natural_size(frame, params=None)           # request 3, item 5: (w, h) in pixels for an element whose
+#   fit is "natural" (spreadsheet, prompt-box, file-chip): the size at which it is drawn at scale 1
+#   for those params, text measured at the brand's font-size-scale; params are checked as for draw;
+#   None for any other element (its size does not come from its parameters)
 lib.credits(names)                            # request 2: credit lines for the elements a video used
 ```
+
+The `fit` and `natural_size` lines and the longer `rect` comment are video-elements' additions of
+10 October 2026, 23:32 (its note, `inbox/done/request-from-video-elements-2026-10-10-2.md`;
+"Settled" 30), used by item 17, 3.
 
 ### The choreography format (item 2; approved: Squirrel, 10 October 2026, 13:24, "choreography format is fine")
 
@@ -979,22 +989,29 @@ Four things the training-video project found describing its scenes A2 and B for 
    it: its box, for the members placed by its corners and centre, is then the rectangle
    spanned by its two ends. An arrow with a Where keeps today's box (a point at the Where). Any
    other piece or element with a blank Where is refused as now.
-3. **A blank Size on an element whose size is nominal: a warning now, the natural size later.**
+3. **A blank Size: the element's natural size when it offers one, a warning when its size is nominal and it does not.**
    A code element whose description's size is nominal (the real `spreadsheet`, `prompt-box`,
    `file-chip`, `diff`: what it draws depends on its data or text) is fitted into that nominal
-   size when the Size column is blank, silently, with tiny text. **Now:** `check-script` lists
+   size when the Size column is blank, silently, with tiny text. **The warning:** `check-script` lists
    a warning for each such cast member, by line, after the problems, under its own heading
    (`N warning(s):`); warnings do not change the exit code (0 when there are no problems;
    Squirrel, 10 October 2026, 23:11), and a member with a Size has none. video-tools learns
    that a size is nominal from the Notes cell of the `size` row in the element's `ELEMENT.md`
    (it begins `nominal`), read from the description's `folder`, because the description the
-   library returns does not carry it ("Open questions" 1). **Later:** when video-elements
-   offers an element's natural size for given parameters (its request 3, item 5, proposed as
-   `el.natural_size(frame, params) -> (w, h)`), a blank Size draws the element at that size and
-   the warning is given only for an element that does not offer it. This half **waits**
-   (Squirrel, 10 October 2026, 23:11: "do wait for natural-size in video-elements (it's being
-   worked on now)"): the interface is shared, so its words come from video-elements through
-   Squirrel, as the rest of the interface did.
+   library returns does not carry it ("Open questions" 1). **The natural
+   size** (built 10 October 2026, after video-elements' note of 23:32 with the interface, item
+   15; Squirrel, 23:11: "do wait for natural-size in video-elements (it's being worked on
+   now)", and it came): a library member with a blank Size whose element's `fit` is `natural`
+   is drawn at `el.natural_size(frame, params)`, asked with the parameters `draw` is given at
+   that moment (the data file read into rows, the moves applied), so its text is at the sizes
+   its parameters say. Placed by pixels or by an anchor, that is its size; in a region it is
+   centred at that size and not scaled to the region ("Open questions" 2). A refusal from
+   `natural_size` is one line in words naming the member, exit 3, as a refusal from `draw` is.
+   A Size that is given wins, as before, and the library fits the element into it.
+   `check-script` cannot ask for the size (it has no frame) and does not need to; the warning
+   is now given only for an element that does not offer its natural size (its `fit` is not
+   `natural`: today the real `diff`), and a library without the `fit` key is treated as
+   offering none.
 4. **A `WxH` Size reaches the element as its rect**, whatever the element's own proportions,
    so an element video-elements marks as stretching (its request 3, item 4) is given the shape
    the script says. Already so; pinned by a test of its own.
@@ -1158,7 +1175,8 @@ remote ("Settled" 7).
 15. **Request 14** (10 October 2026, 10:20; OK'd 10:36): item 16, after item 15's parser, in
    item 16's order.
 16. **Request 15** (10 October 2026, 22:59; OK'd 23:09): item 17, in its order of work. The
-   natural-size half of its item 3 waits on video-elements.
+   natural-size half of its item 3 waited on video-elements, whose note came at 23:32; built
+   after it.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1205,7 +1223,15 @@ README): each command for real on the example video.
    in the size row's note with fit `ratio`, so the note is the only thing that tells for it.
    The warning is built on the note, which covers all four today. When the natural-size half of
    item 17, 3 is built, an element whose fit is `natural` is drawn at its natural size and not
-   warned of; whether the note stays the signal for the rest is this question.
+   warned of; whether the note stays the signal for the rest is this question. (Built so, 23:40:
+   the note is read only for an element whose fit is not `natural`.)
+2. **A natural-sized element in a region with a blank Size** (item 17, 3). Item 15 says "a region
+   with a blank size fits the element inside it"; request 15 says a blank Size draws the element
+   at its natural size. Assumed: for an element whose `fit` is `natural`, the natural size wins,
+   and it is centred in the region at that size, not scaled to it (text stays the size its
+   parameters say; it may overflow a region it is too big for, and a Size then says otherwise).
+   Every other element in a region with a blank Size is fitted as before. Claude's assumption,
+   10 October 2026, 23:40.
 
 ## Settled
 
@@ -1311,3 +1337,12 @@ README): each command for real on the example video.
     Size at the element's natural size waits until video-elements offers it; an arrow's `head`
     is `yes` or `no`, whether the arrowhead is drawn, default `yes`; the `check-script` warning
     for a blank Size on a nominal-sized element is printed and leaves the exit code as it was.
+30. video-elements' note (`inbox/done/request-from-video-elements-2026-10-10-2.md`, 23:32): the
+    description's `fit` and `el.natural_size(frame, params)` are in the shared interface, in its
+    words (item 15, "The interface"), and video-tools uses `natural_size` for a blank Size as
+    item 17, 3 says. Squirrel's OK is his answer of 23:11 on request 15 ("do wait for
+    natural-size in video-elements (it's being worked on now)") to the question whether that
+    half should wait until he had OK'd the interface on the video-elements side, which he then
+    did there (its DIARY: his answers of 23:31, the note sent with his "Yes"). He was not asked
+    again about the note itself; if that reading is wrong, the commits after `4c2091d` that
+    build it are the ones to revert.

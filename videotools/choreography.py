@@ -326,8 +326,9 @@ def check(scene, tl, lib, folder):
 
 def warnings(scene, lib):
     """What is allowed but probably not meant, by line: a library member with a blank Size whose
-    element is code with a nominal size (what it draws depends on its data or text), so it is
-    fitted into that size. [] without a library."""
+    element is code with a nominal size (what it draws depends on its data or text) and does not
+    offer its natural size (its `fit` is not `natural`), so it is fitted into the nominal one.
+    [] without a library."""
     if lib is None:
         return []
     key, out = scene["key"], []
@@ -338,7 +339,7 @@ def warnings(scene, lib):
             if m["size"] is not None or _element_kind(m["element"], lib) != "library":
                 continue
             el = lib.element(m["element"])
-            if el["kind"] == "code" and _size_is_nominal(el):
+            if el["kind"] == "code" and el.get("fit") != "natural" and _size_is_nominal(el):
                 w, h = el["size"]
                 out.append(f"line {m['line']}: {where}: '{m['name']}': Size is blank and {_a(el['name'])}'s own size "
                            f"({w:g} × {h:g}) is nominal, so it will not be drawn at the size its data or text "

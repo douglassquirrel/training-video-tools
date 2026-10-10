@@ -514,3 +514,56 @@ def test_a_size_given_as_w_by_h_reaches_the_element_as_its_rect_whatever_its_own
     rects = {d["name"]: d["rect"] for d in video.library.draws}
     assert rects["pot"] == (140.0, 218.0, 200.0, 80.0)
     assert rects["table"] == (751.0 + (711.0 - 100.0) / 2, 118.0 + (818.0 - 300.0) / 2, 100.0, 300.0)
+
+
+# ---- item 17 (request 15), 3: a blank Size on an element that offers its natural size
+
+NATURAL = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| sheet | table | 100 400 | | rows=assets/sample.csv | 4 rows of 2 columns: the stub's natural size is 240 x 120 |
+| side | table | right | | rows=assets/sample.csv | the right half is 711 x 818 at 751, 118 |
+| corner | pot | sheet.bottom-right | 20 | | follows the size the table was drawn at |
+
+### Moves
+
+- cue 1: show sheet, side, corner
+
+"""
+
+
+def test_a_blank_size_draws_an_element_that_offers_one_at_its_natural_size(example):
+    video = pointed(example, NATURAL)
+    rendered(video, "A", 2.0)
+    rects = [d["rect"] for d in video.library.draws]
+    assert rects[0] == (140.0, 518.0, 240.0, 120.0)                      # not its nominal 300 x 200
+    assert rects[2] == (380.0, 638.0, 20.0, 20.0)                        # a member placed by its corner
+    asked = video.library.sizes[0]["params"]                            # with what draw is given
+    assert asked["rows"] == [["Rep", "Commission"], ["A", "1"], ["B", "2"], ["C", "3"]]
+
+
+def test_in_a_region_it_is_centred_at_its_natural_size_and_not_fitted_to_the_region(example):
+    video = pointed(example, NATURAL)
+    rendered(video, "A", 2.0)
+    assert video.library.draws[1]["rect"] == (751.0 + (711.0 - 240.0) / 2, 118.0 + (818.0 - 120.0) / 2, 240.0, 120.0)
+
+
+def test_a_refusal_to_give_the_natural_size_is_one_message_in_words(example, tmp_path):
+    cropped(example)
+    narrated(example)
+    script = describe(example, NATURAL.replace("rows=assets/sample.csv | 4 rows", "rows=assets/sample.csv explode=yes | 4 rows"))
+    code, out, err = run("stills", script, "A:2.0", "--out", tmp_path / "s.png", "--elements", INVENTED)
+    assert code == 3
+    assert err == ("stills: scene A: the library could not size 'sheet' (table): element 'table': its natural_size "
+                   "failed: Failure: no font role 'mono' in the brand kit\n")
+    assert not (tmp_path / "s.png").exists()
+
+
+def test_an_arrow_with_a_blank_where_can_be_moved_like_any_member(example):
+    moved = BOXED.replace("- cue 1: show pot1, pot2, line, corner, far, mid\n",
+                          "- cue 1: show pot1, pot2, line, corner, far, mid\n- cue 1, 0.5–1.0 s: move line to 100 100\n")
+    video = pointed(example, moved)
+    rendered(video, "A", 2.0)                       # after the move: the box's corner is at the area's 100 100
+    small = [d["rect"] for d in video.library.draws if d["rect"][2] == 20.0]
+    assert small[0] == (140.0, 218.0, 20.0, 20.0)

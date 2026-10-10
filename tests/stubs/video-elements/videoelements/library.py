@@ -52,7 +52,7 @@ def _element(folder):
     w, h = ident["size"].split()
     states = dict(t.get("States", {}))
     return {"name": ident["name"], "kind": ident["kind"], "size": (float(w), float(h)),
-            "description": ident.get("description", ""),
+            "description": ident.get("description", ""), "fit": ident.get("fit", "ratio"),
             "default-state": ident.get("default-state", next(iter(states), None)),
             "anchors": {k: _anchor(v) for k, v in t.get("Anchors", {}).items()},
             "states": states,
@@ -115,11 +115,28 @@ class Element(dict):
         return anchors
 
 
+    def natural_size(self, frame, params=None):
+        """The stub's natural size for an element whose fit is `natural`: 120 a column by 30 a row
+        of its `rows`; None for any other element. The call is recorded in `library.sizes`; like
+        the real one it needs the frame's `ctx` and `brand`, and refuses in words."""
+        if self["fit"] != "natural":
+            return None
+        params = dict(params or {})
+        if params.get("explode"):
+            raise Failure(f"element '{self['name']}': its natural_size failed: Failure: no font role 'mono' in the "
+                          "brand kit")
+        assert frame.ctx is not None and frame.brand is not None    # the real one measures text with these
+        rows = params["rows"]
+        self.library.sizes.append({"name": self["name"], "params": params})
+        return (120.0 * len(rows[0]), 30.0 * len(rows))
+
+
 class Library:
     def __init__(self, path, renderer, register, elements):
         self.path, self.renderer, self.register = path, renderer, register
         self._elements = {n: Element(d, self) for n, d in elements.items()}
         self.draws = []                      # every draw call, for the tests
+        self.sizes = []                      # every natural_size call that gave a size
 
     def names(self):
         return sorted(self._elements)

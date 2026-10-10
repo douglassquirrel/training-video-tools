@@ -224,7 +224,23 @@ def _scene(text):
     return data["scenes"][0]
 
 
-def test_a_blank_size_on_a_code_element_whose_size_is_nominal_is_a_warning_and_not_a_problem(lib, folder):
+def without_fit(tmp_path):
+    """A copy of the invented library whose table does not offer its natural size (no `fit` row):
+    nominal, as the real `diff` is. Returns (the copy's folder, the table's ELEMENT.md)."""
+    import shutil
+    copy = tmp_path / "library"
+    shutil.copytree(INVENTED, copy)
+    described = copy / "elements" / "table" / "ELEMENT.md"
+    text = described.read_text(encoding="utf-8")
+    row = "| fit | natural | the stub's `natural_size` gives 120 a column by 30 a row |\n"
+    assert row in text
+    described.write_text(text.replace(row, ""), encoding="utf-8")
+    return copy, described
+
+
+def test_a_blank_size_on_a_code_element_whose_size_is_nominal_is_a_warning_and_not_a_problem(tmp_path, folder):
+    copy, _described = without_fit(tmp_path)
+    lib = elements.open_library(str(copy), None)
     scene = _scene(NOMINAL)
     assert choreography.check(scene, TL, lib, folder) == []
     assert choreography.warnings(scene, lib) == [
@@ -235,12 +251,14 @@ def test_a_blank_size_on_a_code_element_whose_size_is_nominal_is_a_warning_and_n
     ]
 
 
+def test_no_warning_for_an_element_that_offers_its_natural_size(lib):
+    assert lib.element("table")["fit"] == "natural"
+    assert choreography.warnings(_scene(NOMINAL), lib) == []
+
+
 def test_no_warning_without_a_library_or_for_a_code_element_whose_size_is_not_said_to_be_nominal(tmp_path):
-    import shutil
     assert choreography.warnings(_scene(NOMINAL), None) == []
-    copy = tmp_path / "library"
-    shutil.copytree(INVENTED, copy)
-    described = copy / "elements" / "table" / "ELEMENT.md"
+    copy, described = without_fit(tmp_path)
     text = described.read_text(encoding="utf-8")
     assert "| size | 300 200 | nominal: " in text
     described.write_text(text.replace("| size | 300 200 | nominal: ", "| size | 300 200 | a design size: "),
@@ -249,11 +267,8 @@ def test_no_warning_without_a_library_or_for_a_code_element_whose_size_is_not_sa
 
 
 def test_no_warning_and_no_crash_when_the_elements_file_is_not_there_or_has_no_size_row(tmp_path):
-    import shutil
-    copy = tmp_path / "library"
-    shutil.copytree(INVENTED, copy)
+    copy, described = without_fit(tmp_path)
     opened = elements.open_library(str(copy), None)             # read while the files were whole
-    described = copy / "elements" / "table" / "ELEMENT.md"
     whole = described.read_text(encoding="utf-8")
     described.write_text(whole.replace("| size | 300 200 | nominal: the natural size comes from its rows |\n", ""),
                          encoding="utf-8")

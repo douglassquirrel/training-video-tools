@@ -24,28 +24,30 @@ def region_rect(name, area):
     return halves[name]
 
 
-def own_size(member, lib):
+def own_size(member, lib, natural=None):
     """(w, h) the member takes from its Size column and the element's own proportions; a piece
-    without a Size is a point."""
+    without a Size is a point, and an element without one that offers its natural size (`natural`)
+    takes that."""
     size, element = member["size"], member["element"]
     w0, h0 = (lib.element(element)["size"] if element not in choreography.PIECES else (0.0, 0.0))
     if size is None:
-        return float(w0), float(h0)
+        return natural or (float(w0), float(h0))
     if size["h"] is not None:
         return size["w"], size["h"]
     return size["w"], (size["w"] * h0 / w0 if w0 else 0.0)
 
 
-def base_rect(member, area, lib, anchors_of):
+def base_rect(member, area, lib, anchors_of, natural=None):
     """The member's rect in frame pixels before any move: from its Where (pixels in the area,
-    a region it is fitted into, or another member's anchor plus an offset) and its size."""
-    w, h = own_size(member, lib)
+    a region it is fitted into, or centred in at its natural size, or another member's anchor
+    plus an offset) and its size."""
+    w, h = own_size(member, lib, natural)
     where = member["where"]
     if where["kind"] == "pixels":
         return (area[0] + where["x"], area[1] + where["y"], w, h)
     if where["kind"] == "region":
         rx, ry, rw, rh = region_rect(where["name"], area)
-        if member["size"] is None and w and h:
+        if member["size"] is None and natural is None and w and h:
             scale = min(rw / w, rh / h)
             w, h = w * scale, h * scale
         return (rx + (rw - w) / 2, ry + (rh - h) / 2, w, h)
@@ -83,7 +85,7 @@ class Performance:
         self.area, self.tl, self.t, self.lib, self.folder = area, tl, t, lib, folder
         self.panel = panel_start is not None
         self.panel_start = panel_start or 0.0
-        self._rects, self._anchors, self._busy = {}, {}, set()
+        self._rects, self._anchors, self._busy, self._params, self._frame = {}, {}, set(), {}, None
 
     def _moves_of(self, name, kinds):
         out = []
@@ -149,23 +151,39 @@ class Performance:
         if name in self._busy:
             raise cli.Failure(f"'{name}' is placed by a member placed by it, round in a circle")
         self._busy.add(name)
-        member = self.cast[name]
+        member, natural = self.cast[name], None
         if member["where"] is None:             # an arrow with a blank Where: the box its two ends span
             p, _state = self.params(member)
             (x0, y0), (x1, y1) = self._point(p["from"]), self._point(p["to"])
             x, y, w, h = min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)
         else:
-            x, y, w, h = base_rect(member, self.area, self.lib, self.anchors_of)
+            natural = self._natural(member)
+            x, y, w, h = base_rect(member, self.area, self.lib, self.anchors_of, natural)
         for (a, b), mv in self._moves_of(name, ("move",)):
             if self.t < a:
                 break
             to = dict(member, where=mv["action"]["to"])
-            tx, ty, _tw, _th = base_rect(to, self.area, self.lib, self.anchors_of)
+            tx, ty, _tw, _th = base_rect(to, self.area, self.lib, self.anchors_of, natural)
             p = timeline.ep(self.t, a, b)
             x, y = timeline.lerp(x, tx, p), timeline.lerp(y, ty, p)
         self._busy.discard(name)
         self._rects[name] = (x, y, w, h)
         return self._rects[name]
+
+    def _natural(self, member):
+        """(w, h) for a library member with a blank Size whose element offers its natural size
+        (its `fit` is `natural`), asked with the parameters it is drawn with; else None."""
+        if member["size"] is not None or member["element"] in choreography.PIECES:
+            return None
+        el = self.lib.element(member["element"])
+        if el.get("fit") != "natural":
+            return None
+        try:
+            w, h = el.natural_size(self._frame, self.params(member)[0])
+        except Exception as e:              # the library refuses in words (its Failure) or fails: one line, exit 3
+            raise cli.Failure(f"scene {self._frame.scene['key']}: the library could not size '{member['name']}' "
+                              f"({member['element']}): {e}") from e
+        return float(w), float(h)
 
     def _kind(self, member, name):
         """The type of a parameter: the library description's, or the piece's (number or a word)."""
@@ -191,6 +209,13 @@ class Performance:
         animated or set eases over the span (an integer stays whole), a word is set at the
         span's start, a state change is the name after, or (from, to, progress) part-way.
         Returns (params, state) with `state` taken out of the parameters."""
+        name = member["name"]
+        if name not in self._params:        # once a frame: asked for the natural size, then for the draw
+            self._params[name] = self._params_at_t(member)
+        out, state = self._params[name]
+        return dict(out), state
+
+    def _params_at_t(self, member):
         name = member["name"]
         out, state = {}, None
         for pname, value in member["params"].items():
@@ -218,6 +243,7 @@ class Performance:
         return out, state
 
     def draw(self, frame):
+        self._frame = frame
         for name, member in self.cast.items():
             alpha = self.alpha(name)
             if alpha <= 0:

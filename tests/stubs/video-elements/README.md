@@ -8,4 +8,6 @@ package `videoelements/` with `library.open(path, renderer)`, `names()`, `elemen
 package here is a stub that reads those files into the same plain data the real one exposes; it
 checks far less than the real reader (a missing root, `elements/` or register, an unknown name)
 and draws nothing until the increment that needs it. Nothing here is from any real element or
-source. Tests point `--elements` or `VIDEO_ELEMENTS_DIR` at this folder.
+source. The `table` has `fit` `natural` and a `natural_size` (120 a column by 30 a row of its
+rows; video-elements' note of 10 October 2026, 23:32), the `pot` the default `ratio`. Tests point
+`--elements` or `VIDEO_ELEMENTS_DIR` at this folder.
