@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 15:50. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 16:35. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -34,23 +34,24 @@ or never), and `check-script` runs it on every described scene, opening the libr
 settings only when a cast names a library element; and **the fifth increment**, the
 scene-loading rule: a described step scene needs no `code` (`load` gives None), a described
 panel no `mistake`/`right_way`, a step scene with neither is refused naming both, and the frame
-draws what a module has and skips what it has not. **Nothing draws a described cast yet**: a
-described scene renders as its chrome and empty panels. **The next step** is increment 6, the
-interpreter's show, hide and move: `videotools.choreography.draw(frame, scene, lib)` called from
-`frame.draw_frame` (and the panels' casts from `mistake_panels`), each member's alpha from its
-shows and hides and its place from its Where and moves, eased over their spans, drawn through
-the library's `el.draw` or the frame's own methods for the pieces; the drawing commands open
-the library (`elements.open_library`) when a scene is described, and `frame.Video` refuses a
-described scene's problems (`choreography.check`) before drawing, exit 3; the invented library's
-stub gains an `Element.draw` (a filled rectangle with the element's colour, anchors from the
-rect) and `table` gets its `element.py`; pinned by sampled frames. A new session
+draws what a module has and skips what it has not; and **the sixth increment** (Squirrel,
+16:00: "proceed with increments 6-7"): `videotools.perform` draws a described cast frame by
+frame (show, hide, move, placement by pixels, region or another member's corner, the pieces and
+the library's elements), `frame.Video` opens the library when a cast needs it and refuses a
+described scene's problems before drawing, and the four drawing commands pass the settings
+(PLAN.md item 15, "Built"). The invented library's stub draws a filled rectangle and records
+every call in `lib.draws`. **The next step** is increment 7: parameter and state changes in
+moves (`NAME.PARAM A → B` eased for numbers, a set as a step or an eased change, `NAME STATE →
+STATE` as `(from, to, p)` part-way), for the pieces' parameters too; then increment 8, computed
+anchors after a member is drawn and the pieces' real rects for their box anchors. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-15:50; anything at its top level other than README.md is new and is reported to Squirrel, never
+16:35; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 437 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 445 tests, coverage 97% (perform.py's untested branches, the pieces
+and the refusals, are covered by increments 7 and 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -80,12 +81,13 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–5 built; increment 6 onward on his word, as the list of 15:00 said); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
-video-elements (read-only from here) has its steps 1–5 of 8 done (14:35, commits `c12033a`,
-`ee9e553`: the reader, checks and `credits`, our four asks, `Element.draw` for svg elements
-with a render cache and cross-fades, and an `elements-preview` command; 80 tests green; code
-elements still refused as "not built yet"; no elements in `elements/` yet); its step 6, the
-starter set, waits on Squirrel. Our Tier 3 on real elements waits on that first batch. The one write made into that
+increments 1–6 built, 7 OK'd at 16:00); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+video-elements (read-only from here) has its steps 1–5 of 8 done and the starter set three
+batches in (16:00, commit `8e4aede`): nineteen real elements including the six screens as code
+elements (`spreadsheet` with `rows`, `widths`, `numeric` (column letters), `header`, `numbers`,
+`tabs`, `row-height`, `text-size`, `rows-shown`, `highlight.*`, `highlight-colour.*`,
+`cell-alpha.*.*`: our worked example's guesses were close; no `box.*.*`), 134 tests green. Our
+Tier 3 against real elements can follow increment 8. The one write made into that
 repository was the request file of 13:05, at Squirrel's word; it is in its `inbox/done/` now. Also the
 training-video project's: its six phoneme spans and re-made clips, its three scenes on
 `before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
@@ -2028,3 +2030,41 @@ the README's notes say so rather than leaving it to be discovered.
 
 **State.** 437 green, 98%, lint clean, pushed. Increments 3–5 done as asked at 14:20. Next:
 increment 6, on Squirrel's word.
+
+### 10 October 2026 — Item 15, increment 6: a described cast drawn: show, hide, move, placement
+
+**Goal.** A described scene drawn frame by frame through the library and the frame's pieces;
+the commands opening the library and refusing a bad description before drawing.
+
+**Test.** `tests/tier2/test_perform.py`, eight tests on scene A of the example described
+(its `code` removed, a `pot`, a `pill`, a `table` from a CSV the test writes, a badge placed by
+the pot's corner, a `pot` and a `pill` in the panels), frames drawn in-process as
+`test_frame.py` draws them: absent before its show, mid-fade half way, there after; the table
+in place after its own span; a move glides the pot to its new place and a hide removes it; the
+badge follows the pot it is placed by; the panel's pot drawn in panel pixels while the curtain
+is up; the stub asked to draw with the rect, state, converted params (rows as lists) and alpha;
+`frame.Video` refused without a library and with the description's problems listed; `stills`
+and `render --dry-run` with `--elements`, and `render` refused without. The increment-5 stills
+test now passes `--elements`, since its scene needs the library.
+
+**Red.** `3 failed, 5 errors`: `TypeError: Video.__init__() takes 2 positional arguments but 4
+were given`, `DID NOT RAISE Failure`, `assert (0 == 3)`.
+
+**Green.** `8 passed in 2.48s`; the full suite `445 passed in 131.34s (0:02:11)`, `TOTAL …
+97%`, `ruff check .` clean. Three expectations of mine were wrong and corrected against the
+code once it was read and seen right: the table sampled at 1.4 s was mid-fade (its span is
+1.2–1.8 s; sampled at 2.0 s now); the badge sampled at its centre hit the ✓ mark (sampled above
+it); the paperboat kit's `correct` is `#3E7D4F`, not the `#2E7D4F` I had typed. The refusal's
+line numbers moved up one because `describe()` removes the `code` line.
+
+**Decision / surprise.** `perform.Performance` resolves rects lazily and recursively so a
+member placed by another's corner follows it wherever the cast order puts them; a cycle is a
+refusal in words. A computed anchor (a row, a cell) is known only after its member is drawn,
+so a member placed by one must come later in the cast (a refusal otherwise; `check-script`
+gains that check in increment 8). A piece's rect is a point unless it has a Size; its real
+extent for its corners is increment 8's. `elements.from_args` turns a malformed config file
+into a refusal, so the four commands never see `ConfigError`. Coverage dipped to 97%: the
+`text`, `hand`, `callout` and `arrow` branches, region fitting, the parameter conversions and
+the two refusals in `perform.py` have no test yet; 7 and 8 bring them.
+
+**State.** 445 green, 97%, lint clean, pushed. Next: increment 7.

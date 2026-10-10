@@ -586,7 +586,21 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   `load` returns None for a described step scene with no `code`; `check_code` and `load` refuse
   a step scene with neither as "has no 'code' property and no Cast, so nothing can draw it";
   `frame.draw_frame` and `mistake_panels` draw what the module has and skip what it has not.
-  Until increment 6 a described scene renders as chrome and empty panels.
+  **Increment 6, 16:30**: `videotools.perform` draws a described cast: `Performance` resolves
+  each member's alpha (its shows and hides in time order, each eased over its span, a panel
+  member with no show at 1 from the start) and rect (its Where: area pixels, a region it is
+  fitted into, or another member's box anchor plus an offset, resolved lazily so it follows;
+  then its moves, each gliding from where it was), reads a `rows` file into rows and converts
+  parameters by the description's types, and draws in cast order: `pill`, `text`, `badge`,
+  `hand`, `callout` and `arrow` through the frame's methods, a library element through
+  `el.draw(frame, rect, state, params, alpha)`, keeping the anchors it returns for members
+  placed by them (a computed anchor of a member later in the cast is a refusal). `frame.Video`
+  takes the library settings, opens the library only when a cast names a library element,
+  and refuses a described scene's problems (`choreography.check`, exit 3) before anything is
+  drawn; `draw_frame` performs the scene's cast before the module's `draw`, `mistake_panels` a
+  described panel's cast in the panel body's pixels before the module's body. The four drawing
+  commands pass `--elements`/`--renderer` or the config through `elements.from_args`. Parameter
+  and state changes in moves are increment 7.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

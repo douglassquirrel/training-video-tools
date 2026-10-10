@@ -15,7 +15,7 @@ import os
 import cairo
 
 from videotools import brand as brand_
-from videotools import chrome, cli, draw, fonts, scenes, script, timeline
+from videotools import choreography, chrome, cli, draw, elements, fonts, perform, scenes, script, timeline
 
 HEADING_HEIGHT = 38      # what a side-panel heading adds above a steps or checklist panel
 
@@ -23,7 +23,10 @@ HEADING_HEIGHT = 38      # what a side-panel heading adds above a steps or check
 class Video:
     """Everything a frame needs, loaded once."""
 
-    def __init__(self, script_path):
+    def __init__(self, script_path, elements_dir=None, renderer=None):
+        """`elements_dir` and `renderer` (elements.settings) are needed only when a scene's cast
+        names a library element; a described scene's problems refuse the video before anything
+        is drawn (PLAN.md item 15)."""
         self.script_path = script_path
         self.folder = script.folder(script_path)
         self.data = script.read(script_path)
@@ -40,6 +43,25 @@ class Video:
         self._modules = {}
         self._background = None
         self._end_card = None
+        self.library = self._library(elements_dir, renderer)
+        self._check_choreography()
+
+    def _library(self, elements_dir, renderer):
+        casts = [m for sc in self.data["scenes"] for m in sc["cast"] + [m for p in sc["panels"].values()
+                                                                        for m in p["cast"]]]
+        if not any(m["element"] not in choreography.PIECES for m in casts):
+            return None
+        return elements.open_library(elements_dir, renderer)
+
+    def _check_choreography(self):
+        problems = []
+        for sc in self.data["scenes"]:
+            if sc["cast"] or sc["panels"]:
+                problems += choreography.check(sc, self.timeline(sc, estimate=True), self.library, self.folder)
+        if problems:
+            n = len(problems)
+            listed = "\n".join("  - " + p for p in problems)
+            raise cli.Failure(f"the script's choreography has {n} problem{'' if n == 1 else 's'}:\n{listed}")
 
     def _insets(self):
         folder = os.path.join(self.folder, "work", "insets")
@@ -287,6 +309,9 @@ def mistake_panels(ctx, video, scene, tl, t, frame):
         ctx.save()
         ctx.rectangle(x + 2, y + 62, w - 4, h - 64)
         ctx.clip()
+        panel = ("mistake", "right way")[side]
+        if panel in scene["panels"]:
+            perform.draw_panel(frame, video, scene, panel, (x, y + 62, w, h - 62), tl, t)
         if body:
             body(frame, (x, y + 62, w, h - 62))
         ctx.restore()
@@ -391,6 +416,8 @@ def draw_frame(ctx, video, scene, tl, t, curtain=True):
         ctx.save()
         ctx.rectangle(ax - 20, ay, aw + 40, ah + 10)
         ctx.clip()
+        if scene["cast"]:
+            perform.draw_scene(frame, video, scene, tl, t)
         module = video.module(scene)            # None for a described scene with no code
         if module and hasattr(module, "draw"):
             module.draw(frame)

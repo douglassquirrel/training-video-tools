@@ -55,3 +55,14 @@ def open_library(folder, renderer):
         problems = getattr(e, "problems", None) or [f"{type(e).__name__}: {e}"]
         listed = "\n".join("  - " + p for p in problems)
         raise cli.Failure(f"the video-elements library at {folder} refuses to open:\n{listed}") from e
+
+
+def from_args(args):
+    """(folder, renderer) for a command: the flags, else the config file; a malformed config file
+    is a refusal in words (exit 3)."""
+    from videotools import cli, config
+    try:
+        conf = config.read()
+    except config.ConfigError as e:
+        raise cli.Failure(str(e)) from e
+    return settings(args, conf)

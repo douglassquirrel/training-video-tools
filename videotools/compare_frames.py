@@ -68,7 +68,7 @@ def _run(args):
 
     from videotools import frame
     from videotools import sheet as sheet_
-    video = frame.Video(args.SCRIPT)
+    video = frame.Video(args.SCRIPT, *elements.from_args(args))
     offsets = parse_offsets(args.offset, video)
     starts, at = {}, 0.0
     for scene in video.data["scenes"]:        # every scene's timing, so the starts are exact

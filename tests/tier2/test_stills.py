@@ -245,6 +245,7 @@ def test_a_described_scene_with_no_code_draws_its_chrome_and_panels_and_needs_no
     text = open(script, encoding="utf-8").read().replace("| code | fold_in_half | |\n", "")
     open(script, "w", encoding="utf-8").write(text)
     sheet = tmp_path / "sheet.png"
-    code, out, err = run("stills", script, "A:1.0,A:5.0", "--out", sheet)
+    from tests.tier2.test_check_script_choreography import INVENTED
+    code, out, err = run("stills", script, "A:1.0,A:5.0", "--out", sheet, "--elements", INVENTED)
     assert (code, err) == (0, "")
     assert sheet.exists()

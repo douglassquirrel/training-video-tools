@@ -82,7 +82,7 @@ def encode(video, scene, tl, first, last, path, replace=False):
 def _run(args):
     cli.need("cairo")
     from videotools import frame
-    video = frame.Video(args.SCRIPT)
+    video = frame.Video(args.SCRIPT, *elements.from_args(args))
     scenes = script.select(video.data, args.scenes)
     folder = os.path.join(video.folder, "work", "segments")
     jobs = []

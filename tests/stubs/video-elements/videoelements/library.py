@@ -83,11 +83,41 @@ class Element(dict):
         super().__init__(data)
         self.library = library
 
+    def draw(self, frame, rect, state=None, params=None, alpha=1.0):
+        """The stub's drawing: the rect filled with the brand's accent at `alpha` (a cross-fade
+        part-way draws the same); the call recorded in `library.draws`; anchors returned in frame
+        pixels: fixed ones scaled into the rect, `row.N` down the right edge and `cell.N.M` across
+        the rows for a `rows` parameter, any other computed one at the rect's top-left."""
+        params = dict(params or {})
+        x, y, w, h = rect
+        self.library.draws.append({"name": self["name"], "rect": tuple(float(v) for v in rect), "state": state,
+                                   "params": params, "alpha": alpha})
+        if alpha > 0:
+            frame.ctx.save()
+            frame.ctx.rectangle(x, y, w, h)
+            frame.ctx.set_source_rgba(*frame.colour("accent"), alpha)
+            frame.ctx.fill()
+            frame.ctx.restore()
+        w0, h0 = self["size"]
+        anchors = {}
+        for name, value in self["anchors"].items():
+            if value == "computed":
+                anchors[name] = (x, y)
+            else:
+                anchors[name] = (x + value[0] * w / w0, y + value[1] * h / h0)
+        rows = params.get("rows") or []
+        for i in range(1, len(rows) + 1):
+            anchors[f"row.{i}"] = (x + w, y + h * i / (len(rows) + 1))
+            for j in range(1, len(rows[i - 1]) + 1):
+                anchors[f"cell.{i}.{j}"] = (x + w * j / (len(rows[i - 1]) + 1), y + h * i / (len(rows) + 1))
+        return anchors
+
 
 class Library:
     def __init__(self, path, renderer, register, elements):
         self.path, self.renderer, self.register = path, renderer, register
         self._elements = {n: Element(d, self) for n, d in elements.items()}
+        self.draws = []                      # every draw call, for the tests
 
     def names(self):
         return sorted(self._elements)

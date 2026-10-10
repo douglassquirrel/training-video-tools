@@ -352,9 +352,12 @@ A video's own drawing lives in the folder its script's `scene-code` names, one P
 per scene, named by the scene's `code` property (`examples/videos/paper-boat/scenes/` is the
 worked example; its README has the details). A title or end card needs none: the chrome draws
 the whole card, and a card that names a `code` has that module's `draw` add to it. A scene the
-script describes (a `### Cast`, PLAN.md item 15, being built) needs no module either, and a
-described Mistake or Right way panel needs no function; a scene may have both a description and
-a module, the module drawing over what the description draws. A module defines:
+script describes (a `### Cast`, PLAN.md item 15, being built: the format is documented here
+once it is complete) needs no module either, and a described Mistake or Right way panel needs
+no function; a scene may have both a description and a module, the module drawing over what the
+description draws. A described scene whose cast names a library element needs the video-elements
+library (`--elements` or `VIDEO_ELEMENTS_DIR`), and a problem in the description refuses the
+command before anything is drawn, with every problem listed as `check-script` lists them. A module defines:
 
 - `draw(frame)`: the animation area, every scene without a Cast;
 - `mistake(frame, rect)` and `right_way(frame, rect)`: the two panel bodies, for a scene whose
@@ -657,9 +660,12 @@ with ffmpeg 4.4.
   `### Mistake` and `### Right way` sections (PLAN.md item 15), opening the video-elements library
   when a cast names one of its elements; a script without them checks exactly as before. A step
   scene with a `### Cast` needs no `code`, and a described panel no `mistake`/`right_way`
-  function: `stills` and `render` draw its chrome and empty panels, since nothing draws a
-  described cast yet. The refusal for a step scene with no `code` now reads "has no 'code'
-  property and no Cast, so nothing can draw it".
+  function. `stills`, `render`, `frame-hashes` and `compare-frames` draw a described cast: each
+  member shown, hidden and moved over its eased spans, placed in area pixels, in a region or by
+  another member's corner, the pieces through the frame's methods and the library's elements
+  through the library (opened from `--elements` or `VIDEO_ELEMENTS_DIR`, refused in words when
+  it cannot be); parameter and state changes in moves follow. The refusal for a step scene with
+  no `code` now reads "has no 'code' property and no Cast, so nothing can draw it".
 - 10 October 2026 (afternoon): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,
   for the video-elements library (PLAN.md item 15, in progress): the root named goes on the

@@ -95,7 +95,7 @@ def _run(args):
         result = _load(args.out)
     cli.need("cairo")
     from videotools import frame
-    video = frame.Video(args.SCRIPT)
+    video = frame.Video(args.SCRIPT, *elements.from_args(args))
     scenes = script.select(video.data, args.scenes)
     timelines = [(scene, video.timeline(scene)) for scene in scenes]   # every scene's timing checked first
     differ = 0

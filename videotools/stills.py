@@ -130,7 +130,7 @@ def _run(args):
     cli.need("cairo")
     cli.need("PIL")
     from videotools import frame
-    video = frame.Video(args.SCRIPT)
+    video = frame.Video(args.SCRIPT, *elements.from_args(args))
     timelines, warned, jobs = {}, set(), []
 
     def timeline_for(scene):
