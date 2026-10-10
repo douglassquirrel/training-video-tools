@@ -14,13 +14,11 @@ a Cast and Moves on title and end cards, in frame pixels, a scene with no cues w
 without `cue N`; `rotate` on any member. Each is in the README. A new session starts by reading
 CLAUDE.md, PLAN.md (items 15 to 19 in full, and whatever follows) and this section, then `inbox/`.
 
-**In the inbox, OK'd and next, in this order:** request 18
-(`inbox/request-from-training-video-2026-10-11-18.md`; Squirrel, 00:28: "1. and 2. both yes"):
-a move marked `linear`; `dim NAME to LEVEL`; a span that ends in a later cue and times as a
-percentage of a cue; a CSV's columns and rows chosen with `rows.columns`, `rows.where`,
-`rows.first`. Then request 19 (`…-19.md`; Squirrel, 00:36: "cue up work on it (if you agree)
-after 17 and 18"; agreed, with the adjustments said to him): `flash`, a repeating opacity over
-a span. Neither is in PLAN.md yet: each goes in as its own item before its first test.
+**Inbox: empty. In PLAN.md and next, in this order:** item 20 (request 18): a move marked
+`linear`; `dim NAME to LEVEL`; times as a percentage of a cue and a span that ends in a later
+cue; a CSV's columns and rows chosen with `rows.columns`, `rows.where`, `rows.first`. Then item
+21 (request 19): `flash`, a repeating opacity over a span. The log's last entries say how far
+each has got.
 
 Green: 531 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
@@ -3080,3 +3078,15 @@ rules as built, and what was found.
 **Green.** `531 passed in 149.48s (0:02:29)`, 98%; `All checks passed!`.
 
 **State.** Item 19 complete, pushed. Next: request 18 into PLAN.md as item 20, then test-first.
+
+### 11 October 2026 — Requests 18 and 19 into PLAN.md
+
+**Decision.** Both OK'd earlier (00:28 and 00:36; the entries above): now PLAN.md items 20 and
+21, "Settled" 39 and 40, the two items moved to `inbox/done/`. The rules were worked out
+together, since both change how a move's time is written and resolved: a time may be seconds
+from a cue's start, from its end, a percentage of its length, or the scene's end; a span may
+end in a later cue; a move may be `linear`; `dim` and `flash` join `show` and `hide` in
+deciding a member's opacity. One change to something already there: in a panel, `end` now
+means the mistake cue's end (it meant the panel's rise, the same as 0, which said nothing).
+
+**State.** 531 green as left. Next: item 20, 1, `linear`, test first.

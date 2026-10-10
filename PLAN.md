@@ -26,7 +26,10 @@ element whose size is nominal, item 17; and (10 October 2026, 23:59) from the si
 checked, item 18; and (11 October 2026, 00:15) from the seventeenth,
 `inbox/done/request-from-training-video-2026-10-11-17.md` ("Settled" 37): a callout's leader
 colour, curved and dashed arrows, a member's own colours, a cast on title and end cards, and
-turning a member, item 19. CLAUDE.md says how the work is done; this file says what
+turning a member, item 19; and (11 October 2026, 00:55) from the eighteenth and nineteenth,
+`inbox/done/request-from-training-video-2026-10-11-18.md` and `…-19.md` ("Settled" 39 and 40):
+steady moves, dimming, spans across cues and percentages, a CSV's columns and rows, item 20, and a
+repeating flash, item 21. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -1117,6 +1120,76 @@ Order of work, test-first against the invented library: 1; 2 (`draw.arrow`'s das
 and the check for a scene without cues, then the drawing); 5 (the turn, the anchors, the
 check); README, "Notes for users", lint as its own pass; a Tier 3 against the real library.
 
+## 20. Steady moves, dimming, spans across cues and percentages, and a CSV's columns and rows (request 18; Squirrel, 11 October 2026, 00:28: "1. and 2. both yes")
+
+Four of the things the training-video project's modules do that item 15's format could not say
+(our reply to it of 11 October; its request 18 numbers them 1, 2, 4 and 5). Built in this
+order, each adding to the moves' grammar of item 15 or to the cast's Parameters.
+
+1. **A steady rate.** A move's time may end `, linear`: `cue 2, 0–end-0.3 s, linear:
+   prompt.progress 0 → 1`, `cue 1, linear: show a` (the first 0.6 s), in a panel `0.4–0.8 s,
+   linear: show total`. The change then runs at a steady rate over its span; an unmarked move
+   eases as before. It applies to whatever the move changes (opacity, place, a parameter, a
+   state's progress).
+2. **Dimming to a level.** `dim NAME[, NAME…] to LEVEL`, LEVEL a number from 0 to 1: the
+   members' opacity goes to that level over the span, as `show` takes it to 1 and `hide` to 0;
+   a later `show` brings it back to 1, a later `dim` to another level. The curtain, and a
+   flash (item 21), multiply it as they do a shown member's. `check-script`: a level outside 0
+   to 1; a dim of a member that is not shown at that moment (never shown, or hidden); a `show`
+   of a member that is dimmed is not "shown again while still shown". For the curtain rule a
+   dim names its members at its cue, as any move does.
+3. **Times as a percentage, and a span that ends in a later cue.** A time may be `P%`, that
+   share of the cue's length from its start: `cue 5, 74%–80%: …`, `cue 5, 42%: …` (from there,
+   for 0.6 s), mixed with seconds if wanted (`cue 2, 0.5 s–50%`; seconds keep their ` s`, a
+   percentage has none). In a panel a percentage is of the mistake cue's length, and `end`
+   there is now that cue's end (it was the panel's rise, which said nothing); in a scene with
+   no cues, of the scene's length. A span may end in a later cue: `cue 1, 0.5 s – cue 2,
+   end-0.5 s: gauge.level 0.12 → 0.92`, each time against its own cue; or at the scene's end:
+   `cue 2, 2.6 s – end of scene: …` (request 19). `check-script`: the later cue must exist
+   and come after the first; each time is checked against its own cue's length as now. For the
+   curtain rule a member in such a move is named at the cue the span ends in (every later cue,
+   for `end of scene`).
+4. **Choosing a CSV's columns and rows.** Beside a parameter that names a data file
+   (`rows=FILE`), three optional qualifiers named after it, so that they cannot collide with an
+   element's own parameters (Squirrel, 00:28): `rows.where="COLUMN = VALUE"` or `"COLUMN !=
+   VALUE"` keeps the data rows whose cell in that column equals (or does not equal) the value;
+   `rows.first=N` then keeps the first N of them; `rows.columns="A, B, C"` then keeps those
+   columns, in the order written. A column is its header's name or its number from 1; the list
+   is separated by commas. The file's first row is its header: it is always kept, and names are
+   looked up in it. The element is handed the result exactly as it would be handed a file's
+   rows, and `check-script` counts rows and indices against the result. Refused in words, by
+   line in `check-script` and again when drawn: a column that is not there, by name or number;
+   a `where` that is not `COLUMN = VALUE` or `COLUMN != VALUE`; a `where` with `=` that no row
+   matches; a `first` that is not a whole number above 0; a qualifier of a parameter the member
+   does not give or that is not a data file.
+
+Order of work, test-first: `linear`; `dim`; percentages, then spans across cues and `end of
+scene` (the moves' times resolved in one place, `choreography.window`, used by the check and by
+`perform`); the CSV qualifiers as a pure function, then the check, then the drawing; README,
+"Notes for users", lint as its own pass; a Tier 3 against the real library.
+
+## 21. A repeating flash (request 19; Squirrel, 11 October 2026, 00:36: "cue up work on it (if you agree) after 17 and 18"; agreed)
+
+`flash NAME[, NAME…] [rate=R] [phase=P] [low=L]`: over the move's span the members' opacity
+is multiplied by a sine between `low` and 1: `low + (1 − low) × (0.5 + 0.5 × sin(2π × (R × τ +
+P)))`, τ the seconds since the span's start. `rate` is flashes a second, default 1.4 (what the
+training-video module drew: 9 radians a second), above 0 and at most 3 (the usual limit for
+flashing content, three a second); `phase` is a fraction of a beat (0.25 starts at the top),
+any number; `low` the lowest opacity, 0 by default, from 0 to below 1. Options are written
+`name=value` after the names (the request's `, phase 1` would read as a member's name). It
+multiplies the member's own opacity (its show, hide and dim, and the curtain), so a hidden
+member stays hidden; outside the span the member's opacity is its plain one. Any span a move
+can have, `– end of scene` among them. A flash changes nothing lasting, so for the curtain
+rule it does not name its members: a sign shown before the mistake cue and flashing to the
+scene's end still fades under the panels. `check-script`: a member not in the cast; a rate,
+phase or low that is not a number or is out of range; an option that is not one of the three;
+two flashes on one member whose spans overlap.
+
+After item 20, which gives it its spans. Test-first: the parser; the opacity over a span (the
+stub records it: 0.5 at the start, 1 a quarter-beat on, 0 at three quarters; `phase`, `low`;
+hidden stays hidden; plain outside the span); the checks; README, "Notes for users", lint; a
+Tier 3.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1274,6 +1347,8 @@ remote ("Settled" 7).
    after it.
 17. **Request 16** (10 October 2026, 23:58; OK'd 23:59): item 18, in its order of work.
 18. **Request 17** (11 October 2026, 00:00; OK'd 00:13): item 19, in its order of work.
+19. **Request 18** (11 October 2026, 00:22; OK'd 00:28): item 20, in its order of work, after item 19.
+20. **Request 19** (11 October 2026, 00:33; OK'd 00:36): item 21, after item 20.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1453,3 +1528,13 @@ None.
     standing permission, for that folder only; everything else in that project stays read-only
     (Squirrel, 11 October 2026, 00:13: "write your comments in training-video inbox, standing
     permission granted to do that"). At the time that project had no `inbox/` folder; asked.
+39. The eighteenth request (`inbox/done/request-from-training-video-2026-10-11-18.md`), all four
+    items, after request 17, in the order linear, dim, spans and percentages, CSV; the CSV's
+    choices written `rows.columns`, `rows.where`, `rows.first`; dimming as `dim NAME to LEVEL`
+    (Squirrel, 11 October 2026, 00:28: "1. and 2. both yes", to those two questions).
+40. The nineteenth request (`inbox/done/request-from-training-video-2026-10-11-19.md`), after
+    requests 17 and 18 (Squirrel, 11 October 2026, 00:36: "check inbox for request 19 and cue up
+    work on it (if you agree) after 17 and 18"). Agreed, with five adjustments told to him at
+    00:38 and not objected to: options written `name=value`; `phase` a fraction of a beat; `rate`
+    at most 3 a second, default 1.4; a flash does not name its members for the curtain rule;
+    `end of scene` as a span's end. If any of the five is not what he wants, it is a small change.
