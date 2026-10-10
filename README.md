@@ -505,6 +505,7 @@ scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 
 | Action | What happens |
 |---|---|
 | `show NAME[, NAME…]` / `hide NAME[, …]` | Fades in / out. Before its first show a member is not drawn at all. |
+| `keep NAME[, NAME…]` | Changes nothing: names the members at this cue, so that the curtain (below) leaves them on screen through the mistake. |
 | `move NAME to WHERE` | Glides to a place written as in the Where column. |
 | `NAME.PARAM A → B` | Animates a parameter: `fuel.level 0.2 → 0.9`, `sheet.rows-shown 0 → 3` (an integer stays whole). Before the span the cast's value or the element's default holds. |
 | `NAME.PARAM VALUE` | Sets it: a number eases from its current value over the span, a word takes effect at the span's start (`sheet.highlight-colour.3 correct`). |
@@ -521,7 +522,9 @@ scene with no `mistake:` cue is a problem.
 **The curtain for free.** A member shown before the mistake cue and not named in any move at
 or after the cue that follows it fades while the panels cover it, so the glimpse
 `stills --cue-changes` warns of cannot be written by accident. One named after the mistake
-(hidden, moved or changed at a later cue) is left to its moves.
+(hidden, moved, changed or kept at a later cue) is left to its moves. A data-driven element
+whose natural size comes from its data (the spreadsheet: its column widths and rows) is fitted
+into its Size, so give it one, or its description's nominal size is used.
 
 **Checks.** `check-script` reads the choreography and lists, each with its line: a malformed
 row or move; an element that is neither a piece nor in the library; an anchor, state or
@@ -756,6 +759,11 @@ refuse) and `font-weights` on a real variable font into a scratch folder. Done a
 the training-video project, recorded in PLAN.md "Things checked" 5): the suite passes with the
 one CoreText test skipped, the fonts draw through fontconfig, and the example's chain runs
 with ffmpeg 4.4.
+A described scene against the real video-elements library (10 October 2026, on macOS): scene A
+of a copy of the example with a person, a sun, a gauge and a calendar (the run under "Describing
+a scene in the script"), and the training-video project's second video's scene A2 described in
+a scratch copy and compared with its v4 frames through `compare-frames` (mean differences 2.3
+to 2.9 per channel, the same picture by eye), recorded in `DIARY.md`.
 
 ## Known limitations and non-goals
 

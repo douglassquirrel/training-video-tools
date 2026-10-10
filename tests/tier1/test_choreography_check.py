@@ -293,3 +293,39 @@ def test_a_member_never_shown_shown_again_while_shown_or_hidden_while_not_is_a_p
         "line 37: scene A2, moves: 'b' is hidden at cue 3 but was not shown",
         "line 48: scene A2, mistake: 'wrong' is shown again while still shown (shown at line 46, not hidden since)",
     ]
+
+
+def test_a_time_counted_from_the_cues_end_is_ordered_by_where_it_falls_not_by_its_offset():
+    # cue 2 is 4.0 s long: end-1.2 is 2.8 s in, after a show at 0.5 s; found by the Tier 3 on the real scene A2
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+
+### Moves
+
+- cue 2, 0.5 s: show a
+- cue 2, end-1.2–end-0.4 s: hide a
+"""
+    assert _check(text) == []
+    text = text.replace("- cue 2, 0.5 s: show a", "- cue 2, end-0.9 s: show a")        # 3.1 s in: after the hide
+    assert _check(text) == ["line 30: scene A2, moves: 'a' is hidden at cue 2 but was not shown"]
+
+
+def test_a_keep_names_cast_members_and_changes_nothing_else():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+
+### Moves
+
+- cue 1: show a
+- cue 3: keep a
+- cue 3: keep ghost
+"""
+    assert _check(text) == ["line 31: scene A2, moves: 'ghost' is not in the cast (a)"]

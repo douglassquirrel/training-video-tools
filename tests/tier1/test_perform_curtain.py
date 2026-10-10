@@ -41,3 +41,10 @@ def test_a_member_first_shown_at_or_after_the_mistake_cue_is_not_touched():
 def test_a_scene_with_no_mistake_cue_has_no_curtain():
     tl = timeline.Timeline([0.7, 3.7], [3.0, 4.0], 8.7, 30, estimated=[], mistake=None)
     assert perform.Performance([_member("a")], [_move(1, "show", ["a"])], AREA, tl, 5.0, None).alpha("a") == 1.0
+
+
+def test_a_keep_at_a_later_cue_leaves_the_member_to_stay_through_the_mistake():
+    # found by the Tier 3 on the real scene A2: its "Sample output" tag stays while the panels come and go
+    moves = [_move(1, "show", ["d"]), _move(3, "keep", ["d"])]
+    assert perform.Performance([_member("d")], moves, AREA, TL, 5.0, None).alpha("d") == 1.0
+    assert perform.Performance([_member("d")], moves, AREA, TL, 8.5, None).alpha("d") == 1.0

@@ -631,8 +631,22 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   tick on the needle's computed anchor, looked at by eye), the flags in the five usage lines, a
   dated note, two known limits; and a find from that run: a library refusal at draw time (the
   real `spreadsheet` needs the `mono` font roles the example kit lacks) came out as a
-  traceback, now one line in words, exit 3, pinned by a test with the stub refusing. What
-  remains of item 15: the Tier 3 on the real second video's scene A2 (12).
+  traceback, now one line in words, exit 3, pinned by a test with the stub refusing.
+  **Increment 12, 19:40, the Tier 3** on a scratch copy of the training-video project's second
+  video (its script, assets, scenes, timing and brand kit copied to the session's scratchpad;
+  v4 read in place; nothing written into that project): scene A2 described in the format
+  against the real library (`spreadsheet` at its natural size `564x262`, `text` pieces for the
+  working and for the panels' cell text since there is no `formula-bar`, ticks and the hand by
+  `row.N` with offsets, `cell-alpha.3.2` for the landing total), `check-script` clean, `stills`
+  at eight times and `compare-frames` against v4 at 7.0, 16.6 and 24.3 s, mean differences 2.3,
+  2.5, 2.9 per channel, looked at by eye: the same picture. Three finds: a bug in the check,
+  which ordered a show or hide written from the cue's end (`end-1.2 s`) by its raw offset, so a
+  hide at `end-1.2` looked earlier than a show at `7.7 s` (fixed test-first); the curtain rule
+  hid the "Sample output" tag that v4 keeps through the mistake, which the format could not
+  say: the `keep` action was added (above); and a data-driven element is fitted into its Size,
+  so a `spreadsheet` needs its natural size given (the README says so). Item 15 is complete
+  but for what the training-video project does on its side (re-describe A2 and B in its own
+  script, compare, retire modules).
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the
@@ -733,7 +747,10 @@ earlier).
   change with an empty span is a step.
 - **`show NAME[, NAME…]`**: fade in. **`hide NAME[, …]`**: fade out. A member is on screen from
   its show to its hide; before its first show it is not drawn at all (the request's "shown at a
-  cue and hidden at another, with frames sampled for its presence").
+  cue and hidden at another, with frames sampled for its presence"). **`keep NAME[, …]`**: changes
+  nothing, but names the members at that cue, so the curtain rule leaves them (added 10 October
+  2026, 19:30, from the Tier 3: the real scene A2's "Sample output" tag stays through the
+  mistake, and the rule would have hidden it).
 - **`move NAME to WHERE`**: glide to a place written as in the Where column.
 - **`NAME.PARAM A → B`**: animate a parameter (`prompt.progress 0 → 1`, `sample.rows-shown 0 → 3`,
   `gauge.level 0.2 → 0.9`); **`NAME.PARAM VALUE`**: set it (`sample.highlight-colour.3 correct`);

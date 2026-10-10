@@ -28,7 +28,7 @@ _SPAN_RE = re.compile(rf"^(?P<a>{_TIME})(?:\s*[–-]\s*(?P<b>{_TIME}))?\s*s$|^(?
 _SCENE_MOVE_RE = re.compile(r"^cue (\d+)(?:, ([^:]+))?: (.+)$")
 _PANEL_MOVE_RE = re.compile(r"^(?:([^:]+): )?(.+)$")
 _VALUE = r'"[^"]*"|\S+'
-_SHOW_RE = re.compile(rf"^(show|hide) ({NAME}(?:, {NAME})*)$")
+_SHOW_RE = re.compile(rf"^(show|hide|keep) ({NAME}(?:, {NAME})*)$")
 _MOVE_RE = re.compile(rf"^move ({NAME}) to (.+)$")
 _ANIMATE_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE}) (?:→|->) ({_VALUE})$")
 _SET_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE})$")
@@ -37,8 +37,8 @@ _LIST_RE = re.compile(r"^-\s+(.+)$")
 
 WHERE_HELP = ("is not X Y in area pixels, a region ({}) or a member's anchor like sample.row.3 + 40 -12"
               .format(", ".join(REGIONS)))
-ACTION_HELP = ("is not show NAME, hide NAME, move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or "
-               "NAME STATE → STATE")
+ACTION_HELP = ("is not show NAME, hide NAME, keep NAME, move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE "
+               "or NAME STATE → STATE")
 
 
 def parse_where(text):
@@ -583,8 +583,10 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
             problems.append(f"{at}'{n}' is not in the cast ({', '.join(members)})")
         if missing:
             continue
+        if act["kind"] == "keep":           # names the members, so the curtain leaves them; nothing else
+            continue
         if act["kind"] in ("show", "hide"):
-            t = (tl.start(cue) if not panel else 0.0) + mv["start"][1]
+            t = (tl.start(cue) + _resolve(tl, cue, mv["start"])) if not panel else mv["start"][1]
             for n in names:
                 events.append((t, mv["line"], act["kind"], n, cue))
         elif act["kind"] == "move":

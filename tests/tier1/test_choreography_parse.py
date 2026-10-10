@@ -44,6 +44,7 @@ MOVES = """
 - cue 2, over the cue: pot plain → cracked
 - cue 3, -0.3–0.2 s: hide checker
 - cue 3: sample.highlight-colour.1 correct
+- cue 3: keep sample-tag, pot
 """
 
 PANELS = """
@@ -97,7 +98,7 @@ def test_moves_read_back_with_cue_times_and_actions():
     scene, problems = _scene(HEAD + CAST + MOVES)
     assert problems == []
     m = scene["moves"]
-    assert [x["cue"] for x in m] == [1, 1, 2, 2, 2, 3, 3]
+    assert [x["cue"] for x in m] == [1, 1, 2, 2, 2, 3, 3, 3]
     assert m[0]["start"] == ("start", 0.0) and m[0]["end"] == ("start", 0.6)
     assert m[0]["action"] == {"kind": "show", "names": ["sample-tag", "sample"]}
     assert m[0]["line"] == 31
@@ -113,6 +114,7 @@ def test_moves_read_back_with_cue_times_and_actions():
     assert m[5]["start"] == ("start", -0.3) and m[5]["end"] == ("start", 0.2)
     assert m[5]["action"] == {"kind": "hide", "names": ["checker"]}
     assert m[6]["action"] == {"kind": "set", "name": "sample", "param": "highlight-colour.1", "value": "correct"}
+    assert m[7]["action"] == {"kind": "keep", "names": ["sample-tag", "pot"]}
 
 
 def test_the_panels_read_back_each_with_a_cast_and_moves_timed_from_the_rise():
@@ -123,7 +125,7 @@ def test_the_panels_read_back_each_with_a_cast_and_moves_timed_from_the_rise():
     assert [m["name"] for m in wrong["cast"]] == ["wrong"]
     assert wrong["cast"][0]["params"] == {"ok": "no", "r": "30"}
     assert wrong["moves"] == [{"cue": None, "start": ("start", 0.4), "end": ("start", 0.8),
-                               "action": {"kind": "show", "names": ["wrong"]}, "line": 45}]
+                               "action": {"kind": "show", "names": ["wrong"]}, "line": 46}]
     right = scene["panels"]["right way"]
     assert [m["name"] for m in right["cast"]] == ["answers-only"] and right["moves"] == []
 
@@ -198,8 +200,8 @@ just prose
 """
     scene, problems = _scene(text)
     assert problems == [
-        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, move NAME to WHERE, NAME.PARAM A → B, "
-        "NAME.PARAM VALUE or NAME STATE → STATE",
+        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
+        "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves have no cue)",
         "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue]: ACTION",
         "line 34: scene A2, moves: Where 'nowhere' is not X Y in area pixels, a region (left, right, centre, "
@@ -207,7 +209,7 @@ just prose
         "line 35: scene A2, moves: 'prose in the list' is not cue N[, A s | A–B s | over the cue]: ACTION",
         "line 36: scene A2, moves: not a move (a list item '- cue N[, TIME]: ACTION'): just prose",
         "line 44: scene A2, mistake: a panel's moves have no 'cue N': times count from the panel's rise",
-        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, move NAME to WHERE, "
+        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert len(scene["moves"]) == 0 and scene["panels"]["mistake"]["moves"] == []
