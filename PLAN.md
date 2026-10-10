@@ -10,7 +10,9 @@ video re-made and accepted; and (20:14) from the fifth and sixth ("Settled" 17);
 the ninth, `inbox/done/request-from-training-video-2026-10-09-9.md` ("Settled" 20): four checking
 commands, item 11; and (10 October 2026, 07:53) from the tenth,
 `inbox/done/request-from-training-video-2026-10-10.md` ("Settled" 21): ✓ and ✗ drawn when a font
-lacks them, and a check for characters a font lacks, item 12. CLAUDE.md says how the work is done; this file says what
+lacks them, and a check for characters a font lacks, item 12; and (10 October 2026, 08:46) from the
+eleventh, `inbox/done/request-from-training-video-2026-10-10-11.md` ("Settled" 22): phonemes in
+`say:` lines, item 13. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -459,6 +461,36 @@ font, and the README says so). ✓ and ✗ are excepted, since item 1 draws them
 text, naming the script line, the text, the first character lacking with its code point, and the
 font file; listed with the kit's problems after the script's, exit 1. Nothing is drawn.
 
+## 13. Phonemes in `say:` lines (request 11; Squirrel, 10 October 2026, 08:46: "OK to put flag on narrate")
+
+Where respelling cannot fix a word's stress ("Karpathy", "type in"), a `say:` line may hold
+spans written `[[…]]` whose contents are phonemes for the model as they stand (kokoro-onnx
+0.6.1's `create(..., is_phonemes=True)`, checked in the installed package: the text is used as
+phonemes, whitespace collapsed, and any symbol outside the tokenizer's vocabulary is dropped
+silently). A caption never holds a span: the brackets are for `say:` only.
+
+**`videotools.phonemes`** (standard library): `parts(text)` splits a `say:` into text parts and
+spans; `problems(text)` lists an unclosed `[[`, an empty span, and each symbol in a span that
+the vocabulary lacks, with its code point. `VOCAB` is a fixed copy of the 114 symbols in
+kokoro-onnx 0.6.1's `config.json` (`vocab`), named as such in the code; a tier 2 test asserts it
+equals the installed package's, so an upgrade that changes it fails a test rather than drifting.
+
+**`narrate`** (item 1): a cue whose `say:` has a span is sent as phonemes: each text part
+phonemized by the model's own tokenizer (`speech.tokenizer.phonemize(part, lang)`), the spans
+spliced in with the spaces as written, `create(phonemes, voice, speed, lang, is_phonemes=True)`.
+A cue without a span is sent as text, the call unchanged, so every existing clip is unchanged
+(proved on the scratch example: the clips byte-identical before and after). The model's failure
+on a bad span is reported as today (exit 4, the cue named).
+
+**`check-script`** (item 2): after the font check, each cue's `say:` with `phonemes.problems`
+(unclosed, empty, a dropped symbol), and a caption holding `[[` (it would show on screen), each
+by its line; exit 1.
+
+**`narrate --dry-run --phonemes`** (item 3): the dry run also prints, for each cue, the full
+phoneme string that would be sent, spans spliced in, so a writer can see what the voice is
+given; needs the speech package (exit 4 if missing, as `narrate` says it) but not the model
+file; writes nothing. The flag is on `narrate`, not a new command (Squirrel, 10 October 2026).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -587,6 +619,10 @@ remote ("Settled" 7).
    2026, 07:53–08:06**: both items built and in the README; the two real scripts read clean
    (their ✓ labels excepted); the training-video project re-makes its second video's stills and
    retires its `tag()` helper (their side).
+12. **Request 11** (10 October 2026, 08:29; OK'd 08:46): item 13, test-first in this order: the
+   span parser and the vocabulary copy; the splice in `narrate` with the stub's fake
+   phonemizer; the `check-script` report; `--phonemes` on the dry run; README, "Notes for
+   users", lint as its own pass; the byte-identical proof on the scratch example in Tier 3.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -674,6 +710,12 @@ None.
     checks the scene code statically (Squirrel, 9 October 2026, 20:52: "go ahead").
 19. The eighth request (`inbox/done/request-from-training-video-2026-10-09-8.md`): `check-video`'s
     sheet labels in a strip under each frame (Squirrel, 9 October 2026, 21:07: "go ahead").
+22. The eleventh request (`inbox/done/request-from-training-video-2026-10-10-11.md`), all three
+    items, with the phoneme listing as a flag on `narrate --dry-run` rather than a new command
+    (Squirrel, 10 October 2026, 08:46: "Right to verify. OK to put flag on narrate."). Squirrel's
+    standing OK on the training-video side lets that project *send* requests; each is still
+    OK'd here before anything is done (Squirrel, 10 October 2026: "My standing OK to them is to
+    request changes, not for you to do them").
 21. The tenth request (`inbox/done/request-from-training-video-2026-10-10.md`), both items,
     with On screen labels checked against the display font only (Squirrel, 10 October 2026,
     07:50: "display font only. go ahead").

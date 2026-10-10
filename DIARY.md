@@ -1499,3 +1499,20 @@ through `brand.FONT_FALLBACKS`. The `--json` output is unchanged.
 
 **State.** Request 10 complete: 361 tests, 98%, lint clean, README and PLAN.md current. Nothing
 waiting.
+
+### 10 October 2026 — The eleventh request arrives and is OK'd: phonemes in `say:` lines
+
+**Decision / surprise.** `inbox/request-from-training-video-2026-10-10-11.md` (08:29,
+training-video side, after Squirrel heard six wrongly stressed words in the second video):
+`[[…]]` spans of phonemes in a `say:` line, a `check-script` report for bad spans, and a way to
+see the phoneme string each cue gets. Checked in the installed kokoro-onnx 0.6.1 before
+reporting (08:40–08:44): `create` takes `is_phonemes=True` and then uses the text as phonemes
+with whitespace collapsed; the tokenizer drops any symbol outside `config.json`'s `vocab` (114
+symbols, the space among them) silently; `tokenizer.phonemize(text, lang)` is public. Reported
+at 08:45 with the plan and one question (a flag on `narrate --dry-run`, or a new command).
+Squirrel (08:46): his standing OK on their side is for them to request changes, not for them
+to be done here without his OK; "Right to verify. OK to put flag on narrate." Taken as the
+go-ahead with the flag on `narrate`. PLAN.md item 13, build step 12, "Settled" 22; the item
+moved to `inbox/done/`.
+
+**State.** Next: `videotools.phonemes`, test-first.
