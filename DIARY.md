@@ -2835,3 +2835,21 @@ read-only), told to Squirrel:
   (a rounded bar, a disc, a line of dashes) other than through an element.
 
 **State.** 509 green, 98%, lint clean. Waiting on Squirrel's OK for request 17.
+
+### 11 October 2026 — The seventeenth request is OK'd
+
+**Decision.** Squirrel (00:13): "1. yes 2. yes 3. write your comments in training-video inbox,
+standing permission granted to do that. Go ahead with request 17 as written." So: the five
+asks, PLAN.md item 19 and "Settled" 37, the item moved to `inbox/done/`; a scene with no cues
+writes its moves without `cue N`; the "what else" list is not built but written to the
+training-video project ("Settled" 38: a standing permission to write into that project's inbox,
+and nothing else there). **That project has no `inbox/` folder** and its CLAUDE.md names none,
+so nothing has been written there: Squirrel asked where it should go.
+
+**Design, decided before the tests** (PLAN.md item 19 has the rules): `via` is exactly two
+points, pixels or anchors; `dash` leaves the head solid; `colour.<role>` is cast-only and works
+by handing the element a frame whose colours carry the role, with no interface change; on a
+card Where is frame pixels; `rotate` turns the member's finished drawing about its box's
+centre, and its anchors with it.
+
+**State.** 509 green as left. Next: item 19, 1, test first.

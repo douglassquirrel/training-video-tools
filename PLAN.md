@@ -23,7 +23,10 @@ library, item 15 (its format a proposal awaiting approval), and credits on the e
 anchor is read, an arrow that draws on and needs no Where, and a warning for a blank Size on an
 element whose size is nominal, item 17; and (10 October 2026, 23:59) from the sixteenth,
 `inbox/done/request-from-training-video-2026-10-10-16.md` ("Settled" 34): an empty label is not
-checked, item 18. CLAUDE.md says how the work is done; this file says what
+checked, item 18; and (11 October 2026, 00:15) from the seventeenth,
+`inbox/done/request-from-training-video-2026-10-11-17.md` ("Settled" 37): a callout's leader
+colour, curved and dashed arrows, a member's own colours, a cast on title and end cards, and
+turning a member, item 19. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -1056,6 +1059,64 @@ library, whose stub now passes every label it is given through `frame.label` as 
 elements do; README, "Notes for users", lint as its own pass; a Tier 3 with the real
 `formula-bar`.
 
+## 19. What the rest of a video needs to be described (request 17; Squirrel, 11 October 2026, 00:13: "Go ahead with request 17 as written")
+
+The training-video project is making a v5 of "App For That" with every scene described and no
+Python of its own. Its scenes A2 and B are described already; these five things are what its
+other ten modules do that the format of item 15 could not say. Each adds to that format.
+
+1. **A callout's leader colour.** `callout` gains `leader`, a colour name for its leader line
+   and dot (default `ink`, as `frame.callout` has it).
+2. **Curved and dashed arrows.** `arrow` gains `via="P; P"`: exactly two control points
+   separated by `;`, each written `X Y` in the pixels its cast uses (the animation area's in a
+   scene, the panel's in a panel, the frame's on a card) or as a member's anchor with an optional
+   offset; the arrow is then the cubic curve from `from` by the two points to `to`, and
+   `progress` draws it on along the curve (`draw.arrow` does both already). And `dash="ON
+   OFF"`, two numbers above 0: the line is dashed, the head stays solid. Anything else in
+   either is a problem by line. A computed anchor in `via` follows the cast-order rule as `from`
+   and `to` do. An arrow with a blank Where keeps the box its two ends span, curved or not.
+3. **One member in other colours.** A library member's Parameters may map the element's colour
+   roles to colours of its own, `colour.<role>=<colour name>` (`colour.fill=doc`): the role must
+   be in the element's Colours table and the name one `frame.colour` knows (the script's
+   Colours, else the brand's roles), each refused by line in `check-script` when the colours are
+   known to it (the kit read) and at draw time in any case. The element is then handed a frame
+   whose colours carry those roles, which is how video-elements already takes a role's colour
+   (a role named in the frame's colours wins over the element's default); nothing in the shared
+   interface changes, and video-elements is asked to keep that true. Not animatable: a move
+   cannot name `colour.<role>`. The pieces keep their own `fill` and `colour`.
+4. **A cast on the title and end cards.** A scene of kind `title` or `end` may have `### Cast`
+   and `### Moves`. The cast is drawn over the card, after the card's own text and inside its
+   clip, and before the scene's module if it has one. Where is in **frame** pixels (0 0 the
+   frame's top-left, 1920 × 1080; a card has no animation area), and a region is a half or
+   quarter of the frame. Moves are by cue as elsewhere; negative times reach before cue 1.
+   **A scene with no cues** (an end card) writes its moves without `cue N`, as a panel does,
+   timed from the scene's start, `end` being the scene's end (Squirrel, 11 October 2026,
+   00:13: "yes"); `cue N` there is a problem, as a missing `cue N` is in a scene that has cues.
+   No curtain and no panels on a card (a Mistake or Right way section there is the existing
+   problem: no cue has a `mistake:`). The library elements on a card are credited like any others.
+5. **Turning a member.** Any member, a piece or a library element, in a scene, a panel or a
+   card, takes `rotate=DEGREES` in its Parameters: clockwise, about the centre of its box (a
+   library element's rect; a pill's, a text's and a badge's drawn box; the point a hand or a
+   callout is placed at; an arrow's box). It is animated and set like any number (`cue 1,
+   0–0.6 s: pile-3.rotate 0 → -20`). `rotate` is video-tools' own name, not passed to the
+   element. A member is drawn as it would be unturned and that drawing is turned, so nothing
+   inside it changes; an anchor read from a turned member is turned with it, so a member placed
+   on it follows. With no `rotate`, or 0, the frame is exactly what it was. The `hand` piece
+   keeps its own `angle`, in radians, which turns the drawing about the wrist; `rotate` is in
+   degrees like everything a script's author writes.
+
+**Not built, and said to the training-video project instead** (request 17, item 6: "say so in
+your reply rather than building it unasked"; Squirrel, 00:13: "write your comments in
+training-video inbox"): what else its modules do that the format cannot say (choosing columns
+or rows of a CSV; a steady rate rather than eased; a pulse and anything that repeats; a move
+spanning cues or timed as a fraction of a cue; dimming to a level; growing or stretching a
+member; plain shapes).
+
+Order of work, test-first against the invented library: 1; 2 (`draw.arrow`'s dash first); 3
+(the stub elements gain a `fill` role, drawn as the real library resolves one); 4 (the parser
+and the check for a scene without cues, then the drawing); 5 (the turn, the anchors, the
+check); README, "Notes for users", lint as its own pass; a Tier 3 against the real library.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1212,6 +1273,7 @@ remote ("Settled" 7).
    natural-size half of its item 3 waited on video-elements, whose note came at 23:32; built
    after it.
 17. **Request 16** (10 October 2026, 23:58; OK'd 23:59): item 18, in its order of work.
+18. **Request 17** (11 October 2026, 00:00; OK'd 00:13): item 19, in its order of work.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1383,3 +1445,11 @@ None.
     empty string is "none" (item 18, 1; Squirrel, 11 October 2026, 00:09: "agreed").
 36. A `pill`, `callout` or `text` whose `text` is empty stays a problem; a `hand` whose `label`
     is empty is drawn without a label (item 18, 2; Squirrel, 11 October 2026, 00:09: "yes").
+37. The seventeenth request (`inbox/done/request-from-training-video-2026-10-11-17.md`), its
+    five asks as written, with a scene that has no cues writing its moves without `cue N`,
+    timed from the scene's start (Squirrel, 11 October 2026, 00:13: "1. yes 2. yes … Go ahead
+    with request 17 as written"). Its item 6 is answered with comments, not code.
+38. video-tools may write its replies and comments into the training-video project's inbox: a
+    standing permission, for that folder only; everything else in that project stays read-only
+    (Squirrel, 11 October 2026, 00:13: "write your comments in training-video inbox, standing
+    permission granted to do that"). At the time that project had no `inbox/` folder; asked.
