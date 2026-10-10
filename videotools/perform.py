@@ -104,16 +104,27 @@ class Performance:
         return value
 
     def anchors_of(self, name, anchor):
-        """A member's anchor in frame pixels: a box anchor from its rect; a computed one from
-        what its draw returned, if it has been drawn."""
+        """A member's anchor in frame pixels: what its draw returned once it is drawn (a library
+        element's anchors; a piece's real box); else a box anchor from its rect, or a library
+        element's fixed anchor scaled into the rect as the element is fitted (uniformly,
+        centred). A computed anchor (a row, a cell) exists only once the member is drawn."""
+        drawn = self._anchors.get(name, {})
+        if anchor in drawn:
+            return drawn[anchor]
         rect = self.rect(name)
         if anchor in choreography.BOX_ANCHORS:
             return box_anchors(rect)[anchor]
-        drawn = self._anchors.get(name)
-        if drawn is None or anchor not in drawn:
-            raise cli.Failure(f"'{anchor}' of '{name}' is computed when it is drawn, so a member placed by it must "
-                              f"come after '{name}' in the cast")
-        return drawn[anchor]
+        element = self.cast[name]["element"]
+        if element not in choreography.PIECES:
+            el = self.lib.element(element)
+            for pattern, value in el["anchors"].items():
+                if choreography._anchor_matches(anchor, pattern) and value != "computed":
+                    x, y, w, h = rect
+                    w0, h0 = el["size"]
+                    scale = min(w / w0, h / h0) if w0 and h0 else 1.0
+                    return (x + (w - w0 * scale) / 2 + value[0] * scale, y + (h - h0 * scale) / 2 + value[1] * scale)
+        raise cli.Failure(f"'{anchor}' of '{name}' is computed when it is drawn, so a member placed by it must "
+                          f"come after '{name}' in the cast")
 
     def rect(self, name):
         if name in self._rects:
@@ -194,14 +205,20 @@ class Performance:
             element = member["element"]
             p, state = self.params(member)
             if element == "pill":
-                frame.tag(p["text"], x, y, size=float(p.get("size", 22)), fill=p.get("fill", "ink"),
-                          colour=p.get("colour", "on-accent"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
+                box = frame.tag(p["text"], x, y, size=float(p.get("size", 22)), fill=p.get("fill", "ink"),
+                                colour=p.get("colour", "on-accent"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
+                self._anchors[name] = box_anchors(box)
             elif element == "text":
-                frame.text(p["text"], x, y, float(p.get("size", 22)), role=p.get("role", "body"),
-                           colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha,
-                           check=True)
+                size, align = float(p.get("size", 22)), ALIGN[p.get("anchor", "left")]
+                width = frame.text(p["text"], x, y, size, role=p.get("role", "body"), colour=p.get("colour", "ink"),
+                                   anchor=align, alpha=alpha, check=True)
+                left = x if align == "l" else x - width / 2 if align == "c" else x - width
+                scaled = frame._size(size)                      # the baseline is at y; the box is the type size
+                self._anchors[name] = box_anchors((left, y - scaled * 0.75, width, scaled))
             elif element == "badge":
-                frame.badge(x, y, p["ok"] in YES, r=float(p.get("r", 24)), alpha=alpha)
+                r = float(p.get("r", 24))
+                frame.badge(x, y, p["ok"] in YES, r=r, alpha=alpha)
+                self._anchors[name] = box_anchors((x - r, y - r, 2 * r, 2 * r))
             elif element == "hand":
                 frame.hand(x, y, float(p["angle"]), float(p["scale"]), alpha=alpha, mirror=p.get("mirror") in YES,
                            label=p.get("label"))

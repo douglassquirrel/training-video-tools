@@ -606,8 +606,17 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   whole; before the span the parameter is absent, so the element's default or the cast's value
   holds), a set of a number eased from its current value, a set of a word at the span's start,
   `NAME STATE → STATE` the name after and `(from, to, progress)` part-way; the pieces' own
-  parameters (a badge's `r`, a pill's `size`) animate the same way. The computed anchors and the
-  pieces' real extents are increment 8.
+  parameters (a badge's `r`, a pill's `size`) animate the same way. **Increment 8, 17:40**:
+  anchors. A member's anchor is what its draw returned once it is drawn (a library element's
+  anchors, computed ones included; a pill's, a text's and a badge's real box, the text's box
+  being its width by its type size above the baseline); before it is drawn, a box anchor comes
+  from its rect and a library element's *fixed* anchor is scaled into the rect as the element is
+  fitted (uniformly, centred: to be confirmed against the real library's geometry in the Tier 3),
+  so a member placed by a fixed anchor may come anywhere in the cast; a *computed* anchor (the
+  description says `computed`, or it is indexed) exists only after its member is drawn, so a
+  member placed by one, moved to one, or pointing a callout or an arrow at one must come after
+  that member in the cast: `check-script` says so by line, and `perform` refuses if it is met
+  at draw time anyway.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

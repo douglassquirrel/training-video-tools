@@ -323,7 +323,8 @@ def check(scene, tl, lib, folder):
 def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel):
     members = {m["name"]: m for m in cast}
     rows_of = {m["name"]: _rows_file(m, lib, folder) for m in cast}   # name -> (file, row count) or None
-    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of}
+    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of,
+           "order": {m["name"]: i for i, m in enumerate(cast)}}
     problems = []
     for m in cast:
         at = f"line {m['line']}: {cast_where}: "
@@ -378,9 +379,23 @@ def _anchor_matches(name, pattern):
     return len(a) == len(b) and all(x == y or (y == "*" and x.isdigit()) for x, y in zip(a, b))
 
 
-def _anchor_problem(ctx, where, self_name=None):
-    """None, or the rest of a sentence: 'X', which is not in the cast (…) / 'X'.'y', but …"""
+def _is_computed(member, anchor, lib):
+    """True when a library element's anchor is worked out by its draw (the description says
+    `computed`, or it is indexed), so a member placed by it must come later in the cast."""
+    if member["element"] in PIECES or anchor in BOX_ANCHORS or lib is None:
+        return False
+    for name, value in lib.element(member["element"])["anchors"].items():
+        if _anchor_matches(anchor, name):
+            return value == "computed"
+    return False
+
+
+def _anchor_problem(ctx, where, self_name=None, placed=None):
+    """None, or the rest of a sentence: 'X', which is not in the cast (…) / 'X'.'y', but ….
+    `placed` is the member being placed (`self_name` when it is placed by its Where), for the
+    rule that a computed anchor's member must come earlier in the cast."""
     members, target, anchor = ctx["members"], where["member"], where["anchor"]
+    placed = placed or self_name
     if target == self_name:
         return "itself"
     if target not in members:
@@ -395,6 +410,11 @@ def _anchor_problem(ctx, where, self_name=None):
             return f"'{target}'.'{anchor}', but rows count from 1"
         if rows and index is not None and index > rows[1]:
             return f"'{target}'.'{anchor}', but {rows[0]} has {rows[1]} rows"
+        order = ctx.get("order", {})
+        if (placed in order and _is_computed(members[target], anchor, ctx["lib"])
+                and order[target] >= order[placed]):
+            return (f"'{target}'.'{anchor}', which is computed when '{target}' is drawn, so '{placed}' must come "
+                    f"after '{target}' in the cast")
         return None
     element = members[target]["element"]
     listed = ", ".join(names[:-1]) + " and " + names[-1]
@@ -491,8 +511,9 @@ def _library_params(m, ctx):
     return out
 
 
-def _value_problem(kind, name, value, members, lib, labels):
-    """The problem with a parameter value of `kind`, or None."""
+def _value_problem(kind, name, value, ctx, self_name):
+    """The problem with a piece's parameter value of `kind`, or None."""
+    labels = ctx["labels"]
     if kind == "number":
         if not re.match(f"^{NUM}$", value):
             return f"'{name}' should be a number, not '{value}'"
@@ -509,14 +530,13 @@ def _value_problem(kind, name, value, members, lib, labels):
         where = parse_where(value)
         if not where or where["kind"] != "anchor":
             return f"'{name}' should be a member's anchor like a.centre, not '{value}'"
-        problem = _anchor_problem({"members": members, "lib": lib, "rows_of": {}}, where)
+        problem = _anchor_problem(ctx, where, placed=self_name)
         if problem:
             return f"'{name}' is {problem}"
     return None
 
 
 def _piece_params(m, ctx):
-    members, lib, labels = ctx["members"], ctx["lib"], ctx["labels"]
     piece, params = m["element"], PIECE_PARAMS[m["element"]]
     out = []
     for name in PIECE_REQUIRED[piece]:
@@ -527,7 +547,7 @@ def _piece_params(m, ctx):
             out.append(f"'{m['name']}': {_a(piece)} has no parameter '{name}' "
                        f"(its parameters are {', '.join(params)})")
             continue
-        problem = _value_problem(params[name], name, value, members, lib, labels)
+        problem = _value_problem(params[name], name, value, ctx, m["name"])
         if problem:
             out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
     return out
@@ -540,7 +560,7 @@ def _resolve(tl, cue, when):
 
 def _check_moves(scene, ctx, moves, where, tl, panel):
     """([members never shown], [problems]) for a cast's moves."""
-    members, lib, labels = ctx["members"], ctx["lib"], ctx["labels"]
+    members, lib = ctx["members"], ctx["lib"]
     problems, events = [], []
     for mv in moves:
         at = f"line {mv['line']}: {where}: "
@@ -569,7 +589,7 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
                 events.append((t, mv["line"], act["kind"], n, cue))
         elif act["kind"] == "move":
             if act["to"]["kind"] == "anchor":
-                problem = _anchor_problem(ctx, act["to"])
+                problem = _anchor_problem(ctx, act["to"], placed=act["name"])
                 if problem:
                     problems.append(f"{at}'{act['name']}' moves to {problem}")
         elif act["kind"] == "state":
@@ -604,7 +624,7 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
                                     f"'{act['param']}' (its parameters are {', '.join(params)})")
                     continue
                 for v in values:
-                    problem = _value_problem(params[act["param"]], act["param"], v, members, lib, labels)
+                    problem = _value_problem(params[act["param"]], act["param"], v, ctx, act["name"])
                     if problem:
                         sep = " " if problem.startswith("draws") else ": "
                         problems.append(f"{at}'{act['name']}'{sep}{problem}")

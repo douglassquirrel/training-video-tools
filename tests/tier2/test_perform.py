@@ -214,3 +214,60 @@ def test_the_other_pieces_draw_and_a_region_fits_the_element_inside_it(example):
     _s, pot = _draw(video, "pot", 2.0)
     x, y, w, h = pot["rect"]                       # the centre region is 711 x 409 at 395.5, 322.5: a 24 x 24 pot fits to 409
     assert (round(w), round(h)) == (409, 409) and (round(x), round(y)) == (546, 322)
+
+
+# ---- increment 8: computed anchors, fixed anchors, and the pieces' real extents
+
+ANCHORED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| rim-mark | badge | pot1.rim + 0 -60 | | ok=yes r=20 | a fixed anchor, before its member: 12 4 of 24 24 in 200 px |
+| pot1 | pot | 100 100 | 200 | | frame rect 140 218, 200 x 200: rim at 240, 251 |
+| sign | pill | 400 100 | | text=crease size=22 fill=accent | at 440, 218 |
+| after-sign | pot | sign.bottom-right + 10 0 | 20 | | the pill's real extent, once drawn |
+| word | text | 100 100 | | text=crease size=30 | baseline at 140, 218 |
+| after-word | pot | word.top-right | 20 | | the text's real extent, once drawn |
+| sheet | table | 100 400 | 300x100 | rows=assets/sample.csv | frame rect 140 518: the stub's row.2 at 440, 558 |
+| row-mark | badge | sheet.row.2 | | ok=yes r=20 | a computed anchor, after its member |
+
+### Moves
+
+- cue 1: show rim-mark, pot1, sign, after-sign, word, after-word, sheet, row-mark
+
+"""
+
+
+@pytest.fixture
+def anchored(example):
+    cropped(example)
+    narrated(example)
+    return frame.Video(describe(example, ANCHORED), INVENTED, None)
+
+
+def test_a_fixed_anchor_places_a_member_before_its_element_is_drawn_and_a_computed_one_after(anchored):
+    s = rendered(anchored, "A", 2.0)
+    assert pixel(s, 240, 191 - 15) == hex_rgb("#3E7D4F")      # rim-mark: 60 above the pot's rim
+    assert pixel(s, 440, 558 - 15) == hex_rgb("#3E7D4F")      # row-mark: at the stub's row.2
+
+
+def test_a_pill_and_a_text_have_their_drawn_extent_for_the_members_placed_by_them(anchored):
+    rendered(anchored, "A", 2.0)
+    pots = {round(d["rect"][0]): d["rect"] for d in anchored.library.draws if d["name"] == "pot"}
+    after_sign = next(r for x, r in pots.items() if 480 < x < 700)          # right of the pill, 10 px on
+    assert after_sign[1] > 218                                                # at the pill's bottom edge
+    after_word = next(r for x, r in pots.items() if 190 < x < 480)          # the text "crease" is wider than 50 px
+    assert after_word[1] < 218                                                # at the text's top, above its baseline
+
+
+# ---- increment 9: the curtain for free
+
+def test_stills_cue_changes_is_quiet_on_a_described_scene_whose_picture_fades_under_the_panels(example, tmp_path):
+    cropped(example)
+    narrated(example)
+    # pot1 is shown at cue 1 and never named again: it fades under the panels, so nothing vanishes as they lift
+    cast = CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", "")
+    script = describe(example, cast)
+    code, out, err = run("stills", script, "--cue-changes", "--scenes", "A", "--out", tmp_path / "cues.png",
+                         "--elements", INVENTED)
+    assert (code, err) == (0, "")

@@ -67,7 +67,8 @@ class Frame:
         if check:
             s = self.label(s)
         size = self._size(size)
-        draw.text(self.ctx, s, x, y, self._font(role), size, self._colour_at(colour, size), anchor, alpha, track)
+        return draw.text(self.ctx, s, x, y, self._font(role), size, self._colour_at(colour, size), anchor, alpha,
+                         track)
 
     def tag(self, s, x, y, size=22, fill="ink", colour="on-accent", role="display", anchor="l", alpha=1.0,
             padx=14, pady=9, border=None):

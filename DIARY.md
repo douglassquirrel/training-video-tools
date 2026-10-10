@@ -2,8 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 17:05 (session end, at Squirrel's word: "running low on session usage, come to a
-stopping place"). **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 17:45. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -44,21 +43,22 @@ described scene's problems before drawing, and the four drawing commands pass th
 every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
 (`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
 span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): 1–7.** **The next step** is increment
-8: computed anchors (a row, a cell) usable by members later in the cast, with `check-script`
-refusing a member placed by a computed anchor of a member earlier or later as the rule needs,
-and the pieces' real extents for their box anchors (a pill's rect from `draw.tag`, a text's
-width); then 9 (the curtain rule), 10 (panels' moves and the equivalence through
-`frame-hashes`), 11 (README: the format under "Writing a video's script", the flags, a dated
-note), 12 (Tier 3 against the real library's nineteen elements: scene A2 described and compared
-with v4, the training-video project's side). A new session
+far of item 15's twelve increments (the list of 15:00): 1–8** (8, 17:40: computed anchors
+after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
+extents, and `check-script`'s cast-order rule; Squirrel, 17:20: "continue with increments
+8-10"). **Next**: 9 (the curtain rule: `Performance.alpha` times `before_curtain` for a member
+shown before the mistake cue and not named at or after the next; tests written, red), 10
+(panel moves under the curtain and the equivalence of a described scene with the same scene as
+a module through `frame-hashes`), 11 (README: the format under "Writing a video's script", the
+flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
+32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-17:05; anything at its top level other than README.md is new and is reported to Squirrel, never
+17:45; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 449 tests, coverage 98% (perform.py's two refusals untested until increment 8), `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 452 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -88,13 +88,14 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–7 built; 8 onward on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
-video-elements (read-only from here) has its steps 1–5 of 8 done and the starter set three
-batches in (16:00, commit `8e4aede`): nineteen real elements including the six screens as code
-elements (`spreadsheet` with `rows`, `widths`, `numeric` (column letters), `header`, `numbers`,
-`tabs`, `row-height`, `text-size`, `rows-shown`, `highlight.*`, `highlight-colour.*`,
-`cell-alpha.*.*`: our worked example's guesses were close; no `box.*.*`), 134 tests green. Our
-Tier 3 against real elements can follow increment 8. The one write made into that
+increments 1–8 built, 9 and 10 OK'd at 17:20); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+video-elements (read-only from here) is **finished through its step 7** (17:20, commit
+`8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
+from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
+letters), `header`, `numbers`, `tabs`, `row-height`, `text-size`, `rows-shown`, `highlight.*`,
+`highlight-colour.*`, `cell-alpha.*.*` (our worked example's guesses were close; no `box.*.*`,
+no `formula-bar`). Its step 8 is Squirrel's first real run. Our Tier 3 against it is increment
+12. The one write made into that
 repository was the request file of 13:05, at Squirrel's word; it is in its `inbox/done/` now. Also the
 training-video project's: its six phoneme spans and re-made clips, its three scenes on
 `before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
@@ -2107,3 +2108,39 @@ progress needs `approx`.
 
 **State.** 449 green, 98%, lint clean, pushed. Session ended here at Squirrel's word. Next:
 increment 8.
+
+### 10 October 2026 — Item 15, increment 8: anchors, computed and fixed, and the pieces' extents
+
+**Goal.** A member placed by a library element's computed anchor (a row, a cell) lands there;
+a fixed anchor places a member before its element is drawn; a pill and a text have their drawn
+extent for the members placed by their corners; `check-script` requires a member placed by a
+computed anchor to come after that member (Squirrel, 17:20: "continue with increments 8-10").
+
+**Test.** `test_choreography_library.py`: a badge before the table placed by `t.row.1`, a
+callout before it targeting `t.row.1`, and a move to `t.row.2` by a member before it, each a
+problem naming both members; a badge placed by `p.rim` with `p` last, and members after the
+table, fine. `test_perform.py`: a badge 60 px above the pot's rim placed *before* the pot in
+the cast (at 240, 191: the rim 12 4 of 24 24 scaled into 200 px); a badge at the stub's
+`row.2` (440, 558) after the table; a pot placed by the pill's bottom-right corner lands right
+of and below the pill's point; one placed by the text's top-right lands right of and above its
+baseline.
+
+**Red.** `assert [] == ["line 25: …"]` and `videotools.cli.Failure: 'rim' of 'pot1' is computed
+when it is drawn, so a member placed by it must come after 'pot1' in the cast` (a fixed anchor
+treated as computed).
+
+**Green.** `28 passed` over the three files after the implementation (`_is_computed` and the
+cast order in `choreography`, `anchors_of` in `perform` taking drawn anchors first, then box
+anchors, then fixed anchors fitted into the rect; `frame.text` now returns the width drawn,
+`scenes.Frame.text` passes it on); the full suite `452 passed in 131.75s (0:02:11)`, `TOTAL …
+98%`, `ruff check .` clean after two unused locals went.
+
+**Decision / surprise.** My test first had a member before the table move to the table's row
+and called it fine; the code flagged it, rightly, since a move's target is resolved when the
+mover is drawn: the test's cast was reordered. A fixed anchor is scaled as if the element is
+fitted uniformly and centred in its rect, which is how video-elements' `geometry` fits an SVG
+as far as its PLAN.md says; the Tier 3 confirms it against the real library. A text's box is
+its width by its type size, 0.75 of the size above the baseline: approximate, said so in
+PLAN.md.
+
+**State.** 452 green, 98%, lint clean, pushed. Next: increment 9 (tests written).

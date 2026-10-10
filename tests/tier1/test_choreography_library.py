@@ -162,3 +162,33 @@ def test_a_state_must_be_one_the_element_has_and_a_code_element_without_states_t
         "line 31: scene A2, moves: 'p': a pot has no state 'broken' (its states are plain, cracked)",
         "line 32: scene A2, moves: 't': a table has no states",
     ]
+
+
+def test_a_member_placed_by_or_moved_to_a_computed_anchor_must_come_after_that_member(lib, folder):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | badge | t.row.1 | | ok=yes | before t: its rows are computed when t is drawn |
+| c0 | callout | 10 10 | | text="Sample output" target=t.row.1 | likewise |
+| t | table | 10 10 | | rows=assets/sample.csv | |
+| d | badge | p.rim | | ok=yes | p's rim is fixed: any order will do; after t, so it may move to t's rows |
+| b | badge | t.cell.2.2 | | ok=yes | after t: fine |
+| c | callout | 10 10 | | text="Sample output" target=t.row.1 | after t: fine |
+| p | pot | 10 10 | | | |
+
+### Moves
+
+- cue 1: show a, c0, d, t, b, c, p
+- cue 2: move d to t.row.2
+- cue 2: move a to t.row.2
+"""
+    assert _check(text, lib, folder) == [
+        "line 25: scene A2, cast: 'a' is placed by 't'.'row.1', which is computed when 't' is drawn, so 'a' must "
+        "come after 't' in the cast",
+        "line 26: scene A2, cast: 'c0': 'target' is 't'.'row.1', which is computed when 't' is drawn, so 'c0' must "
+        "come after 't' in the cast",
+        "line 37: scene A2, moves: 'a' moves to 't'.'row.2', which is computed when 't' is drawn, so 'a' must "
+        "come after 't' in the cast",
+    ]
