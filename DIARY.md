@@ -2853,3 +2853,43 @@ card Where is frame pixels; `rotate` turns the member's finished drawing about i
 centre, and its anchors with it.
 
 **State.** 509 green as left. Next: item 19, 1, test first.
+
+### 11 October 2026 — Item 19, 1 and 2: a callout's leader colour; curved and dashed arrows
+
+**Goal.** `leader` on `callout`; `via` and `dash` on `arrow` (request 17, items 4 and 3).
+
+**Tests, red and green, in order.**
+
+1. `test_a_callouts_leader_takes_the_colour_named_and_ink_otherwise` (tier 2, `Frame.callout`
+   recorded). Red: `'note': a callout has no parameter 'leader' (its parameters are text, target,
+   size, fill, colour, anchor)`. Green: `49 passed in 9.49s` (the two files).
+2. `test_a_dashed_arrow_has_gaps_in_its_line_and_a_solid_head` (tier 1, `test_draw.py`, by
+   pixels). Red: `TypeError: arrow() got an unexpected keyword argument 'dash'`. Green: `11
+   passed in 0.05s`.
+3. `test_an_arrows_via_is_two_points_and_its_dash_two_numbers_above_0` (tier 1: one point, a
+   region, a member not in the cast, one number, a zero) and
+   `test_an_arrow_with_via_is_a_curve_by_its_two_points_and_with_dash_is_dashed` (tier 2,
+   `draw.arrow` recorded: four control points, the area's pixels turned into the frame's, the
+   anchor with its offset; `dash` as two numbers). Red:
+   ```
+   E   At index 0 diff: "line 26: scene A2, cast: 'good': an arrow has no parameter 'via' (its parameters are from, to, colour, width, progress, head)" != "line 27: scene A2, cast: 'one': 'via' should be two points separated by ';', …
+   ```
+   Green: `63 passed in 10.38s` (the three files).
+
+Full suite: `514 passed in 143.88s (0:02:23)`, 98%; `All checks passed!` (one line over 120
+characters found by lint and split).
+
+**Decision / surprise.** `draw.line` already took `dash` and `draw.arrow` already drew a
+four-point curve; the primitive only needed to hand `dash` to its line, which leaves the head
+solid. `test_a_plain_arrow_is_handed_no_dash` passed as soon as written (an arrow without the
+two is drawn as before) and is kept as the other half of the same rule, not as a test that
+failed. `Performance._point` now reads a place in the cast's pixels as well as an anchor
+(`_place`), which is what `via` needs; `from` and `to` are still anchors only, by the check.
+
+**Also done** (00:17): at Squirrel's word ("create the inbox") the folder
+`~/projects/non-code/training-video/inbox/` made, with a short README saying who made it and
+why, and `reply-from-video-tools-2026-10-11.md` in it: the rules of item 19 as they are being
+built, and the seven things its modules do that the format cannot say. Nothing else in that
+project was touched.
+
+**State.** 514 green, 98%, lint clean. Next: item 19, 3, a member's own colours.

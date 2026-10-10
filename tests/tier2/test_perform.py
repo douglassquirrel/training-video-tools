@@ -598,3 +598,35 @@ def test_a_hand_with_an_empty_label_is_drawn_with_no_label(example, monkeypatch)
     monkeypatch.setattr(scenes.Frame, "hand", lambda self, x, y, angle, scale, **kw: hands.append(kw))
     rendered(pointed(example, UNLABELLED), "A", 2.0)
     assert hands[0]["label"] is None
+
+
+# ---- item 19 (request 17), 1: a callout's leader colour
+
+def test_a_callouts_leader_takes_the_colour_named_and_ink_otherwise(example, monkeypatch):
+    from videotools import scenes
+    leaders = []
+    monkeypatch.setattr(scenes.Frame, "callout", lambda self, s, target, at, **kw: leaders.append(kw.get("leader", "ink")))
+    cast = POINTED.replace('target="pot1.top-right + -20 30" | |',
+                           'target="pot1.top-right + -20 30" leader=mistake | |\n'
+                           '| plain | callout | 400 700 | | text="edge fold" target=pot1.centre | |').replace(
+        "show pot1, pot2, line, note", "show pot1, pot2, line, note, plain")
+    rendered(pointed(example, cast), "A", 2.0)
+    assert leaders == ["mistake", "ink"]
+
+
+# ---- item 19 (request 17), 2: curved and dashed arrows
+
+def test_an_arrow_with_via_is_a_curve_by_its_two_points_and_with_dash_is_dashed(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    curved = POINTED.replace('to="pot2.centre + 0 -5" |',
+                             'to="pot2.centre + 0 -5" via="300 50; pot2.top-left + -40 0" dash="12 8" |')
+    rendered(pointed(example, curved), "A", 2.0)
+    control, kw = arrows[0]                                  # area pixels 300 50 are frame pixels 340 168
+    assert control == [(250.0, 318.0), (340.0, 168.0), (500.0, 418.0), (590.0, 463.0)]
+    assert kw["dash"] == [12.0, 8.0]
+
+
+def test_a_plain_arrow_is_handed_no_dash(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    rendered(pointed(example), "A", 2.0)
+    assert arrows[0][1].get("dash") is None and len(arrows[0][0]) == 2

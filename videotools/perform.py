@@ -272,13 +272,17 @@ class Performance:
             elif element == "callout":
                 target = self._point(p["target"])
                 frame.callout(p["text"], target, (x, y), size=float(p.get("size", 22)), fill=p.get("fill", "surface"),
-                              colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha)
+                              colour=p.get("colour", "ink"), anchor=ALIGN[p.get("anchor", "left")], alpha=alpha,
+                              leader=p.get("leader", "ink"))
             elif element == "arrow":
                 from videotools import draw
                 headless = {} if p.get("head", "yes") in YES else {"head": 0}     # draw.arrow's head is its size
-                draw.arrow(frame.ctx, [self._point(p["from"]), self._point(p["to"])],
+                via = [self._place(w) for w in choreography.parse_points(p["via"])] if "via" in p else []
+                control = [self._point(p["from"])] + via + [self._point(p["to"])]    # two points, or a curve by four
+                draw.arrow(frame.ctx, control,
                            frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)),
-                           progress=float(p.get("progress", 1)), alpha=alpha, **headless)
+                           progress=float(p.get("progress", 1)), alpha=alpha,
+                           dash=choreography.parse_dash(p["dash"]) if "dash" in p else None, **headless)
             else:
                 el = self.lib.element(element)
                 try:
@@ -289,7 +293,12 @@ class Performance:
 
     def _point(self, text):
         """A point written as a member's anchor with an optional offset (an arrow's ends, a callout's target)."""
-        where = choreography.parse_where(text)
+        return self._place(choreography.parse_where(text))
+
+    def _place(self, where):
+        """A parsed place in frame pixels: the cast's own pixels, or a member's anchor plus its offset."""
+        if where["kind"] == "pixels":
+            return (self.area[0] + where["x"], self.area[1] + where["y"])
         x, y = self.anchors_of(where["member"], where["anchor"])
         return (x + where["dx"], y + where["dy"])
 

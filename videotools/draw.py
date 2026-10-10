@@ -234,9 +234,9 @@ def cut(pts, p):
     return out
 
 
-def arrow(ctx, control, colour, lw=6, progress=1.0, head=20, alpha=1.0):
+def arrow(ctx, control, colour, lw=6, progress=1.0, head=20, alpha=1.0, dash=None):
     """An arrow along a straight line (two points) or a Bézier curve (four), drawn on to
-    `progress` of its length, with a filled head."""
+    `progress` of its length, with a filled head; `dash` ([on, off]) dashes the line, not the head."""
     if progress <= 0.01 or alpha <= 0:
         return
     pts = bezier(*control) if len(control) == 4 else [control[0], control[1]]
@@ -246,7 +246,7 @@ def arrow(ctx, control, colour, lw=6, progress=1.0, head=20, alpha=1.0):
     (x1, y1), (x2, y2) = pts[-2], pts[-1]
     angle = math.atan2(y2 - y1, x2 - x1)
     bx, by = x2 - math.cos(angle) * head * 0.6, y2 - math.sin(angle) * head * 0.6
-    line(ctx, pts[:-1] + [(bx, by)], colour, lw, alpha)
+    line(ctx, pts[:-1] + [(bx, by)], colour, lw, alpha, dash=dash)
     poly(ctx, [(x2, y2),
                (x2 - math.cos(angle - 0.45) * head, y2 - math.sin(angle - 0.45) * head),
                (x2 - math.cos(angle + 0.45) * head, y2 - math.sin(angle + 0.45) * head)],

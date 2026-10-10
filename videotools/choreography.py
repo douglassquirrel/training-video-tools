@@ -56,6 +56,23 @@ def parse_where(text):
     return None
 
 
+def parse_points(text):
+    """The two control points of an arrow's `via`, 'P; P', each a Where's pixels or anchor
+    ({'kind': 'pixels' | 'anchor', …}); None when the text is not two such places."""
+    places = [parse_where(part.strip()) for part in text.split(";")]
+    if len(places) != 2 or any(w is None or w["kind"] == "region" for w in places):
+        return None
+    return places
+
+
+def parse_dash(text):
+    """[on, off] from 'ON OFF', two numbers above 0; None otherwise."""
+    parts = text.split()
+    if len(parts) != 2 or not all(re.match(f"^{NUM}$", v) and float(v) > 0 for v in parts):
+        return None
+    return [float(v) for v in parts]
+
+
 def parse_size(text):
     """(ok, None | {'w', 'h'}): blank is the element's own size; W or WxH in pixels."""
     if not text:
@@ -278,16 +295,17 @@ PANELS = ("mistake", "right way")
 # The pieces' parameters by name and kind: label (the words the piece is for: not empty, and checked
 # against On screen), caption (optional words: checked against On screen unless empty, which is none),
 # number, unit (a number from 0 to 1), colour (a name frame.colour resolves), align (left, centre, right),
-# yesno, anchor (a member's anchor, a.centre, with an optional offset), text.
+# yesno, anchor (a member's anchor, a.centre, with an optional offset), points (two places separated by
+# ';', each X Y or an anchor), dash (two numbers above 0), text.
 PIECE_PARAMS = {
     "pill": {"text": "label", "size": "number", "fill": "colour", "colour": "colour", "anchor": "align"},
     "callout": {"text": "label", "target": "anchor", "size": "number", "fill": "colour", "colour": "colour",
-                "anchor": "align"},
+                "anchor": "align", "leader": "colour"},
     "text": {"text": "label", "size": "number", "role": "text", "colour": "colour", "anchor": "align"},
     "badge": {"ok": "yesno", "r": "number"},
     "hand": {"angle": "number", "scale": "number", "mirror": "yesno", "label": "caption"},
     "arrow": {"from": "anchor", "to": "anchor", "colour": "colour", "width": "number", "progress": "unit",
-              "head": "yesno"},
+              "head": "yesno", "via": "points", "dash": "dash"},
 }
 PIECE_REQUIRED = {"pill": ("text",), "callout": ("text", "target"), "text": ("text",), "badge": ("ok",),
                   "hand": ("angle", "scale"), "arrow": ("from", "to")}
@@ -579,6 +597,18 @@ def _value_problem(kind, name, value, ctx, self_name):
         problem = _anchor_problem(ctx, where, placed=self_name)
         if problem:
             return f"'{name}' is {problem}"
+    elif kind == "points":
+        places = parse_points(value)
+        if places is None:
+            return (f"'{name}' should be two points separated by ';', each X Y or a member's anchor like "
+                    f"a.centre + 10 0, not '{value}'")
+        for where in places:
+            problem = _anchor_problem(ctx, where, placed=self_name) if where["kind"] == "anchor" else None
+            if problem:
+                return f"'{name}' is {problem}"
+    elif kind == "dash":
+        if parse_dash(value) is None:
+            return f"'{name}' should be two numbers above 0, the dash and the gap, not '{value}'"
     return None
 
 

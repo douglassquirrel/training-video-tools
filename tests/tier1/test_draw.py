@@ -131,3 +131,14 @@ def test_an_arrow_with_a_head_of_0_is_a_line_to_its_end_and_no_head():
     s, c = surface()
     draw.arrow(c, [(20, 50), (180, 50)], RED, lw=6, head=0)
     assert pixel(s, 164, 55) == (255, 255, 255) and pixel(s, 178, 50) == (255, 0, 0)
+
+
+def test_a_dashed_arrow_has_gaps_in_its_line_and_a_solid_head():
+    s, c = surface()
+    draw.arrow(c, [(20, 50), (180, 50)], RED, lw=6, dash=[20, 20], head=20)
+    assert pixel(s, 30, 50) == (255, 0, 0)                  # in the first dash (20 to 40, round caps beyond)
+    assert pixel(s, 50, 50) == (255, 255, 255)              # in the first gap (40 to 60)
+    assert pixel(s, 172, 50) == (255, 0, 0)                 # the head, whole
+    s, c = surface()
+    draw.arrow(c, [(20, 50), (180, 50)], RED, lw=6, head=20)
+    assert pixel(s, 50, 50) == (255, 0, 0)                  # no dash: no gap

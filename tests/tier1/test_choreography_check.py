@@ -441,3 +441,35 @@ def test_a_pieces_empty_text_is_a_problem_in_plain_words_and_a_hands_empty_label
         "(Sample output, checked ✓)",
         "line 35: scene A2, moves: 'e': 'text' is empty, so there is nothing to draw",
     ]
+
+
+# ---- item 19 (request 17), 2: curved and dashed arrows
+
+def test_an_arrows_via_is_two_points_and_its_dash_two_numbers_above_0():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| good | arrow | | | from=a.centre to=a.top-right via="200 300; a.bottom-left + 10 -5" dash="12 8" | |
+| one | arrow | | | from=a.centre to=a.top-right via="200 300" | |
+| words | arrow | | | from=a.centre to=a.top-right via="left; 200 300" | |
+| gone | arrow | | | from=a.centre to=a.top-right via="b.centre; 200 300" | |
+| solid | arrow | | | from=a.centre to=a.top-right dash="12" | |
+| none | arrow | | | from=a.centre to=a.top-right dash="12 0" | |
+
+### Moves
+
+- cue 1: show a, good, one, words, gone, solid, none
+"""
+    assert _check(text) == [
+        "line 27: scene A2, cast: 'one': 'via' should be two points separated by ';', each X Y or a member's "
+        "anchor like a.centre + 10 0, not '200 300'",
+        "line 28: scene A2, cast: 'words': 'via' should be two points separated by ';', each X Y or a member's "
+        "anchor like a.centre + 10 0, not 'left; 200 300'",
+        "line 29: scene A2, cast: 'gone': 'via' is 'b', which is not in the cast (a, good, one, words, gone, solid, "
+        "none)",
+        "line 30: scene A2, cast: 'solid': 'dash' should be two numbers above 0, the dash and the gap, not '12'",
+        "line 31: scene A2, cast: 'none': 'dash' should be two numbers above 0, the dash and the gap, not '12 0'",
+    ]
