@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 
-from videotools import brand, cli, elements, scenes, script
+from videotools import brand, choreography, cli, config, elements, scenes, script, timeline
 
 PROG = "check-script"
 WORDS_PER_SECOND = 2.6
@@ -125,6 +125,38 @@ def code_problems(data, script_path):
     return scenes.check_code(os.path.join(os.path.dirname(os.path.abspath(script_path)), folder), data)
 
 
+def choreography_problems(data, args, script_path):
+    """The problems with every described scene (choreography.check): the library opened from
+    --elements or the config file when a cast names a library element (one problem when it
+    cannot be, the pieces still checked), cue lengths from work/narration/timing.json when it
+    exists, else the estimate. Nothing when no scene is described or the settings are unusable
+    (their problems are already listed)."""
+    described = [sc for sc in data["scenes"] if sc["cast"] or sc["panels"]]
+    if not described:
+        return []
+    problems, lib = [], None
+    casts = [m for sc in described for m in sc["cast"] + [m for p in sc["panels"].values() for m in p["cast"]]]
+    if any(m["element"] not in choreography.PIECES for m in casts):
+        try:
+            lib = elements.open_library(*elements.settings(args, config.read()))
+        except (cli.Failure, config.ConfigError) as f:
+            problems.append(str(f))
+    try:
+        settings = script.settings(data)
+    except (KeyError, ValueError):
+        return problems
+    folder = script.folder(script_path)
+    timing_path = os.path.join(folder, "work", "narration", "timing.json")
+    timing = None
+    if os.path.isfile(timing_path):
+        with open(timing_path, encoding="utf-8") as f:
+            timing = json.load(f)
+    for sc in described:
+        tl = timeline.build(settings, sc, timeline.clips_for(timing, sc), estimate=True)
+        problems += choreography.check(sc, tl, lib, folder)
+    return problems
+
+
 def parser():
     p = argparse.ArgumentParser(prog=PROG, description="Read a video's script.md, check it against "
                                 "the script format, and list what needs approval and checking.")
@@ -155,6 +187,7 @@ def main(argv=None):
             problems.append(str(f))
     problems += phoneme_problems(data)
     problems += code_problems(data, args.SCRIPT)
+    problems += choreography_problems(data, args, args.SCRIPT)
     print(summary(data))
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:

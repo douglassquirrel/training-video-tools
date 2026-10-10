@@ -202,7 +202,17 @@ line, the text, the first such character with its code point, and the font file.
 never reported: the tools draw them (below). The fonts' character maps are read with the
 standard library, so this still needs nothing installed. It also checks the `[[…]]` phoneme
 spans in `say:` lines (`narrate`, above): an unclosed `[[`, an empty span, a symbol the voice
-would drop (with its code point), and a span in a caption, each by its line. `--json OUT` also
+would drop (with its code point), and a span in a caption, each by its line. On a scene with a
+`### Cast` (choreography described in the script and drawn from the video-elements library,
+PLAN.md item 15, being built: the format is documented here once the tools draw it), it checks
+the choreography too: the cast table and the moves list are read into data, every malformed line
+a problem; then each element (one of the tools' own pieces, or the library's, opened from
+`--elements` or `VIDEO_ELEMENTS_DIR` when a cast needs it, one problem when it cannot be), the
+anchors members are placed by, the parameters by name, kind and range (indices from 1, a data
+file under the video's folder), labels against the On screen list, states, each move's cue and
+its times against the cue's length (measured from `work/narration/timing.json` when it exists,
+else the estimate, said which), members never shown or shown twice, and a Mistake or Right way
+section in a scene with no mistake cue. `--json OUT` also
 writes the parsed script as JSON; it refuses to write over an existing file. Needs only Python 3.9's standard
 library, so it also runs as `/usr/bin/python3 check-script …`.
 
@@ -640,7 +650,11 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
-- 10 October 2026 (afternoon, last): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
+- 10 October 2026 (afternoon, later): `check-script` reads and checks a scene's `### Cast`, `### Moves`,
+  `### Mistake` and `### Right way` sections (PLAN.md item 15), opening the video-elements library
+  when a cast names one of its elements; a script without them checks exactly as before. Nothing
+  draws a described scene yet.
+- 10 October 2026 (afternoon): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,
   for the video-elements library (PLAN.md item 15, in progress): the root named goes on the
   import path at the point of use and the library is opened through its interface, each

@@ -570,6 +570,18 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   action as `{kind: show|hide|move|param|set|state, …}`. Every malformed line is a problem
   naming it; a row with any problem is left out of the cast; a table with the wrong header is
   one problem and its rows are not read. What a row means is increment 4.
+  **Increment 4, 15:20**: `choreography.check(scene, tl, lib, folder)` lists every problem of
+  "Checks" below (elements, anchors with patterns and indices, the pieces' and the library's
+  parameters by kind and range, data files and their row counts, states, labels, cues, times,
+  shown twice or never, panels without a mistake cue), and `check-script` calls it for every
+  described scene, opening the library from the settings only when a cast names a library
+  element (one problem when it cannot be; the pieces are still checked) and building each
+  scene's timeline from `timing.json` or the estimate. An index up to a data file's row count is
+  allowed (whether its first row is a header is the element's business; the element refuses at
+  draw time). Pieces' parameters: `pill` and `callout` `text`, `size`, `fill`, `colour`, `anchor`
+  (+ `target`); `text` `text`, `size`, `role`, `colour`, `anchor`; `badge` `ok`, `r`; `hand`
+  `angle`, `scale`, `mirror`, `label`; `arrow` `from`, `to`, `colour`, `width`; `state=` on a
+  library member is its initial state.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

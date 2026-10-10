@@ -7,6 +7,7 @@ has, a cue the scene has, a label in On screen) is checked later, against the li
 Standard library only; runs on Python 3.9.
 """
 
+import os
 import re
 import shlex
 
@@ -226,26 +227,27 @@ def parse_moves(lines, where, in_panel, problems):
 
 def parse_sections(scene, sections, problems):
     """Fill `scene['cast']`, `scene['moves']` and `scene['panels']` from the raw lines of its
-    `### Cast`, `### Moves`, `### Mistake` and `### Right way` sections ({name: [(n, line)]})."""
+    `### Cast`, `### Moves`, `### Mistake` and `### Right way` sections
+    ({name: {"line": heading line, "lines": [(n, line)]}})."""
     key = scene["key"]
     if "cast" in sections:
-        scene["cast"] = parse_cast_rows(_tables_only(sections["cast"], f"scene {key}, cast", problems),
+        scene["cast"] = parse_cast_rows(_tables_only(sections["cast"]["lines"], f"scene {key}, cast", problems),
                                         f"scene {key}, cast", problems)
     if "moves" in sections:
-        scene["moves"] = parse_moves([(n, ln) for n, ln in sections["moves"] if ln.strip()],
+        scene["moves"] = parse_moves([(n, ln) for n, ln in sections["moves"]["lines"] if ln.strip()],
                                      f"scene {key}, moves", False, problems)
     for panel in ("mistake", "right way"):
         if panel not in sections:
             continue
         where = f"scene {key}, {panel}"
         table, moves = [], []
-        for n, ln in sections[panel]:
+        for n, ln in sections[panel]["lines"]:
             s = ln.strip()
             if not s:
                 continue
             (table if s.startswith("|") else moves if s.startswith("-") else _reject(problems, n, where, s)).append(
                 (n, ln))
-        scene["panels"][panel] = {"cast": parse_cast_rows(table, where, problems),
+        scene["panels"][panel] = {"line": sections[panel]["line"], "cast": parse_cast_rows(table, where, problems),
                                  "moves": parse_moves(moves, where, True, problems)}
 
 
@@ -265,3 +267,366 @@ def _tables_only(lines, where, problems):
         else:
             problems.append(f"line {n}: {where}: not a cast row: {s}")
     return out
+
+
+# ---------------------------------------------------------------- what a row or a move means
+
+BOX_ANCHORS = ("top-left", "top-right", "bottom-left", "bottom-right", "centre")   # every member has these
+PANELS = ("mistake", "right way")
+# The pieces' parameters by name and kind: label (checked against On screen), number, colour (a name
+# frame.colour resolves), align (left, centre, right), yesno, anchor (a member's anchor, a.centre), text.
+PIECE_PARAMS = {
+    "pill": {"text": "label", "size": "number", "fill": "colour", "colour": "colour", "anchor": "align"},
+    "callout": {"text": "label", "target": "anchor", "size": "number", "fill": "colour", "colour": "colour",
+                "anchor": "align"},
+    "text": {"text": "label", "size": "number", "role": "text", "colour": "colour", "anchor": "align"},
+    "badge": {"ok": "yesno", "r": "number"},
+    "hand": {"angle": "number", "scale": "number", "mirror": "yesno", "label": "label"},
+    "arrow": {"from": "anchor", "to": "anchor", "colour": "colour", "width": "number"},
+}
+PIECE_REQUIRED = {"pill": ("text",), "callout": ("text", "target"), "text": ("text",), "badge": ("ok",),
+                  "hand": ("angle", "scale"), "arrow": ("from", "to")}
+ESTIMATE_NOTE = " (estimated at 2.6 words a second; run narrate for the measured length)"
+
+
+def _a(noun):
+    return ("an " if noun[0] in "aeiou" else "a ") + noun
+
+
+def _secs(t):
+    return f"{round(t, 3):g}"
+
+
+def check(scene, tl, lib, folder):
+    """Every problem with what a scene's choreography means: the elements (the pieces, and the
+    library's when `lib` is given), the anchors members are placed by, the parameters by name,
+    kind and range, labels against On screen, cues and times against `tl` (a Timeline), members
+    shown twice or never. `folder` is the video's, for data files. [] when all is well."""
+    key = scene["key"]
+    problems = []
+    has_mistake = any("mistake" in c for c in scene["cues"])
+    for panel in PANELS:
+        if panel in scene["panels"] and not has_mistake:
+            problems.append(f"line {scene['panels'][panel]['line']}: scene {key}: a {panel.capitalize()} section, "
+                            f"but no cue has a 'mistake:'")
+    labels = [it["text"] for it in scene["screen"]]
+    problems += _check_part(scene, scene["cast"], scene["moves"], f"scene {key}, cast", f"scene {key}, moves",
+                            tl, lib, labels, folder, panel=False)
+    for panel in PANELS:
+        if panel in scene["panels"]:
+            p = scene["panels"][panel]
+            where = f"scene {key}, {panel}"
+            problems += _check_part(scene, p["cast"], p["moves"], where, where, tl, lib, labels, folder, panel=True)
+    return problems
+
+
+def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel):
+    members = {m["name"]: m for m in cast}
+    rows_of = {m["name"]: _rows_file(m, lib, folder) for m in cast}   # name -> (file, row count) or None
+    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of}
+    problems = []
+    for m in cast:
+        at = f"line {m['line']}: {cast_where}: "
+        kind = _element_kind(m["element"], lib)
+        if kind is None:
+            problems.append(f"{at}'{m['name']}': no element '{m['element']}': not one of video-tools' pieces "
+                            f"({', '.join(PIECES)}) and not in the library ({', '.join(lib.names())})")
+        if m["where"]["kind"] == "anchor":
+            problem = _anchor_problem(ctx, m["where"], m["name"])
+            if problem:
+                problems.append(f"{at}'{m['name']}' is placed by {problem}")
+        if kind == "piece":
+            problems += [at + p for p in _piece_params(m, ctx)]
+        elif kind == "library":
+            problems += [at + p for p in _library_params(m, ctx)]
+    shown_problems, move_problems = _check_moves(scene, ctx, moves, moves_where, tl, panel)
+    for m in cast:
+        if not panel and m["name"] in shown_problems:
+            problems.append(f"line {m['line']}: {cast_where}: '{m['name']}' is never shown")
+    return problems + move_problems
+
+
+def _element_kind(element, lib):
+    """'piece', 'library', or None for an element nobody has; 'unknown' when there is no library
+    to ask (check-script says why)."""
+    if element in PIECES:
+        return "piece"
+    if lib is None:
+        return "unknown"
+    try:
+        lib.element(element)
+    except Exception:
+        return None
+    return "library"
+
+
+def _anchor_names(member, lib):
+    """The anchors a member can be placed by, or None when the library is not here to say."""
+    if member["element"] in PIECES:
+        return list(BOX_ANCHORS)
+    if lib is None:
+        return None
+    try:
+        return list(lib.element(member["element"])["anchors"]) + list(BOX_ANCHORS)
+    except Exception:
+        return None
+
+
+def _anchor_matches(name, pattern):
+    """'row.3' matches 'row.*'; 'cell.3.2' matches 'cell.*.*'; a plain name matches itself."""
+    a, b = name.split("."), pattern.split(".")
+    return len(a) == len(b) and all(x == y or (y == "*" and x.isdigit()) for x, y in zip(a, b))
+
+
+def _anchor_problem(ctx, where, self_name=None):
+    """None, or the rest of a sentence: 'X', which is not in the cast (…) / 'X'.'y', but …"""
+    members, target, anchor = ctx["members"], where["member"], where["anchor"]
+    if target == self_name:
+        return "itself"
+    if target not in members:
+        return f"'{target}', which is not in the cast ({', '.join(members)})"
+    names = _anchor_names(members[target], ctx["lib"])
+    if names is None:
+        return None
+    if any(_anchor_matches(anchor, n) for n in names):
+        rows = ctx["rows_of"].get(target)
+        index = _first_index(anchor)
+        if index == 0:
+            return f"'{target}'.'{anchor}', but rows count from 1"
+        if rows and index is not None and index > rows[1]:
+            return f"'{target}'.'{anchor}', but {rows[0]} has {rows[1]} rows"
+        return None
+    element = members[target]["element"]
+    listed = ", ".join(names[:-1]) + " and " + names[-1]
+    return f"'{target}'.'{anchor}', but {_a(element)}'s anchors are {listed}"
+
+
+def _first_index(name):
+    """The first index in a dotted name ('highlight.3' -> 3, 'cell.3.2' -> 3), or None."""
+    parts = name.split(".")
+    return int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
+
+
+def _rows_file(m, lib, folder):
+    """(file as written, its row count) for a library member whose `rows` parameter names a
+    readable CSV under the video's folder; else None."""
+    if m["element"] in PIECES or lib is None or folder is None or "rows" not in m["params"]:
+        return None
+    path = os.path.join(folder, m["params"]["rows"])
+    if not os.path.isfile(path):
+        return None
+    import csv
+    with open(path, encoding="utf-8", newline="") as f:
+        return m["params"]["rows"], sum(1 for _ in csv.reader(f))
+
+
+def _param_match(name, params):
+    """The description of the parameter `name` names ('highlight.3' matches 'highlight.*'), or None."""
+    for pattern, desc in params.items():
+        if _anchor_matches(name, pattern):
+            return desc
+    return None
+
+
+def _library_value_problem(desc, name, value, ctx):
+    """The problem with a value for a library element's parameter, or None."""
+    kind = desc["type"]
+    if kind in ("number", "integer"):
+        if not re.match(f"^{NUM}$" if kind == "number" else r"^-?\d+$", value):
+            noun = "a number" if kind == "number" else "a whole number"
+            return f"'{name}' should be {noun}, not '{value}'"
+        if not desc["min"] <= float(value) <= desc["max"]:
+            return f"'{name}' is {desc['min']:g} to {desc['max']:g}, not '{value}'"
+    elif kind == "colour":
+        if not value:
+            return f"'{name}' needs a colour name"
+    elif kind == "boolean":
+        if value not in ("yes", "no", "true", "false"):
+            return f"'{name}' is yes or no (true or false), not '{value}'"
+    elif kind == "label":
+        if value not in ctx["labels"]:
+            return f"draws '{value}', which is not in the script's On screen list ({', '.join(ctx['labels'])})"
+    elif kind == "rows":
+        if ctx["folder"] is not None and not os.path.isfile(os.path.join(ctx["folder"], value)):
+            return f"'{name}' names {value}, which is not under {ctx['folder']}"
+    return None
+
+
+def _index_problem(name, rows):
+    index = _first_index(name)
+    if index == 0:
+        return f"'{name}' counts from 1"
+    if rows and index is not None and index > rows[1]:
+        return f"'{name}': {rows[0]} has {rows[1]} rows"
+    return None
+
+
+def _state_problem(el, state):
+    if not el["states"]:
+        return f"{_a(el['name'])} has no states"
+    if state not in el["states"]:
+        return f"{_a(el['name'])} has no state '{state}' (its states are {', '.join(el['states'])})"
+    return None
+
+
+def _library_params(m, ctx):
+    el = ctx["lib"].element(m["element"])
+    params, out = el["params"], []
+    for name, desc in params.items():
+        if desc["type"] == "rows" and name not in m["params"]:
+            out.append(f"'{m['name']}': {_a(el['name'])} needs '{name}'")
+    for name, value in m["params"].items():
+        if name == "state":
+            problem = _state_problem(el, value)
+        else:
+            desc = _param_match(name, params)
+            if desc is None:
+                out.append(f"'{m['name']}': {_a(el['name'])} has no parameter '{name}' "
+                           f"(its parameters are {', '.join(params)})")
+                continue
+            problem = (_index_problem(name, ctx["rows_of"].get(m["name"]))
+                       or _library_value_problem(desc, name, value, ctx))
+        if problem:
+            out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
+    return out
+
+
+def _value_problem(kind, name, value, members, lib, labels):
+    """The problem with a parameter value of `kind`, or None."""
+    if kind == "number":
+        if not re.match(f"^{NUM}$", value):
+            return f"'{name}' should be a number, not '{value}'"
+    elif kind == "align":
+        if value not in ("left", "centre", "right"):
+            return f"'{name}' is left, centre or right, not '{value}'"
+    elif kind == "yesno":
+        if value not in ("yes", "no"):
+            return f"'{name}' is yes or no, not '{value}'"
+    elif kind == "label":
+        if value not in labels:
+            return f"draws '{value}', which is not in the script's On screen list ({', '.join(labels)})"
+    elif kind == "anchor":
+        where = parse_where(value)
+        if not where or where["kind"] != "anchor":
+            return f"'{name}' should be a member's anchor like a.centre, not '{value}'"
+        problem = _anchor_problem({"members": members, "lib": lib, "rows_of": {}}, where)
+        if problem:
+            return f"'{name}' is {problem}"
+    return None
+
+
+def _piece_params(m, ctx):
+    members, lib, labels = ctx["members"], ctx["lib"], ctx["labels"]
+    piece, params = m["element"], PIECE_PARAMS[m["element"]]
+    out = []
+    for name in PIECE_REQUIRED[piece]:
+        if name not in m["params"]:
+            out.append(f"'{m['name']}': {_a(piece)} needs '{name}'")
+    for name, value in m["params"].items():
+        if name not in params:
+            out.append(f"'{m['name']}': {_a(piece)} has no parameter '{name}' "
+                       f"(its parameters are {', '.join(params)})")
+            continue
+        problem = _value_problem(params[name], name, value, members, lib, labels)
+        if problem:
+            out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
+    return out
+
+
+def _resolve(tl, cue, when):
+    ref, offset = when
+    return offset if ref == "start" else tl.length(cue) + offset
+
+
+def _check_moves(scene, ctx, moves, where, tl, panel):
+    """([members never shown], [problems]) for a cast's moves."""
+    members, lib, labels = ctx["members"], ctx["lib"], ctx["labels"]
+    problems, events = [], []
+    for mv in moves:
+        at = f"line {mv['line']}: {where}: "
+        cue, act = mv["cue"], mv["action"]
+        if not panel:
+            if not 1 <= cue <= len(scene["cues"]):
+                problems.append(f"{at}cue {cue}: the scene has {len(scene['cues'])} cues")
+                continue
+            length = tl.length(cue)
+            for when in (mv["start"], mv["end"]):
+                t = _resolve(tl, cue, when)
+                if t > length + 1e-9:
+                    note = ESTIMATE_NOTE if cue in tl.estimated else ""
+                    problems.append(f"{at}{_secs(t)} s is past the end of cue {cue}, which is {length:.1f} s "
+                                    f"long{note}")
+                    break
+        names = act.get("names", [act.get("name")])
+        missing = [n for n in names if n not in members]
+        for n in missing:
+            problems.append(f"{at}'{n}' is not in the cast ({', '.join(members)})")
+        if missing:
+            continue
+        if act["kind"] in ("show", "hide"):
+            t = (tl.start(cue) if not panel else 0.0) + mv["start"][1]
+            for n in names:
+                events.append((t, mv["line"], act["kind"], n, cue))
+        elif act["kind"] == "move":
+            if act["to"]["kind"] == "anchor":
+                problem = _anchor_problem(ctx, act["to"])
+                if problem:
+                    problems.append(f"{at}'{act['name']}' moves to {problem}")
+        elif act["kind"] == "state":
+            member = members[act["name"]]
+            if member["element"] in PIECES:
+                problems.append(f"{at}'{act['name']}' is {_a(member['element'])}, and the pieces have no states")
+            elif _element_kind(member["element"], lib) == "library":
+                el = lib.element(member["element"])
+                problem = _state_problem(el, act["from"]) or _state_problem(el, act["to"])
+                if problem:
+                    problems.append(f"{at}'{act['name']}': {problem}")
+        else:                                   # param (animate) or set
+            member = members[act["name"]]
+            values = [act["value"]] if act["kind"] == "set" else [act["from"], act["to"]]
+            if _element_kind(member["element"], lib) == "library":
+                el = lib.element(member["element"])
+                desc = _param_match(act["param"], el["params"])
+                if desc is None:
+                    problems.append(f"{at}'{act['name']}': {_a(el['name'])} has no parameter '{act['param']}' "
+                                    f"(its parameters are {', '.join(el['params'])})")
+                    continue
+                problem = _index_problem(act["param"], ctx["rows_of"].get(act["name"]))
+                for v in values:
+                    problem = problem or _library_value_problem(desc, act["param"], v, ctx)
+                if problem:
+                    sep = " " if problem.startswith("draws") else ": "
+                    problems.append(f"{at}'{act['name']}'{sep}{problem}")
+            elif member["element"] in PIECES:
+                params = PIECE_PARAMS[member["element"]]
+                if act["param"] not in params:
+                    problems.append(f"{at}'{act['name']}': {_a(member['element'])} has no parameter "
+                                    f"'{act['param']}' (its parameters are {', '.join(params)})")
+                    continue
+                for v in values:
+                    problem = _value_problem(params[act["param"]], act["param"], v, members, lib, labels)
+                    if problem:
+                        sep = " " if problem.startswith("draws") else ": "
+                        problems.append(f"{at}'{act['name']}'{sep}{problem}")
+                        break
+    shown = {n: None for n in members}           # name -> the line that showed it, or None
+    if panel:
+        for n in members:
+            if not any(e[3] == n and e[2] == "show" for e in events):
+                shown[n] = 0                     # shown from the start
+    never = set(members)
+    for _t, line, kind, n, cue in sorted(events, key=lambda e: (e[0], e[1])):
+        at = f"line {line}: {where}: "
+        if kind == "show":
+            never.discard(n)
+            if shown[n] is not None:        # never 0 here: a member with a show is not shown from the start
+                when = "" if panel else f" at cue {cue}"
+                problems.append(f"{at}'{n}' is shown again{when} while still shown (shown at line {shown[n]}, "
+                                "not hidden since)")
+            shown[n] = line
+        else:
+            if shown[n] is None:
+                when = "" if panel else f" at cue {cue}"
+                problems.append(f"{at}'{n}' is hidden{when} but was not shown")
+            shown[n] = None
+    return never, sorted(problems, key=lambda p: int(p.split(":")[0].split()[1]))

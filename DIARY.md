@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 14:45. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 15:25. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -27,21 +27,22 @@ data; elements `pot`, an svg with fixed anchors, and `table`, a code element wit
 does not); and **the third increment** (Squirrel, 14:20: "continue with increments 3-5"):
 `videotools.choreography` parses the Cast table, the Moves list and the Mistake and Right way
 sections into plain data on every scene (`cast`, `moves`, `panels`), every malformed line a
-problem by line (PLAN.md item 15, "Built"). Nothing calls `open_library` yet, and nothing checks
-what a cast row means. **The next step** is increment 4, the `check-script` checks of item 15
-"Checks" against the invented library, in three parts: structure (cues, times, names, shown
-twice or never, panels without a mistake cue, the pieces' parameters and labels), the library
-(elements, anchors, parameters with types and ranges, data files and indices, states, label
-parameters), and the wiring in `check-script` (the library opened from the settings, one
-problem when it cannot be, cue lengths from `timing.json` or the estimate); then increment 5,
-the scene-loading rule. A new session
+problem by line (PLAN.md item 15, "Built"); and **the fourth increment**:
+`choreography.check` lists every problem of item 15 "Checks" (structure, the pieces, the
+library's elements, anchors, parameters, data files, states, labels, cues and times, shown twice
+or never), and `check-script` runs it on every described scene, opening the library from the
+settings only when a cast names a library element. Nothing draws a described scene yet: `stills`
+and `render` still load the scene's module as before. **The next step** is increment 5, the
+scene-loading rule: a described scene needs no `code`, a described panel needs no
+`mistake`/`right_way`, a scene with both draws the cast first (the drawing itself is increment
+6); `scenes.needed`, `check_code`, `load` and `frame.draw_frame`/`mistake_panels` change. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-14:45; anything at its top level other than README.md is new and is reported to Squirrel, never
+15:25; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 411 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 431 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -71,7 +72,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–3 built, 4 and 5 OK'd in advance at 14:20: "stop if you need anything from me
+increments 1–4 built, 5 OK'd in advance at 14:20: "stop if you need anything from me
 else keep going"); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) has its steps 1–5 of 8 done (14:35, commits `c12033a`,
 `ee9e553`: the reader, checks and `credits`, our four asks, `Element.draw` for svg elements
@@ -1944,3 +1945,48 @@ left out of the cast, so increment 4 never checks a half-read row. Squirrel note
 progress mid-increment (its steps 4 and 5); nothing in our inbox.
 
 **State.** 411 green, 98%, lint clean, pushed. Next: increment 4, the checks.
+
+### 10 October 2026 — Item 15, increment 4: the checks, and check-script running them
+
+**Goal.** Every check of item 15 "Checks" on a described scene, against the invented library,
+and `check-script` listing them by line.
+
+**Test.** Three files. `tests/tier1/test_choreography_check.py` (nine tests, no library): a
+well-formed described scene clean; a panel section without a mistake cue; an element nobody
+has (with the library) and no complaint without one; Where and `move … to` needing the member
+and one of its anchors (a piece's are the five box corners and centre; not itself); the
+pieces' parameters by name, kind and what is required; labels against On screen (a pill's
+`text`, a hand's `label`, in a panel too); a move's cue, time (past the end, with and without
+the estimate note) and member; never shown, shown again while shown, hidden while not, in the
+scene and in a panel. `tests/tier1/test_choreography_library.py` (five tests, the invented
+library): clean with `pot` and `table`; anchors the element lacks, `row.0`, `cell.3` (wrong
+depth), `tab.2`; parameters by name, kind (number, whole number, colour, yes/no, label) and
+range, indexed names, `rows` required; a data file under the video and an index past its rows
+(an index up to the count allowed); states. `tests/tier2/test_check_script_choreography.py`
+(six tests): scene A of the example described, clean with `--elements` and with the config
+file; no setting is one problem and the pieces are still checked; an element the library
+lacks by line; a time past a cue estimated, then measured after `narrated()`; a bad folder.
+
+**Red.** Tier 1: `9 failed` / `3 failed` on `AttributeError: module 'videotools.choreography' has
+no attribute 'check'` and `assert [] == […]`; tier 2: `assert (0, '') == (1, '')` for the three
+tests that can fail before the wiring (the three "clean" ones pass trivially until it exists).
+
+**Green.** Tier 1 `21 passed in 0.05s`, tier 2 `6 passed in 1.05s`; the full suite
+`431 passed in 128.40s (0:02:08)`, `TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** The parser now records each panel section's heading line, for the
+"no mistake cue" message. A library element's `state=` in the cast is its initial state,
+checked against its states. Index 0 is "counts from 1" for parameters and anchors alike (the
+anchor case first gave the anchors-list message; the pattern match now accepts 0 and the index
+check names it). An index up to a data file's row count is allowed: whether the first row is a
+header is the element's business and it refuses at draw time (video-elements' reply). The
+first offending time of a move is reported, start before end. The anchors-with-library test
+passed first time: increment 4a's anchor code already read the library's patterns; it was
+then sharpened with the `row.0` case, which failed and passed. Several of my expected line
+numbers were miscounted again and corrected against the real output after the code was read
+and seen right; one expected message (`highlight.4` on a four-row file) contradicted the
+generous rule and was dropped; one expected time (`3.5 s` on a `5.2 s` cue) was not past the
+end at all. The example's cue 1 is 12 words, so its estimate is 5.2 s, not the 4.8 I first
+assumed.
+
+**State.** 431 green, 98%, lint clean. Next: increment 5.

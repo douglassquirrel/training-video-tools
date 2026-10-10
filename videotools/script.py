@@ -84,6 +84,8 @@ def parse(text):
             sub, item = line[4:].strip().lower(), None
             if section != "scene":
                 problems.append(f"line {n}: '{line.strip()}' outside a scene")
+            elif sub in CHOREOGRAPHY_SECTIONS:
+                scene["_sections"][sub] = {"line": n, "lines": []}
             continue
         if section in ("settings", "colours", "insets"):
             if line.startswith("|"):
@@ -116,7 +118,7 @@ def parse(text):
                 problems.append(f"line {n}: scene {scene['key']}: not a cue or a cue's sub-bullet: {line.strip()[:60]}")
             continue
         if sub in CHOREOGRAPHY_SECTIONS:
-            scene["_sections"].setdefault(sub, []).append((n, line))
+            scene["_sections"][sub]["lines"].append((n, line))
             continue
         if sub in ("side panel", "on screen"):
             dest = scene["side"] if sub == "side panel" else scene["screen"]
