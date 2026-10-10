@@ -364,3 +364,49 @@ def test_rotate_is_a_number_on_a_library_member_too_and_is_not_one_of_the_elemen
         "line 26: scene A2, cast: 'q': 'rotate' should be a number, not 'lots'",
         "line 32: scene A2, moves: 'q': 'rotate' should be a number, not 'round'",
     ]
+
+
+# ---- item 20 (request 18), 4: a cast row chooses a data file's rows and columns
+
+def test_a_rows_qualifier_is_checked_and_the_rows_counted_are_the_ones_chosen(lib, folder):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| t | table | 10 10 | 300x100 | rows=assets/sample.csv rows.columns="Sales Rep" rows.first=2 highlight.3=1 | 3 rows chosen |
+| u | table | 10 10 | 300x100 | rows=assets/sample.csv rows.first=2 highlight.4=1 | row 4 is not among them |
+| v | table | 10 10 | 300x100 | rows=assets/sample.csv rows.columns="Bonus" rows.where="Sales Rep = Nobody" | |
+| w | pot | 10 10 | 100 | rows.first=2 | |
+| x | table | 10 10 | 300x100 | rows.first=2 | |
+| y | pill | 10 10 | | text="Sample output" rows.first=2 | |
+
+### Moves
+
+- cue 1: show t, u, v, w, x, y
+"""
+    assert _check(text, lib, folder) == [                   # the first cast row is line 25
+        "line 26: scene A2, cast: 'u': 'highlight.4': assets/sample.csv has 3 rows as chosen",
+        "line 27: scene A2, cast: 'v': 'rows.where': no row has 'Nobody' in column 'Sales Rep'",
+        "line 27: scene A2, cast: 'v': 'rows.columns': no column 'Bonus' (the columns are Sales Rep, Commission)",
+        "line 28: scene A2, cast: 'w': 'rows.first' qualifies 'rows', which a pot does not take as a data file",
+        "line 29: scene A2, cast: 'x': a table needs 'rows'",
+        "line 29: scene A2, cast: 'x': 'rows.first' qualifies 'rows', which is not given",
+        "line 30: scene A2, cast: 'y': a pill has no parameter 'rows.first' (its parameters are text, size, fill, "
+        "colour, anchor)",
+    ]
+
+
+def test_a_choice_that_cannot_be_made_is_refused_in_words_when_the_parameters_are_worked_out(lib, folder):
+    from videotools import cli, perform
+    scene = _scene(HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| v | table | 10 10 | 300x100 | rows=assets/sample.csv rows.columns="Bonus" | |
+""")
+    p = perform.Performance(scene["cast"], [], (40, 118, 1422, 818), TL, 1.0, lib, folder=folder)
+    with pytest.raises(cli.Failure) as e:
+        p.params(scene["cast"][0])
+    assert str(e.value) == "'v': 'rows.columns': no column 'Bonus' (the columns are Sales Rep, Commission)"

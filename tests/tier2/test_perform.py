@@ -809,3 +809,16 @@ def test_a_show_timed_in_percentages_of_its_cue_is_drawn_at_those_moments(exampl
     video = frame.Video(describe(example, timed), INVENTED, None)
     assert _draw(video, "table", 2.35)[1]["alpha"] == pytest.approx(0.5)
     assert _draw(video, "table", 2.6)[1]["alpha"] == 1.0
+
+
+# ---- item 20 (request 18), 4: a cast row chooses a data file's rows and columns
+
+def test_an_element_is_handed_the_rows_and_columns_its_cast_row_chooses_and_sized_by_them(example):
+    chosen = NATURAL.replace("| sheet | table | 100 400 | | rows=assets/sample.csv |",
+                             '| sheet | table | 100 400 | | rows=assets/sample.csv rows.where="Rep != B" '
+                             'rows.first=2 rows.columns="Commission" |')
+    video = pointed(example, chosen)
+    rendered(video, "A", 2.0)
+    drawn = video.library.draws[0]
+    assert drawn["params"] == {"rows": [["Commission"], ["1"], ["3"]]}       # the qualifiers are not the element's
+    assert drawn["rect"] == (140.0, 518.0, 120.0, 90.0)                      # its natural size, from what was chosen

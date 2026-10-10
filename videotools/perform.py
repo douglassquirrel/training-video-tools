@@ -233,8 +233,13 @@ class Performance:
         for pname, value in member["params"].items():
             if pname == "state":
                 state = value
-            elif not pname.startswith(choreography.OWN_COLOUR):     # its own colours are not the element's parameters
-                out[pname] = self._convert(self._kind(member, pname), value)
+            elif not (pname.startswith(choreography.OWN_COLOUR) or choreography.is_qualifier(pname)):
+                kind = self._kind(member, pname)        # its own colours and a file's qualifiers are not the element's
+                out[pname] = self._convert(kind, value)
+                if kind == "rows":
+                    out[pname], problems = choreography.select_rows(out[pname], member["params"], pname)
+                    if problems:
+                        raise cli.Failure(f"'{name}': " + "; ".join(problems))
         if state is None and member["element"] not in choreography.PIECES:
             state = self.lib.element(member["element"]).get("default-state")
         for (a, b), mv in self._moves_of(name, ("param", "set", "state")):

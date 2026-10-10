@@ -3180,3 +3180,36 @@ cue for `end of scene`. Coverage showed two new refusals unreached (`74% s`; `0.
 
 **State.** 545 green, 98%, lint clean. Next: item 20, 4, a CSV's columns and rows (its pure
 function's tests are written and red).
+
+### 11 October 2026 — Item 20, 4: a cast row chooses a data file's rows and columns
+
+**Goal.** `rows.where`, `rows.first`, `rows.columns` beside `rows=FILE` (request 18, item 1;
+the names by Squirrel's answer of 00:28).
+
+**Tests.** Tier 1: `test_choreography_rows.py`, new, six tests of the pure
+`choreography.select_rows` (columns by name and number and in the order written; `where` with
+`=` and `!=`; `first` after `where`, columns last; the header always kept; every refusal in
+words; an empty file); `test_a_rows_qualifier_is_checked_and_the_rows_counted_are_the_ones_chosen`
+and `test_a_choice_that_cannot_be_made_is_refused_in_words_when_the_parameters_are_worked_out`
+(`test_choreography_library.py`). Tier 2:
+`test_an_element_is_handed_the_rows_and_columns_its_cast_row_chooses_and_sized_by_them`.
+
+**Red.** `AttributeError: module 'videotools.choreography' has no attribute 'select_rows'` for
+the function; then, for the check and the drawing, `'t': a table has no parameter
+'rows.columns' (its parameters are rows, tab, …)` (`3 failed, 60 deselected`).
+
+**Green.** `6 passed in 0.02s`; `322 passed in 13.66s` (tier 1 and `test_perform.py`); suite
+`554 passed in 146.92s (0:02:26)`, 98%; `All checks passed!` (three lines over 120 characters
+found by lint along the way).
+
+**Decision / surprise.** The order is fixed whatever order the qualifiers are written in:
+`where`, then `first`, then `columns`, so a `where` can test a column that `columns` then
+drops. The check counts rows for indices against what was chosen and says so (`assets/sample.csv
+has 3 rows as chosen`). A `where` with `=` that no row matches is a problem (a misspelt value
+would otherwise give an empty sheet); with `!=` it is not. The qualifiers are never among the
+parameters the element is handed, for its draw or its natural size (pinned: the stub gets
+`{"rows": […]}` alone). The same function serves the check and the drawing, and the drawing
+refuses in words too, for a caller that did not check first.
+
+**State.** Item 20's four parts built. 554 green, 98%, lint clean. Next: item 21, `flash`; then
+the README and the Tier 3 for both.

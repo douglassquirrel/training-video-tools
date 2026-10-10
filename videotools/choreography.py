@@ -13,6 +13,7 @@ import shlex
 
 NAME = r"[A-Za-z0-9][A-Za-z0-9-]*"
 DOTTED = r"[a-z][a-z0-9-]*(?:\.\d+)*"            # a parameter or anchor name, maybe indexed: highlight.3
+QUALIFIERS = ("where", "first", "columns")        # rows.where, .first, .columns: part of a data file, in that order
 ROTATE = "rotate"                                 # on any member: degrees clockwise about its box's centre
 OWN_COLOUR = "colour."                            # colour.<role>=<name>: a member's own colour for an element's role
 NUM = r"-?\d+(?:\.\d+)?"
@@ -39,6 +40,8 @@ _ANIMATE_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE}) (?:→|->) ({_VALUE
 _SET_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE})$")
 _STATE_RE = re.compile(rf"^({NAME}) ([a-z][a-z0-9-]*) (?:→|->) ([a-z][a-z0-9-]*)$")
 _LIST_RE = re.compile(r"^-\s+(.+)$")
+# a parameter's name: the element's own, maybe indexed; colour.<role>; or <rows parameter>.where / .first / .columns
+_PARAM_NAME_RE = re.compile(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*|[a-z][a-z0-9-]*\.(?:where|first|columns))$")
 
 WHERE_HELP = ("is not X Y in area pixels, a region ({}) or a member's anchor like sample.row.3 + 40 -12"
               .format(", ".join(REGIONS)))
@@ -78,6 +81,64 @@ def parse_dash(text):
     return [float(v) for v in parts]
 
 
+def _column(text, header, what):
+    """(index from 0, None) for a column written as its header's name or its number from 1; or
+    (None, a problem)."""
+    text = text.strip()
+    if text.isdigit():
+        n, count = int(text), f"{len(header)} column{'' if len(header) == 1 else 's'}"
+        return (n - 1, None) if 1 <= n <= len(header) else (None, f"'{what}': no column {n} (there are {count})")
+    if text in header:
+        return header.index(text), None
+    return None, f"'{what}': no column '{text}' (the columns are {', '.join(header)})"
+
+
+def select_rows(rows, params, name):
+    """(rows, [problems]) for a data file's rows as a cast row chooses them beside the parameter
+    `name`: `name.where` ("COLUMN = VALUE" or "COLUMN != VALUE") keeps the data rows that match,
+    `name.first` then the first N of them, `name.columns` ("A, B") then those columns in that
+    order. A column is its header's name or its number from 1; the first row is the header and
+    is always kept. With a problem, that choice is left unmade."""
+    where, first, columns = (params.get(f"{name}.{q}") for q in QUALIFIERS)
+    if where is None and first is None and columns is None:
+        return rows, []
+    if not rows:
+        q = next(q for q in QUALIFIERS if f"{name}.{q}" in params)
+        return rows, [f"'{name}.{q}': the file has no rows"]
+    header, data, problems = rows[0], rows[1:], []
+    if where is not None:
+        m = re.match(r"^(.+?)\s*(!=|=)\s*(.*)$", where)
+        if not m:
+            problems.append(f"'{name}.where' should be COLUMN = VALUE or COLUMN != VALUE, not '{where}'")
+        else:
+            col, problem = _column(m.group(1), header, f"{name}.where")
+            value, equal = m.group(3).strip(), m.group(2) == "="
+            if problem:
+                problems.append(problem)
+            else:
+                kept = [r for r in data if ((r[col].strip() if col < len(r) else "") == value) == equal]
+                if equal and not kept:
+                    problems.append(f"'{name}.where': no row has '{value}' in column '{header[col]}'")
+                else:
+                    data = kept
+    if first is not None:
+        if not first.isdigit() or int(first) < 1:
+            problems.append(f"'{name}.first' should be a whole number above 0, not '{first}'")
+        else:
+            data = data[:int(first)]
+    if columns is not None:
+        wanted = [c for c in columns.split(",") if c.strip()]
+        found = [_column(c, header, f"{name}.columns") for c in wanted]
+        if not wanted:
+            problems.append(f"'{name}.columns' names no column")
+        elif any(problem for _i, problem in found):
+            problems += [problem for _i, problem in found if problem]
+        else:
+            picked = [i for i, _problem in found]
+            header, data = [header[i] for i in picked], [[r[i] if i < len(r) else "" for i in picked] for r in data]
+    return [header] + data, problems
+
+
 def parse_size(text):
     """(ok, None | {'w', 'h'}): blank is the element's own size; W or WxH in pixels."""
     if not text:
@@ -97,7 +158,7 @@ def parse_params(text):
         return out, [f"Parameters: {e}"]
     for token in tokens:
         name, eq, value = token.partition("=")
-        if not eq or not re.match(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*)$", name):
+        if not eq or not _PARAM_NAME_RE.match(name):
             problems.append(f"Parameters: '{token}' is not name=value")
             continue
         out[name] = value
@@ -543,7 +604,7 @@ def _anchor_problem(ctx, where, self_name=None, placed=None):
         if index == 0:
             return f"'{target}'.'{anchor}', but rows count from 1"
         if rows and index is not None and index > rows[1]:
-            return f"'{target}'.'{anchor}', but {rows[0]} has {rows[1]} rows"
+            return f"'{target}'.'{anchor}', but {rows[0]} has {rows[1]} rows{rows[2]}"
         order = ctx.get("order", {})
         if (placed in order and _is_computed(members[target], anchor, ctx["lib"])
                 and order[target] >= order[placed]):
@@ -561,9 +622,16 @@ def _first_index(name):
     return int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
 
 
+def is_qualifier(name):
+    """True for `<parameter>.where`, `.first` or `.columns`: a choice of a data file's rows or columns."""
+    base, dot, last = name.rpartition(".")
+    return bool(dot) and last in QUALIFIERS
+
+
 def _rows_file(m, lib, folder):
-    """(file as written, its row count) for a library member whose `rows` parameter names a
-    readable CSV under the video's folder; else None."""
+    """(file as written, its row count, a note, [problems]) for a library member whose `rows`
+    parameter names a readable CSV under the video's folder: the rows counted are those its
+    qualifiers choose (the note says so), and the problems are those of the choosing; else None."""
     if m["element"] in PIECES or lib is None or folder is None or "rows" not in m["params"]:
         return None
     path = os.path.join(folder, m["params"]["rows"])
@@ -571,7 +639,9 @@ def _rows_file(m, lib, folder):
         return None
     import csv
     with open(path, encoding="utf-8", newline="") as f:
-        return m["params"]["rows"], sum(1 for _ in csv.reader(f))
+        rows, problems = select_rows(list(csv.reader(f)), m["params"], "rows")
+    chosen = any(f"rows.{q}" in m["params"] for q in QUALIFIERS)
+    return m["params"]["rows"], len(rows), " as chosen" if chosen else "", problems
 
 
 def _param_match(name, params):
@@ -611,7 +681,7 @@ def _index_problem(name, rows):
     if index == 0:
         return f"'{name}' counts from 1"
     if rows and index is not None and index > rows[1]:
-        return f"'{name}': {rows[0]} has {rows[1]} rows"
+        return f"'{name}': {rows[0]} has {rows[1]} rows{rows[2]}"
     return None
 
 
@@ -648,7 +718,12 @@ def _library_params(m, ctx):
         if desc["type"] == "rows" and name not in m["params"]:
             out.append(f"'{m['name']}': {_a(el['name'])} needs '{name}'")
     for name, value in m["params"].items():
-        if name.startswith(OWN_COLOUR):
+        if is_qualifier(name):
+            base = name.rpartition(".")[0]
+            problem = (f"'{name}' qualifies '{base}', which {_a(el['name'])} does not take as a data file"
+                       if params.get(base, {}).get("type") != "rows"
+                       else f"'{name}' qualifies '{base}', which is not given" if base not in m["params"] else None)
+        elif name.startswith(OWN_COLOUR):
             problem = _own_colour_problem(el, name, value, ctx["colours"])
         elif name == ROTATE:
             problem = _rotate_problem(value)
@@ -664,6 +739,8 @@ def _library_params(m, ctx):
                        or _library_value_problem(desc, name, value, ctx))
         if problem:
             out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
+        if name == "rows" and ctx["rows_of"].get(m["name"]):
+            out += [f"'{m['name']}': {p}" for p in ctx["rows_of"][m["name"]][3]]
     return out
 
 
