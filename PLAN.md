@@ -14,7 +14,11 @@ lacks them, and a check for characters a font lacks, item 12; and (10 October 20
 eleventh, `inbox/done/request-from-training-video-2026-10-10-11.md` ("Settled" 22): phonemes in
 `say:` lines, item 13; and (10 October 2026, 09:00) from the twelfth,
 `inbox/done/request-from-training-video-2026-10-10-12.md` ("Settled" 23): the mistake panel as
-a curtain known to scene code, and stills at cue changes with a warning, item 14. CLAUDE.md says how the work is done; this file says what
+a curtain known to scene code, and stills at cue changes with a warning, item 14; and (10 October 2026,
+10:40) from the thirteenth and fourteenth, `inbox/done/request-from-training-video-2026-10-10-13.md`
+and `…-14.md` ("Settled" 24 and 25): choreography in the script drawn from the video-elements
+library, item 15 (its format a proposal awaiting approval), and credits on the end card, item
+16. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -524,6 +528,296 @@ lifts for cue 3 (N pixels); fade it out while covered: frame.timeline.before_cur
 (it is a warning, the sheets are still written). It cannot see a change later than the lift,
 nor a picture that fades under the curtain and comes back; the README says so.
 
+## 15. Choreography in the script, drawn from video-elements (request 13; Squirrel, 10 October 2026, 10:36: the three details settled, "go ahead and do the format and get my approval on that")
+
+A video's own code is mostly choreography: "this appears at cue 2 after 0.4 s, moves there,
+highlights, gets a label". The request asks for the script to say it, in Markdown Squirrel reads
+and approves with the words, and for video-tools to do it, drawing the things themselves from
+the `video-elements` library (`~/projects/code/video-elements/`, its own repository, read-only
+from here), so a video's folder holds a script, data and sources and no code except for the
+genuinely unusual, which stays possible as a scene module.
+
+### Where the library is (item 1)
+
+Two settings in `~/.video-tools.conf`, each also a flag on every command that draws
+(`stills`, `render`, `frame-hashes`, `compare-frames`) and on `check-script`, the flag winning
+(Squirrel, 10 October 2026, 10:36: "yes", "repo root"):
+
+- `VIDEO_ELEMENTS_DIR` / `--elements DIR`: the root of the video-elements repository, the folder
+  holding the package `videoelements/` and the drawings `elements/`. At the point of use the
+  command puts that folder on Python's import path, imports `videoelements.library`, and opens
+  `elements/` under it. The package is never installed into this repository's venv.
+- `RSVG_CONVERT` / `--renderer PATH`: the SVG renderer, passed through to the library as its
+  `renderer`; absent, the library's own default (`rsvg-convert` on PATH). The training-video
+  project's Linux shell runs one extracted from a package, not on PATH.
+
+A script with a described scene and no library setting, a folder that is missing or has no
+`videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the
+setting and the folder, exit 3. A script with no described scene never needs the library.
+
+**The interface**, video-elements' settled text (its PLAN.md "The interface video-tools calls";
+Squirrel, 10 October 2026, 10:36: "go with the choice in video-elements"). The same words are in
+both READMEs; a change goes through Squirrel to both:
+
+```python
+from videoelements import library
+lib = library.open(path, renderer="rsvg-convert")   # the elements folder; refuses in words, exit 3
+el = lib.element("spreadsheet")               # description: size, anchors, states, params, colours
+anchors = el.draw(frame, rect, state=None, params=None, alpha=1.0)
+#   frame: video-tools' scenes.Frame (ctx, brand, colours, label(), text(), …)
+#   rect:  (x, y, w, h) in frame pixels
+#   state: a name, or (from, to, p) for a change part-way (a cross-fade, or a morph for code)
+#   params: the element's animatable parameters by name; unknown or out-of-range ones refused
+#   returns {anchor name: (x, y)} in frame pixels, for labels, hands and arrows
+lib.credits(names)                            # request 2: credit lines for the elements a video used
+```
+
+### The choreography format (item 2): *proposal, awaiting Squirrel's approval*
+
+Two new `###` sections in a scene, after `### On screen`, and two for the mistake panels. Prose
+under `### Pictures` stays for people. The training-video project's `SCRIPT-FORMAT.md` gets this
+text once approved (their side).
+
+```
+## Scene <key>: <name>
+   (property table)                     `code` now optional: a scene may have a module, a
+   ### Narration                        description (Cast and Moves), or both
+   ### Side panel
+   ### On screen
+   ### Pictures                         prose for people, as now
+   ### Cast                             table: everything on screen, named once
+   ### Moves                            list: what happens, by cue
+   ### Mistake                          the "Mistake" panel: a Cast table, then an optional Moves list
+   ### Right way                        the "Right way" panel: likewise
+```
+
+**The cast.** A table `| Name | Element | Where | Size | Parameters | Notes |`; the tools read the
+first five columns, Notes is for people. Members are drawn in the table's order (later over
+earlier).
+
+- **Name**: letters, digits and hyphens, unique in the scene (`sample`, `tick-1`). Moves and
+  anchors refer to it.
+- **Element**: a library element by name (`spreadsheet`, `person`), or one of video-tools'
+  own pieces, which take the same columns: `pill`, `callout`, `text` (a label, drawn by
+  `frame.tag`, `frame.callout`, `frame.text`), `badge`, `hand`, `arrow`. The request's "label …
+  at", "arrow from … to" and "hand at" are these: a label is a cast member, so it is shown,
+  hidden and moved like anything else. The chrome's pieces stay here; everything else comes from
+  the library (video-elements PLAN.md, "The starter set").
+- **Where**: the member's top-left (its anchor point for a label, hand or badge), as `X Y` in the
+  animation area's pixels (0 0 is the area's top-left; the area is 1422 × 818 at 40, 118 of the
+  frame); or a region, `left`, `right`, `centre`, `top-left`, `top-right`, `bottom-left`,
+  `bottom-right`, `full` (the halves and quarters of the area: the member is centred in it); or
+  another member's anchor, `sample.row.3`, with an optional offset, `sample.row.3 + 40 -12`.
+  Anchors are the element's own, from its description (`row.N`, `cell.R.C`, `tab.N`, `head`,
+  `hand`, …), plus `top-left`, `top-right`, `bottom-left`, `bottom-right` and `centre` of any
+  member's box. A member placed by another's anchor follows it when that one moves.
+- **Size**: `W` (the width in pixels, the height from the element's own proportions) or `WxH`;
+  blank for the element's own size (an SVG's, or what a data-driven element makes of its data
+  and parameters). A region with a blank size fits the element inside it.
+- **Parameters**: `name=value` pairs, space-separated, values with spaces in double quotes:
+  `rows=assets/sample-output-2024-04.csv numeric=2 row-height=58 text-size=22`. The names are
+  the element's, from its description; the state of a multi-state element is `state=lump`. A
+  value naming a file under the video's folder (`assets/….csv`, `.txt`) is read by video-tools
+  (CSV into rows, text as it is) and handed to the element as that parameter: the library never
+  reads the video's folder. A quoted value for a parameter the element declares as a label
+  (a tab name, a prompt, a file name, a pill's `text`) goes through `frame.label`, so the On
+  screen check holds; data (cell values) does not. The pieces' own parameters: `pill` and
+  `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`, `right`), and for
+  `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`, `anchor`; `badge`:
+  `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`; `arrow`: `from`, `to`
+  (anchors), `colour`, `width`. Colours by name, as `frame.colour` resolves them.
+
+**The moves.** A list, one move a line, each `cue N[, TIME]: ACTION`:
+
+- **`cue N`** is the cue's number in the scene's Narration; **TIME** is `A s` (from A seconds
+  after the cue's start, for 0.6 s), `A–B s` (from A to B), or `over the cue` (from the start
+  to the cue's end). A or B may be negative, or `end`, `end-1.2` (relative to the cue's end).
+  No TIME: `0–0.6 s`. Every change is eased (smoothstep, as `tl.p` eases) over its span; a
+  change with an empty span is a step.
+- **`show NAME[, NAME…]`**: fade in. **`hide NAME[, …]`**: fade out. A member is on screen from
+  its show to its hide; before its first show it is not drawn at all (the request's "shown at a
+  cue and hidden at another, with frames sampled for its presence").
+- **`move NAME to WHERE`**: glide to a place written as in the Where column.
+- **`NAME.PARAM A → B`**: animate a parameter (`prompt.progress 0 → 1`, `sample.rows-shown 0 → 3`,
+  `gauge.level 0.2 → 0.9`); **`NAME.PARAM VALUE`**: set it (`sample.highlight-colour.3 correct`);
+  **`NAME STATE → STATE`**: change state (`clay lump → vase`: a morph for a coded element, a
+  cross-fade for drawn states). A parameter with an index (a row, a cell) is written with dots,
+  `highlight.3`, `cell-alpha.3.2`; the names, their types and ranges are the element
+  description's, and video-tools refuses what it does not list.
+
+**The mistake panels.** `### Mistake` and `### Right way` each hold a Cast table (Where in the
+panel's own pixels, 0 0 the panel body's top-left under its heading band, 690 × 728) and an
+optional Moves list whose lines have no `cue N`: `0.4–0.8 s: show total` counts from the
+moment the panels start to rise. A panel member with no show is shown from the start. Each
+panel has its own small cast, as the request asks.
+
+**The curtain for free.** A member shown before the mistake cue and not named in any move at or
+after the cue that follows it is multiplied by `before_curtain`, so it fades while the panels
+cover it and the glimpse of request 12 cannot be written by accident. One named after the
+mistake (hidden, moved or changed at the next cue) is left to its moves.
+
+**Labels**: every `text` parameter of a `pill`, `callout` or `text` member, and every library
+parameter declared a label, is checked against the scene's On screen list as `frame.label`
+checks now, by `check-script` before drawing and again at draw time.
+
+**With a module.** A scene with `code` and a description: the described cast is drawn first,
+then the module's `draw(frame)` over it; a panel with a Cast table and a module: the cast, then
+`mistake`/`right_way`. A scene with a description needs no `code`, and a described panel needs
+no `mistake`/`right_way` function; `scenes.needed` and `check-script` ask for a function only
+where no description covers it. A step scene with neither is refused by name, as now.
+
+**Worked example: scene A2 of "App For That"**, re-described from its module
+`videos/app-for-that/scenes/sample_output.py` (read, not copied), the module's frame pixels
+turned into area pixels (X 110 → 70, Y 250 → 132). The element names and parameters assume
+video-elements' `spreadsheet` (its PLAN.md starter set: `rows-shown`, per-row `highlight`,
+per-cell alpha, anchors per cell and row) and one element the starter set does not have, a
+`formula-bar` (the cell reference and its content), which the training-video project would
+request from video-elements. The working lines are at fixed offsets where the module spreads
+them over the cue's measured length; the compare with v4 shows whether that matters.
+
+```markdown
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| sample-tag | pill | sample.top-left + 0 -30 | | text="Sample output" size=22 fill=sheet-tab | |
+| sample | spreadsheet | 70 132 | | rows=assets/sample-output-2024-04.csv widths="300 230" numeric=2 row-height=58 text-size=22 rows-shown=0 cell-alpha.3.2=0 | L. Chen's figure arrives from the working |
+| working-1 | text | 760 352 | | text="8% of 12,500 = 1,000" size=36 role=display | |
+| working-2 | text | 760 430 | | text="sector bonus 2% = 250" size=36 role=display | |
+| working-3 | text | 760 508 | | text="closed April 15: + 500" size=36 role=display | |
+| total | text | 760 586 | | text="= 1,750" size=40 role=display colour=accent | drops into the cell |
+| checker | hand | sample.row.1 + 190 40 | | angle=3.3 scale=0.8 | someone else |
+| tick-1 | badge | sample.row.1 + 40 0 | | ok=yes r=20 | |
+| tick-2 | badge | sample.row.2 + 40 0 | | ok=yes r=20 | |
+| tick-3 | badge | sample.row.3 + 40 0 | | ok=yes r=20 | |
+| checked | pill | sample.row.3 + 40 80 | | text="checked ✓" size=24 fill=correct anchor=centre | |
+
+### Moves
+
+- cue 1: show sample-tag, sample
+- cue 1, 0.5–1.7 s: sample.rows-shown 0 → 3
+- cue 2, 0–0.5 s: sample.highlight.3 0 → 1
+- cue 2, 0.4–0.8 s: show working-1
+- cue 2, 1.8–2.2 s: show working-2
+- cue 2, 3.2–3.6 s: show working-3
+- cue 2, 4.6–5.0 s: show total
+- cue 2, end-1.2–end-0.4 s: move total to sample.cell.3.2
+- cue 2, end-1.2–end-0.4 s: hide total
+- cue 2, end-1.2–end-0.4 s: sample.cell-alpha.3.2 0 → 1
+- cue 4, 0–0.5 s: sample.highlight.3 1 → 0
+- cue 4, 0–0.5 s: hide working-1, working-2, working-3
+- cue 4, 0–0.4 s: show checker
+- cue 4: sample.highlight-colour.1 correct
+- cue 4: sample.highlight-colour.2 correct
+- cue 4: sample.highlight-colour.3 correct
+- cue 4, 0.3–0.6 s: show tick-1
+- cue 4, 0.3–0.6 s: sample.highlight.1 0 → 0.18
+- cue 4, 0.8–1.1 s: show tick-2
+- cue 4, 0.8–1.1 s: sample.highlight.2 0 → 0.18
+- cue 4, 1.3–1.6 s: show tick-3
+- cue 4, 1.3–1.6 s: sample.highlight.3 0 → 0.18
+- cue 4, 1.4–1.9 s: show checked
+- cue 4, 2.2–2.6 s: hide checker
+
+### Mistake
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| formula | formula-bar | 60 150 | 570x90 | ref="B4" text="='Sales export'!E5*10%+500" mono=yes | |
+| wrong-sheet | spreadsheet | 120 330 | | rows=assets/sample-output-formulas.csv widths="230 200" row-height=50 text-size=20 box.3.2=mistake | a CSV of "=..." cells |
+| wrong | badge | 610 600 | | ok=no r=30 | |
+
+### Right way
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| answer | formula-bar | 60 150 | 570x90 | ref="B4" text="1,750" | |
+| right-sheet | spreadsheet | 120 330 | | rows=assets/sample-output-2024-04.csv widths="230 200" numeric=2 row-height=50 text-size=20 box.3.2=correct | |
+| answers-only | pill | 345 640 | | text="answers only" size=24 fill=correct anchor=centre | |
+```
+
+The scene's module is 60 lines; the description is 11 cast rows, 23 moves and 6 panel rows,
+and the mistake cue's curtain needs no line at all (`working-1..3` are hidden at cue 4 by their
+own moves; `sample` and `sample-tag` are named after the mistake, so they stay).
+
+### Checks (item 3)
+
+`check-script` reads the choreography (standard library, Python 3.9: the library's readers are
+too, video-elements CLAUDE.md non-negotiable 4) and lists, each with its line: a cast table
+with the wrong header or a row short of five cells; a name used twice; an Element that is
+neither a piece nor in the library; a Where that is not pixels, a region or a member's anchor;
+an anchor, state or parameter the element's description does not have, or a value out of its
+range; a parameter file that does not exist; a cue number the scene does not have; a time past
+the cue's length (measured from `work/narration/timing.json` when it exists, else the
+words-a-second estimate, said which); a move naming no cast member; a label not in the On
+screen list; a cast member never shown; one shown again while still shown; a panel section in a
+scene with no mistake cue; a step scene with neither `code` nor a Cast. With no library
+setting and a script that needs one, one problem naming the setting. `stills --cue-changes` and
+its warning work on described scenes as on coded ones; `frame-hashes` pins them.
+
+### How it is drawn
+
+The description is read once per video (with the script), not per frame. For each frame the
+interpreter walks the cast in order: the member's alpha from its shows and hides (times
+`before_curtain` where the curtain rule applies), its place from its Where and moves, its
+parameters from their sets and animations at `t`, then `el.draw(frame, rect, state, params,
+alpha)` for a library element or the frame's own method for a piece; the anchors returned feed
+the members placed by them. Everything video-tools draws today stays as it is: the header,
+tracker, caption band, side panel, panels and cards.
+
+**Not doing** (unless asked): the camera (a described scene is flat; the bed's turning stays a
+module); a cast member drawn by more than one element; conditions or loops in a description.
+
+### Order of work
+
+Test-first against an invented library in `tests/` (two tiny elements, one SVG through a stub
+`rsvg-convert`, one data-driven, with invented `ELEMENT.md` files in the library's settled
+shape), in this order: the config settings and flags, the library's import and refusals; the
+Cast and Moves parser with every check above; the interpreter in the frame (show, hide, move,
+parameters, states, anchors), each pinned by sampled frames; the curtain rule, with
+`stills --cue-changes` quiet on it; a described scene and the same scene as a module through
+`frame-hashes` equal; README ("Writing a video's script": the format), "Notes for users", lint
+as its own pass. Real drawing waits on video-elements' reader and first elements (its steps 3
+and 4); the first real run is a Tier 3 check on scene A2 against v4 with `compare-frames`
+(the training-video project's side), recorded in DIARY.md.
+
+## 16. Credits for external art on the end card, and a credits file (request 14; Squirrel, 10 October 2026, 10:36)
+
+Builds on item 15. The videos use art from outside sources (Tabler Icons, Open Peeps, Fluent
+Emoji: CC0 or MIT, none requiring credit); Squirrel wants to give it, briefly, on the end card.
+video-tools knows which elements a video draws (every scene's cast and its panels' casts);
+video-elements knows their sources (`lib.credits(names)`: the credit lines without duplicates,
+grouped by category in a stable order, each with its licence name, an unknown name refused in
+words).
+
+1. **Collect**: the library elements named in every cast and panel cast of the video, in script
+   order, passed once to `lib.credits`. Pieces (`pill`, `hand`, …) are not elements and credit
+   nothing.
+2. **Draw** the lines on the end card below the two it draws today (the script's `credit`, the
+   brand's `illustration-credit`), in the same style (body, 22 px, muted, centred, 36 px apart,
+   fading in with them), wrapped at the card's text width when long, the lines moving up as a
+   block if they would otherwise reach the bottom margin; a video with no library elements draws
+   exactly today's card (pinned by the stored frames and `frame-hashes`).
+3. **A script setting** `element-credits`: `auto` (the default: the collected lines), `none`, or
+   the wording itself, which wins and is drawn as one line (wrapped). Unknown settings keys stay
+   refused; documented for the training-video project's `SCRIPT-FORMAT.md`.
+4. **Approval**: `check-script` prints the credit lines the end card will show, after the
+   `added:` lines, as `credits:` lines; and the characters-a-font-lacks check (item 12) covers
+   them like any label.
+5. **A credits file** beside the finished video, written by `assemble` after the video:
+   `<output>.credits.txt` next to `<output>.mp4` (`out/video.credits.txt`; with `--out FILE`,
+   beside FILE): every source used, its credit line, its licence name and the elements it
+   supplied, one source per paragraph, for a video description or a client. Like the video it
+   is never replaced: `assemble` refuses before starting if either exists, `--replace` covering
+   its intermediates only as now ("Settled" 13; Claude's choice for the file, recorded in
+   "Settled"). A video with no library elements writes no credits file, and the dry run says so.
+
+Order of work, test-first with the invented library (two elements from two invented sources):
+the setting and its check; the collection; the end card (pixels where the lines go; `none`
+today's card; wording replacing the lines; a long line wrapping without reaching the website
+line); `check-script`'s lines; the credits file and its refusal; README, "Notes for users", lint.
+After item 15's parser, which it collects from.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -540,8 +834,9 @@ nor a picture that fades under the curtain and comes back; the README says so.
 
 ## Configuration
 
-`~/.video-tools.conf` (`video-tools.conf.example` committed): `SPEECH_MODEL_DIR`, `VOICE`, `SPEED`.
-Read, never run: `KEY=value`, `#` comments, optional quotes, `~` for home. The video's script
+`~/.video-tools.conf` (`video-tools.conf.example` committed): `SPEECH_MODEL_DIR`, `VOICE`, `SPEED`,
+and from item 15 `VIDEO_ELEMENTS_DIR` (the root of the video-elements repository) and
+`RSVG_CONVERT` (the SVG renderer's path, optional). Read, never run: `KEY=value`, `#` comments, optional quotes, `~` for home. The video's script
 overrides `VOICE` and `SPEED`; flags override both. `VIDEO_TOOLS_CONF` in the environment names
 another config file (the tests use it). `VIDEO_TOOLS_PYTHON` names a Python to run the commands
 under: each wrapper restarts itself under it before importing anything, instead of the
@@ -554,7 +849,10 @@ a video or a brand lives in the script and the brand kit.
 Allowed (Squirrel, 9 October 2026, 16:16), installed in the README's one-time step: Homebrew
 `python@3.12`, `cairo`, `pkgconf`, `ffmpeg`; in `.venv/`: `pycairo`, `numpy`, `soundfile`,
 `kokoro-onnx==0.6.1` (brings `onnxruntime` and `espeakng-loader`), `Pillow`, `fonttools`; the
-Kokoro-82M model and voices in `~/models/kokoro/` (`model.onnx`, `voices.npz`).
+Kokoro-82M model and voices in `~/models/kokoro/` (`model.onnx`, `voices.npz`). From item 15, for a
+script with a described scene only: the video-elements repository at the configured path (its
+package imported from there, never installed here) and, through it, `rsvg-convert` (Homebrew
+`librsvg`, video-elements PLAN.md "Dependencies").
 
 ## Things checked against the real thing (9 October 2026, on Squirrel's Mac, arm64, macOS 26.6)
 
@@ -665,6 +963,12 @@ remote ("Settled" 7).
    "Notes for users", lint as its own pass. **Done 10 October 2026, 09:00–09:07**: both items built
    and in the README with real runs; the training-video project switches its three scenes to
    `before_curtain` and adds the check to its routine (their side).
+14. **Request 13** (10 October 2026, 10:09; OK'd 10:36 with the three details settled): item 15.
+   First the format, written in item 15 with scene A2 as a worked example, for Squirrel's
+   approval; **no code until he approves it**. Then item 15's "Order of work", test-first
+   against the invented library. Real drawing waits on video-elements' steps 3 and 4.
+15. **Request 14** (10 October 2026, 10:20; OK'd 10:36): item 16, after item 15's parser, in
+   item 16's order.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -698,7 +1002,20 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+1. **The choreography format** (item 15, "The choreography format") is a proposal: the two
+   `###` sections, the cast table's columns, the four kinds of move, the pieces as cast members,
+   area pixels for Where, panel pixels for the panels, the curtain rule and the checks. Squirrel
+   approves or changes it before any code (10 October 2026, 10:36: "get my approval on that").
+2. **Three things video-elements must know**, to go to it through Squirrel in the same words,
+   assumed here meanwhile: data reaches an element as a named parameter (`rows=`, `text=`),
+   read from the video's folder by video-tools, so the interface's `params` carries it and the
+   library never reads a video's files; the description `lib.element(name)` returns exposes its
+   anchors, states and parameters (name, type, range, default, label or data) as plain data,
+   which `check-script` reads on Python 3.9; and an indexed parameter (a row, a cell) is written
+   `highlight.3`, `cell-alpha.3.2`. Element names and parameter names in item 15's example are
+   the starter set's as far as it goes; `formula-bar` is not in it.
+3. **The credits file and `--replace`**: treated like the video, never replaced (item 16, 5).
+   Claude's default; Squirrel's word moves it to "Settled".
 
 ## Settled
 
@@ -769,3 +1086,12 @@ None.
     timing plus --offset. always contrast ratios", then "go ahead!"): `frame-hashes --compare`
     exits 1 when any frame differs; `compare-frames` takes the old video's scene starts from the
     current `timing.json` plus `--offset`; `brand-preview` always lists the contrast ratios.
+24. The thirteenth request (`inbox/done/request-from-training-video-2026-10-10-13.md`), all three
+    items, with the three details settled: the interface is video-elements' settled text, with the
+    `renderer` argument and `lib.credits`; the settings are `VIDEO_ELEMENTS_DIR` and the optional
+    `RSVG_CONVERT`, each also a flag; the folder setting names the repository root, put on the
+    import path at the point of use (Squirrel, 10 October 2026, 10:36: "1. go with the choice in
+    video-elements 2. yes 3. repo root", then "go ahead and do the format and get my approval on
+    that"). The format itself waits for his approval ("Open questions" 1).
+25. The fourteenth request (`inbox/done/request-from-training-video-2026-10-10-14.md`), all five
+    items, after request 13 (Squirrel, 10 October 2026, 10:36, with request 13).

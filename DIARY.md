@@ -2,23 +2,24 @@
 
 ## Where things stand
 
-10 October 2026, 10:23 (from the clock), at the handover ending the session that built requests 9 to 12. **Requests 1 to 12 are built in
-full: the eight commands of the first request, the four checking commands of the ninth
-(`brand-preview`, `frame-hashes`, `compare-frames`, `compare-video`: PLAN.md item 11, "Settled"
-20), the tenth's ✓ and ✗ drawn as strokes wherever a font lacks them plus `check-script`'s
-report of characters a font lacks (item 12, "Settled" 21), and the eleventh's `[[…]]` phoneme
-spans in `say:` lines with `narrate --dry-run --phonemes` and `check-script`'s span report
-(item 13, "Settled" 22), and the twelfth's curtain on the timeline (`covered`, `before_curtain`,
-`curtain`) with `stills --cue-changes` and its warning (item 14, "Settled" 23), each in the
-README with a real run.** A new session starts by reading CLAUDE.md, PLAN.md
-and this section, then `inbox/` (at 10:23 holding requests 13 and 14, read and reported, not acted on; anything at its top level other than README.md
-is new and is reported to Squirrel, never acted on without his OK). The bed video is accepted
-(request 4) and rebuilt on the frame methods (request 8). Request 4's item 2 (the "+ Pillows"
-roundel and icon) was not asked for and is not done.
+10 October 2026, 10:45. **Requests 1 to 12 are built in full** (the eight commands of the first
+request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
+characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
+the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
+real run. **Requests 13 and 14 are recorded** (PLAN.md items 15 and 16, "Settled" 24 and 25,
+the two files in `inbox/done/`) **and no code is written for them**: the choreography format of
+item 15 is a *proposal* (PLAN.md "Open questions" 1), written with scene A2 of the training-video
+project's second video as a worked example, and waits for Squirrel's approval. A new session
+starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
+10:45; anything at its top level other than README.md is new and is reported to Squirrel, never
+acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
+(request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
+done.
 
-Green: 386 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite
-needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and
-no external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
+Green: 386 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main` (the suite
+was not re-run this session: nothing under `videotools/` or `tests/` changed). The suite needs
+pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
+external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
 and serves raw audio (`tone` spans) and raw frames (`colours` by time) from fake media. One test
 is skipped off macOS (CoreText). The suite also passes with tier 2 run before tier 1, and with
@@ -43,17 +44,18 @@ prototype's were 66 (request 5, not asked for). The `assemble --replace` refusal
 finished video exists says "give a new name" and not that `--replace` never covers it (raised at
 21:34, not changed).
 
-Waiting on Squirrel: his OK on requests 13 and 14, which arrived at 10:09 and 10:20 and sit at
-the top of `inbox/` (requests 1–12 are in `inbox/done/`): 13, choreography described in the
-script and drawn from a new `video-elements` library (a companion request went to that
-repository; the interface between the two is proposed in the item); 14, credits for external
-art on the end card and a credits file beside the finished video, building on 13. Both reported
-to Squirrel at the handover with a first comment (the entry "Requests 13 and 14 arrive"); a new
-session starts by re-reading them and waiting for his word. Also the training-video project's: its six phoneme spans and re-made clips, its three
-scenes on `before_curtain` with `stills --cue-changes` in its routine, its second video's
-stills on the standard ✓ drawing with its own `tag()` helper retired, and any request it sends
-here. The stub speech model now has a `tokenizer`
-submodule (upper-cases) and records `is_phonemes`.
+Waiting on Squirrel: **his approval of the choreography format** (PLAN.md item 15, "The
+choreography format", and "Open questions" 1), or his changes to it; then item 15's "Order of
+work" starts, test-first against an invented library. Also "Open questions" 2 (three things
+video-elements must know, to go there through him in the same words) and 3 (the credits file is
+never replaced, Claude's default). The three details of request 13 are settled ("Settled" 24).
+video-elements (read-only from here) has its step 2 of 8 done, awaiting his approval to start
+step 3 (the reader, checks and credits) and his Open Peeps download; its `rsvg-convert` checks
+and licence texts are in; our Tier 3 on real elements waits on its steps 3 and 4. Also the
+training-video project's: its six phoneme spans and re-made clips, its three scenes on
+`before_curtain` with `stills --cue-changes` in its routine, its second video's stills on the
+standard ✓ drawing with its own `tag()` helper retired, and any request it sends here. The stub
+speech model has a `tokenizer` submodule (upper-cases) and records `is_phonemes`.
 
 Known-wrong in past entries: the `check-video` entry says `180 passed`; the run was `179
 passed`. An earlier version of this section was dated "21:30"; that session ended at 18:30. The
@@ -1706,3 +1708,32 @@ dependency on a repository that does not yet have its reader), and its order of 
 on video-elements; the interface text must stay the same in both READMEs, through Squirrel.
 
 **State.** Green and pushed as before. Waiting on Squirrel for 13 and 14.
+
+### 10 October 2026 — Requests 13 and 14 OK'd and recorded; the choreography format proposed
+
+**Goal.** Record both requests in PLAN.md (items 15 and 16, "Settled" 24 and 25), move them to
+`inbox/done/`, and write the choreography format with a worked example for Squirrel's approval.
+No code (Squirrel, 10:36: "go ahead and do the format and get my approval on that").
+
+**Decision / surprise.** Squirrel settled the three details put to him at 10:36: the interface is
+video-elements' settled text (with the `renderer` argument and `lib.credits`), the config keys
+are `VIDEO_ELEMENTS_DIR` and an optional `RSVG_CONVERT`, each also a flag, and the folder
+setting is the repository root, put on the import path at the point of use. The format's shape,
+decided while re-describing scene A2 from its module (read, not copied): the request's "label
+… at", "arrow from … to" and "hand at" are not verbs but cast members of video-tools' own
+pieces (`pill`, `callout`, `text`, `badge`, `hand`, `arrow`), so the moves reduce to four kinds
+(show/hide, move, a parameter, a state) and a label is shown, hidden and moved like anything
+else; a member may be placed by another's anchor with an offset, so ticks and hands follow a
+row; data is a named parameter (`rows=assets/x.csv`) read by video-tools, so the library never
+reads a video's folder (an interface point for video-elements, "Open questions" 2). Where is in
+area pixels as the request asked (the area is 1422 × 818 at 40, 118), panels in panel pixels.
+Two things the example showed: the starter set lacks an element the panel needs (a
+`formula-bar`), and the module spreads its working lines over the cue's measured length, which
+the format writes as fixed offsets; whether that matters is for the `compare-frames` check. The
+mistake cue's curtain needs no line at all in the example. PLAN.md's "Settled" list is out of
+order after 19 (23, 22, 21, 20) from earlier insertions; 24 and 25 are appended at the end,
+not re-ordered. A shell slip: `git mv -k` on the gitignored request 13 silently did nothing, so
+the file sat in `inbox/` for a few minutes before a plain `mv`; nothing else was affected.
+
+**State.** PLAN.md items 15 and 16 written; inbox empty; no code, suite untouched (386 green at
+the last run). Waiting on Squirrel's approval of the format.
