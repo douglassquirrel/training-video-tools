@@ -3115,3 +3115,28 @@ a miscount (34, not 39). `perform.progress(t, a, b, move)` is the one place that
 or steady, used for opacity, place, parameters and a state's progress.
 
 **State.** 533 green, 98%, lint clean. Next: item 20, 2, `dim`.
+
+### 11 October 2026 — Item 20, 2: dimming to a level
+
+**Goal.** `dim NAME[, NAME…] to LEVEL`: opacity to a level over the span; a later `show`
+brings it back (request 18, item 5).
+
+**Tests.** `test_dim_names_members_and_a_level` (tier 1, the parser);
+`test_a_dim_needs_a_level_from_0_to_1_and_a_member_that_is_shown_and_a_show_after_it_is_allowed`
+(tier 1, the check); `test_a_dim_takes_the_opacity_to_its_level_over_the_span_and_a_show_brings_it_back`
+(tier 2: the alpha the stub is handed half way down, at the level, half way back, and at 1).
+
+**Red.** `'dim sample, pot to 0.55' is not show NAME, hide NAME, keep NAME, move NAME to WHERE,
+…` from the parser, in all three (`3 failed, 75 deselected`).
+
+**Green.** `304 passed in 13.91s` (tier 1 and `test_perform.py`); suite `536 passed in 146.03s (0:02:26)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** A dimmed member is still shown, so a `show` after a `dim` is not
+"shown again while still shown" (the check keeps the set of dimmed members), and a dim of a
+member that is not shown at that moment is a problem of its own. The level's range is the
+check's, not the parser's, so `dim a to 1.5` reads and is refused in words. The refusal for an
+unknown action now lists `dim NAME to LEVEL`, which changed two existing expectations on
+purpose. My new check test's line numbers were all one too high (a miscount, the third
+tonight: I now count from a known line in the same file rather than by eye).
+
+**State.** Green, lint clean. Next: item 20, 3, percentages and spans across cues.

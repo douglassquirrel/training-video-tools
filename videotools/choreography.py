@@ -31,6 +31,7 @@ _SCENE_MOVE_RE = re.compile(r"^cue (\d+)(?:, ([^:]+))?: (.+)$")
 _PANEL_MOVE_RE = re.compile(r"^(?:([^:]+): )?(.+)$")
 _VALUE = r'"[^"]*"|\S+'
 _SHOW_RE = re.compile(rf"^(show|hide|keep) ({NAME}(?:, {NAME})*)$")
+_DIM_RE = re.compile(rf"^dim ({NAME}(?:, {NAME})*) to ({NUM})$")
 _MOVE_RE = re.compile(rf"^move ({NAME}) to (.+)$")
 _ANIMATE_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE}) (?:→|->) ({_VALUE})$")
 _SET_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE})$")
@@ -39,8 +40,8 @@ _LIST_RE = re.compile(r"^-\s+(.+)$")
 
 WHERE_HELP = ("is not X Y in area pixels, a region ({}) or a member's anchor like sample.row.3 + 40 -12"
               .format(", ".join(REGIONS)))
-ACTION_HELP = ("is not show NAME, hide NAME, keep NAME, move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE "
-               "or NAME STATE → STATE")
+ACTION_HELP = ("is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, NAME.PARAM A → B, "
+               "NAME.PARAM VALUE or NAME STATE → STATE")
 
 
 def parse_where(text):
@@ -110,6 +111,9 @@ def parse_action(text):
     m = _SHOW_RE.match(text)
     if m:
         return {"kind": m.group(1), "names": [n.strip() for n in m.group(2).split(",")]}, None
+    m = _DIM_RE.match(text)
+    if m:
+        return {"kind": "dim", "names": [n.strip() for n in m.group(1).split(",")], "level": float(m.group(2))}, None
     m = _MOVE_RE.match(text)
     if m:
         where = parse_where(m.group(2))
@@ -725,7 +729,9 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
             continue
         if act["kind"] == "keep":           # names the members, so the curtain leaves them; nothing else
             continue
-        if act["kind"] in ("show", "hide"):
+        if act["kind"] == "dim" and not 0 <= act["level"] <= 1:
+            problems.append(f"{at}a level is 0 to 1, not '{act['level']:g}'")
+        if act["kind"] in ("show", "hide", "dim"):
             t = (mv["start"][1] if panel else _in_scene(tl, mv["start"]) if cue is None
                  else tl.start(cue) + _resolve(tl, cue, mv["start"]))
             for n in names:
@@ -782,19 +788,25 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         for n in members:
             if not any(e[3] == n and e[2] == "show" for e in events):
                 shown[n] = 0                     # shown from the start
-    never = set(members)
+    never, dimmed = set(members), set()
     for _t, line, kind, n, cue in sorted(events, key=lambda e: (e[0], e[1])):
         at = f"line {line}: {where}: "
+        when = "" if cue is None else f" at cue {cue}"
         if kind == "show":
             never.discard(n)
-            if shown[n] is not None:        # never 0 here: a member with a show is not shown from the start
-                when = "" if cue is None else f" at cue {cue}"
+            if shown[n] is not None and n not in dimmed:    # never 0: a member with a show is not shown from the start
                 problems.append(f"{at}'{n}' is shown again{when} while still shown (shown at line {shown[n]}, "
                                 "not hidden since)")
             shown[n] = line
+            dimmed.discard(n)
+        elif kind == "dim":
+            if shown[n] is None:
+                problems.append(f"{at}'{n}' is dimmed{when} but is not shown")
+            else:
+                dimmed.add(n)
         else:
             if shown[n] is None:
-                when = "" if cue is None else f" at cue {cue}"
                 problems.append(f"{at}'{n}' is hidden{when} but was not shown")
             shown[n] = None
+            dimmed.discard(n)
     return never, sorted(problems, key=lambda p: int(p.split(":")[0].split()[1]))

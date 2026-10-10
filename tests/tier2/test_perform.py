@@ -780,3 +780,21 @@ def test_a_linear_move_changes_at_a_steady_rate_and_an_unmarked_one_eases(exampl
     assert quarter["params"]["highlight.2"] == pytest.approx(0.25)          # steady
     assert quarter["params"]["highlight.3"] == pytest.approx(0.15625)       # eased: 3p² − 2p³
     assert quarter["alpha"] == pytest.approx(0.25)                          # a linear show
+
+
+# ---- item 20 (request 18), 2: dimming to a level
+
+DIMMED = CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", """- cue 1, 2.6–2.9 s: hide pot1, corner
+- cue 1, 1.2–1.6 s: dim sheet to 0.55
+- cue 1, 2.0–2.4 s: show sheet
+""")
+
+
+def test_a_dim_takes_the_opacity_to_its_level_over_the_span_and_a_show_brings_it_back(example):
+    cropped(example)
+    narrated(example)
+    video = frame.Video(describe(example, DIMMED), INVENTED, None)     # sheet is shown 1.2–1.8 s into the scene
+    assert _draw(video, "table", 2.1)[1]["alpha"] == pytest.approx((1 + 0.55) / 2)      # half way: 1.9–2.3 s
+    assert _draw(video, "table", 2.5)[1]["alpha"] == pytest.approx(0.55)
+    assert _draw(video, "table", 2.9)[1]["alpha"] == pytest.approx((1 + 0.55) / 2)      # the show: 2.7–3.1 s
+    assert _draw(video, "table", 3.3)[1]["alpha"] == 1.0

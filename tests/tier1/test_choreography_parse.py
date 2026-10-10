@@ -200,7 +200,7 @@ just prose
 """
     scene, problems = _scene(text)
     assert problems == [
-        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
+        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have none)",
         "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
@@ -209,7 +209,7 @@ just prose
         "line 35: scene A2, moves: 'prose in the list' is not cue N[, A s | A–B s | over the cue][, linear]: ACTION",
         "line 36: scene A2, moves: not a move (a list item '- cue N[, TIME]: ACTION'): just prose",
         "line 44: scene A2, mistake: a panel's moves have no 'cue N': times count from the panel's rise",
-        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, move NAME to WHERE, "
+        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert len(scene["moves"]) == 0 and scene["panels"]["mistake"]["moves"] == []
@@ -321,3 +321,24 @@ def test_a_moves_time_may_end_linear_in_a_scene_and_in_a_panel():
         (False, ("start", 0.0), ("start", 0.6))]
     assert [(m.get("linear", False), m["start"], m["end"]) for m in scene["panels"]["mistake"]["moves"]] == [
         (True, ("start", 0.4), ("start", 0.8)), (True, ("start", 0.0), ("start", 0.6))]
+
+
+# ---- item 20 (request 18), 2: dimming to a level
+
+def test_dim_names_members_and_a_level():
+    text = HEAD + CAST + """
+### Moves
+
+- cue 1: show sample, pot
+- cue 2, 0–0.5 s: dim sample, pot to 0.55
+- cue 3: dim pot to faint
+- cue 3: dim pot
+"""
+    scene, problems = _scene(text)
+    assert problems == [
+        "line 33: scene A2, moves: 'dim pot to faint' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, "
+        "move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
+        "line 34: scene A2, moves: 'dim pot' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, "
+        "move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
+    ]
+    assert scene["moves"][1]["action"] == {"kind": "dim", "names": ["sample", "pot"], "level": 0.55}

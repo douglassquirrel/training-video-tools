@@ -111,12 +111,13 @@ class Performance:
         return sorted(out, key=lambda item: item[0])
 
     def alpha(self, name):
-        shows = self._moves_of(name, ("show", "hide"))
+        shows = self._moves_of(name, ("show", "hide", "dim"))
         value = 1.0 if self.panel and not any(mv["action"]["kind"] == "show" for _w, mv in shows) else 0.0
         for (a, b), mv in shows:
             if self.t < a:
                 break
-            target = 1.0 if mv["action"]["kind"] == "show" else 0.0
+            act = mv["action"]
+            target = 1.0 if act["kind"] == "show" else 0.0 if act["kind"] == "hide" else act["level"]
             value = timeline.lerp(value, target, progress(self.t, a, b, mv))
         if self._under_curtain(name, shows):
             value *= self.tl.before_curtain(self.t)

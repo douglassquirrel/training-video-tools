@@ -512,3 +512,35 @@ def test_rotate_is_a_number_on_any_piece_in_the_cast_and_in_a_move():
         "line 26: scene A2, cast: 'b': 'rotate' should be a number, not 'sideways'",
         "line 33: scene A2, moves: 'a': 'rotate' should be a number, not 'upside'",
     ]
+
+
+# ---- item 20 (request 18), 2: dimming to a level
+
+def test_a_dim_needs_a_level_from_0_to_1_and_a_member_that_is_shown_and_a_show_after_it_is_allowed():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| b | badge | 70 100 | | ok=yes | |
+| c | badge | 70 200 | | ok=yes | |
+
+### Moves
+
+- cue 1: show a, c
+- cue 1, 1.0 s: dim a to 0.55
+- cue 2: show a
+- cue 2, 1.0 s: dim a to 1.5
+- cue 2: dim b to 0.5
+- cue 2: hide c
+- cue 3: dim c to 0.5
+- cue 3: dim ghost to 0.5
+"""
+    assert _check(text) == [
+        "line 26: scene A2, cast: 'b' is never shown",
+        "line 34: scene A2, moves: a level is 0 to 1, not '1.5'",
+        "line 35: scene A2, moves: 'b' is dimmed at cue 2 but is not shown",
+        "line 37: scene A2, moves: 'c' is dimmed at cue 3 but is not shown",
+        "line 38: scene A2, moves: 'ghost' is not in the cast (a, b, c)",
+    ]
