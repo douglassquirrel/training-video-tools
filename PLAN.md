@@ -616,7 +616,11 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   description says `computed`, or it is indexed) exists only after its member is drawn, so a
   member placed by one, moved to one, or pointing a callout or an arrow at one must come after
   that member in the cast: `check-script` says so by line, and `perform` refuses if it is met
-  at draw time anyway.
+  at draw time anyway. **Increment 9, 18:00**: the curtain for free. `Performance.alpha`
+  multiplies by `tl.before_curtain(t)` for a scene member whose first show starts before the
+  mistake cue and that no move at a later cue names; a member named after the mistake, or first
+  shown at or after it, is left to its moves; a panel's members and a scene with no mistake are
+  untouched.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

@@ -262,12 +262,31 @@ def test_a_pill_and_a_text_have_their_drawn_extent_for_the_members_placed_by_the
 
 # ---- increment 9: the curtain for free
 
-def test_stills_cue_changes_is_quiet_on_a_described_scene_whose_picture_fades_under_the_panels(example, tmp_path):
+def three_cues(example):
+    """The example copy with scene A given a third cue after its mistake (and a 1 s timing for it),
+    so the panels lift at 7.7 s; described with pot1 shown at cue 1 and never named again."""
+    import json
     cropped(example)
     narrated(example)
-    # pot1 is shown at cue 1 and never named again: it fades under the panels, so nothing vanishes as they lift
-    cast = CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", "")
-    script = describe(example, cast)
+    text = open(example, encoding="utf-8").read().replace(
+        "   - added: the consequence (no hull) is our inference; the figure shows only the edge fold.\n",
+        "   - added: the consequence (no hull) is our inference; the figure shows only the edge fold.\n3. Then crease.\n")
+    open(example, "w", encoding="utf-8").write(text)
+    timing = os.path.join(os.path.dirname(example), "work", "narration", "timing.json")
+    data = json.load(open(timing, encoding="utf-8"))
+    data["scenes"]["A"].append(1.0)
+    json.dump(data, open(timing, "w", encoding="utf-8"))
+    return describe(example, CAST.replace("- cue 1, 2.6–2.9 s: hide pot1, corner\n", ""))
+
+
+def test_a_member_not_named_after_the_mistake_is_gone_when_the_panels_lift(example):
+    video = frame.Video(three_cues(example), INVENTED, None)
+    assert pixel(rendered(video, "A", 3.6), 740, 318) == ACCENT          # just before cue 2: the pot, moved, is there
+    assert pixel(rendered(video, "A", 7.9), 740, 318) != ACCENT          # cue 3 + 0.2 s: panels lifted, pot gone
+
+
+def test_stills_cue_changes_is_quiet_on_a_described_scene_whose_picture_fades_under_the_panels(example, tmp_path):
+    script = three_cues(example)
     code, out, err = run("stills", script, "--cue-changes", "--scenes", "A", "--out", tmp_path / "cues.png",
                          "--elements", INVENTED)
     assert (code, err) == (0, "")

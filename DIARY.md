@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 17:45. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 18:05. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -43,22 +43,20 @@ described scene's problems before drawing, and the four drawing commands pass th
 every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
 (`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
 span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): 1–8** (8, 17:40: computed anchors
+far of item 15's twelve increments (the list of 15:00): 1–9** (8, 17:40: computed anchors
 after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
-extents, and `check-script`'s cast-order rule; Squirrel, 17:20: "continue with increments
-8-10"). **Next**: 9 (the curtain rule: `Performance.alpha` times `before_curtain` for a member
-shown before the mistake cue and not named at or after the next; tests written, red), 10
-(panel moves under the curtain and the equivalence of a described scene with the same scene as
-a module through `frame-hashes`), 11 (README: the format under "Writing a video's script", the
+extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; Squirrel, 17:20:
+"continue with increments 8-10"). **Next**: 10 (panel moves under the curtain and the
+equivalence of a described scene with the same scene as a module through `frame-hashes`), 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-17:45; anything at its top level other than README.md is new and is reported to Squirrel, never
+18:05; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 452 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 458 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -88,7 +86,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–8 built, 9 and 10 OK'd at 17:20); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+increments 1–9 built, 10 OK'd at 17:20); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) is **finished through its step 7** (17:20, commit
 `8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
 from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
@@ -2144,3 +2142,34 @@ its width by its type size, 0.75 of the size above the baseline: approximate, sa
 PLAN.md.
 
 **State.** 452 green, 98%, lint clean, pushed. Next: increment 9 (tests written).
+
+### 10 October 2026 — Item 15, increment 9: the curtain for free
+
+**Goal.** A member shown before the mistake cue and not named in any move at or after the cue
+that follows it fades under the panels, so the glimpse of request 12 cannot be written.
+
+**Test.** `tests/tier1/test_perform_curtain.py` (pure, badges only, an invented Timeline with
+the mistake on cue 2 of 3): such a member is at 1 while the panels rise, between 0 and 1 from
+0.5 to 0.7 s after the mistake cue's start, and 0 after; one hidden at cue 3 is left to its
+moves (1 at 5.0 s, 0 after the hide); one first shown at cue 2 is untouched; a scene with no
+mistake has no curtain. `test_perform.py`: scene A of the example given a third cue (and a 1 s
+timing written into `timing.json`), the pot shown at cue 1 and never named again: there just
+before the mistake cue, gone 0.2 s into cue 3 when the panels have lifted; and
+`stills --cue-changes` on that scene quiet, exit 0.
+
+**Red.** `assert 1.0 < 1.0` in tier 1; in tier 2, with `perform.py` stashed, `assert (31, 111,
+139) != (31, 111, 139)`: the pot still there after the lift.
+
+**Green.** `20 passed in 4.57s` for the two files; the full suite `458 passed in 142.71s
+(0:02:22)`, `TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** My first tier 2 pin was wrong twice before it was right: sampling 0.2 s
+into the mistake cue met the rising panels' tint, and sampling at the pot's first place forgot
+that the cast moves it; the honest pin is the pot's moved place just before the mistake cue and
+after the lift. The `stills --cue-changes` test cannot fail on this rule: without the rule the
+pot stays visible through the lift, which the warning does not see (it looks for a picture
+that vanishes as the panels lift); the test stays as the request's "no warning" check, and the
+pixel test is the proof. "Named at a later cue" is any move whose cue is greater than the
+mistake cue's.
+
+**State.** 458 green, 98%, lint clean, pushed. Next: increment 10.

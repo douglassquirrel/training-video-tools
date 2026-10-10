@@ -101,7 +101,24 @@ class Performance:
                 break
             target = 1.0 if mv["action"]["kind"] == "show" else 0.0
             value = timeline.lerp(value, target, timeline.ep(self.t, a, b))
+        if self._under_curtain(name, shows):
+            value *= self.tl.before_curtain(self.t)
         return value
+
+    def _under_curtain(self, name, shows):
+        """The curtain for free (PLAN.md item 15): a scene member first shown before the mistake
+        cue and not named in any move at or after the cue that follows it belongs to the picture
+        before the mistake, and fades while the panels cover it."""
+        if self.panel or self.tl.mistake is None:
+            return False
+        first_show = next((a for (a, _b), mv in shows if mv["action"]["kind"] == "show"), None)
+        if first_show is None or first_show >= self.tl.start(self.tl.mistake):
+            return False
+        for mv in self.moves:
+            act = mv["action"]
+            if mv["cue"] > self.tl.mistake and name in act.get("names", [act.get("name")]):
+                return False
+        return True
 
     def anchors_of(self, name, anchor):
         """A member's anchor in frame pixels: what its draw returned once it is drawn (a library
