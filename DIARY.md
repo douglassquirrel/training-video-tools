@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 15:25. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 15:50. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -31,18 +31,26 @@ problem by line (PLAN.md item 15, "Built"); and **the fourth increment**:
 `choreography.check` lists every problem of item 15 "Checks" (structure, the pieces, the
 library's elements, anchors, parameters, data files, states, labels, cues and times, shown twice
 or never), and `check-script` runs it on every described scene, opening the library from the
-settings only when a cast names a library element. Nothing draws a described scene yet: `stills`
-and `render` still load the scene's module as before. **The next step** is increment 5, the
-scene-loading rule: a described scene needs no `code`, a described panel needs no
-`mistake`/`right_way`, a scene with both draws the cast first (the drawing itself is increment
-6); `scenes.needed`, `check_code`, `load` and `frame.draw_frame`/`mistake_panels` change. A new session
+settings only when a cast names a library element; and **the fifth increment**, the
+scene-loading rule: a described step scene needs no `code` (`load` gives None), a described
+panel no `mistake`/`right_way`, a step scene with neither is refused naming both, and the frame
+draws what a module has and skips what it has not. **Nothing draws a described cast yet**: a
+described scene renders as its chrome and empty panels. **The next step** is increment 6, the
+interpreter's show, hide and move: `videotools.choreography.draw(frame, scene, lib)` called from
+`frame.draw_frame` (and the panels' casts from `mistake_panels`), each member's alpha from its
+shows and hides and its place from its Where and moves, eased over their spans, drawn through
+the library's `el.draw` or the frame's own methods for the pieces; the drawing commands open
+the library (`elements.open_library`) when a scene is described, and `frame.Video` refuses a
+described scene's problems (`choreography.check`) before drawing, exit 3; the invented library's
+stub gains an `Element.draw` (a filled rectangle with the element's colour, anchors from the
+rect) and `table` gets its `element.py`; pinned by sampled frames. A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-15:25; anything at its top level other than README.md is new and is reported to Squirrel, never
+15:50; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 431 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 437 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -72,8 +80,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–4 built, 5 OK'd in advance at 14:20: "stop if you need anything from me
-else keep going"); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+increments 1–5 built; increment 6 onward on his word, as the list of 15:00 said); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) has its steps 1–5 of 8 done (14:35, commits `c12033a`,
 `ee9e553`: the reader, checks and `credits`, our four asks, `Element.draw` for svg elements
 with a render cache and cross-fades, and an `elements-preview` command; 80 tests green; code
@@ -1990,3 +1997,34 @@ end at all. The example's cue 1 is 12 words, so its estimate is 5.2 s, not the 4
 assumed.
 
 **State.** 431 green, 98%, lint clean. Next: increment 5.
+
+### 10 October 2026 — Item 15, increment 5: the scene-loading rule
+
+**Goal.** A described scene needs no module, a described panel no panel function, a scene with
+both keeps its module, and a step scene with neither is refused naming both.
+
+**Test.** `test_scenes.py`: `needed` drops `draw` for a scene with a Cast and `mistake` /
+`right_way` for each described panel, keeping `panel` for a custom side panel; `load` gives
+None for a described step scene without `code`, loads a module without requiring `draw` when
+the scene is described, and refuses a scene with neither. `test_scene_code_check.py`:
+`check_code` on a script whose step scene has no `code`, then described (clean), then described
+with a module that defines nothing (clean). `test_stills.py`: scene A of the example described
+with its `code` removed renders two stills, exit 0, nothing on stderr. Three pinned messages
+changed in advance to the new wording.
+
+**Red.** `assert ['draw', 'mistake', 'right_way'] == ['mistake', 'right_way']` and the old
+message against the new, in `test_scenes.py` and `test_scene_code_check.py`.
+
+**Green.** `49 passed` over the four files after the implementation (`scenes.described`,
+`needed`, `load`, `check_code`; `frame.draw_frame` calls `draw` only when the module has it,
+`mistake_panels` takes each body with `getattr`); the full suite `437 passed in 131.89s
+(0:02:11)`, `TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** The first run of the stills test failed on stderr: the `prepared`
+fixture is cropped but not narrated, so `stills` printed its "times are estimated" notice; the
+test now narrates first, as its neighbours do, which was the test's omission, not the command's.
+A described scene without a module now renders as chrome and empty panels until increment 6;
+the README's notes say so rather than leaving it to be discovered.
+
+**State.** 437 green, 98%, lint clean, pushed. Increments 3–5 done as asked at 14:20. Next:
+increment 6, on Squirrel's word.

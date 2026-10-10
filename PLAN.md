@@ -581,7 +581,12 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   draw time). Pieces' parameters: `pill` and `callout` `text`, `size`, `fill`, `colour`, `anchor`
   (+ `target`); `text` `text`, `size`, `role`, `colour`, `anchor`; `badge` `ok`, `r`; `hand`
   `angle`, `scale`, `mirror`, `label`; `arrow` `from`, `to`, `colour`, `width`; `state=` on a
-  library member is its initial state.
+  library member is its initial state. **Increment 5, 15:45**: `scenes.described(scene)`;
+  `needed` drops `draw` for a described scene and `mistake`/`right_way` for a described panel;
+  `load` returns None for a described step scene with no `code`; `check_code` and `load` refuse
+  a step scene with neither as "has no 'code' property and no Cast, so nothing can draw it";
+  `frame.draw_frame` and `mistake_panels` draw what the module has and skip what it has not.
+  Until increment 6 a described scene renders as chrome and empty panels.
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

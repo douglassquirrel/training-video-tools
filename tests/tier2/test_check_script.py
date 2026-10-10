@@ -116,7 +116,7 @@ def test_a_step_scene_without_code_or_with_a_module_lacking_a_function_is_listed
     open(example, "w", encoding="utf-8").write(text)
     code, out, err = run("check-script", example)
     assert (code, err) == (1, "")
-    assert out.endswith("\n1 problem:\n  - line 85: scene A: no 'code' property, so no scene code can be found for it\n")
+    assert out.endswith("\n1 problem:\n  - line 85: scene A has no 'code' property and no Cast, so nothing can draw it\n")
 
 
 def test_a_caption_with_a_character_the_brand_font_lacks_is_listed_with_its_line(example):

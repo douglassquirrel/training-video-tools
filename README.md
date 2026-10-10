@@ -187,9 +187,10 @@ of the speech, the tracker's letters, every mistake, and every line marked `adde
 beyond the source, for approval). Then either `No problems found.` or the problems, one per line,
 each naming its line in the script where there is one. It also reads the brand kit the script
 names and lists the kit's problems, each prefixed with the `BRAND.md` path, and checks the scene
-code without running it: a step scene with no `code`, a module that is missing or does not
-parse, and a module without a top-level `def` of a function the scene needs (`draw`; `mistake`
-and `right_way` for a mistake cue; `panel` for a custom side panel). So anything `stills` or
+code without running it: a step scene with neither `code` nor a `### Cast`, a module that is
+missing or does not parse, and a module without a top-level `def` of a function the scene needs
+(`draw`, unless the scene has a Cast; `mistake` and `right_way` for a mistake cue, unless the
+script has that panel's section; `panel` for a custom side panel). So anything `stills` or
 `render` would refuse is found here first. (A function a module gets any other way than its own
 `def`, say by import, is reported as missing.) And it reports every text the chrome will draw
 that holds a character its font has no glyph for, which cairo would otherwise draw as an empty
@@ -350,12 +351,14 @@ names and writes nothing.
 A video's own drawing lives in the folder its script's `scene-code` names, one Python module
 per scene, named by the scene's `code` property (`examples/videos/paper-boat/scenes/` is the
 worked example; its README has the details). A title or end card needs none: the chrome draws
-the whole card, and a card that names a `code` has that module's `draw` add to it. A module
-defines:
+the whole card, and a card that names a `code` has that module's `draw` add to it. A scene the
+script describes (a `### Cast`, PLAN.md item 15, being built) needs no module either, and a
+described Mistake or Right way panel needs no function; a scene may have both a description and
+a module, the module drawing over what the description draws. A module defines:
 
-- `draw(frame)`: the animation area, every scene;
+- `draw(frame)`: the animation area, every scene without a Cast;
 - `mistake(frame, rect)` and `right_way(frame, rect)`: the two panel bodies, for a scene whose
-  narration has a `mistake:` cue;
+  narration has a `mistake:` cue and no section describing that panel;
 - `panel(frame, rect)`: the side panel, for a scene whose `side-panel` is `custom <name> N`.
 
 `frame` carries `ctx` (the cairo context, clipped to the area), `t` (seconds into the scene),
@@ -652,8 +655,11 @@ with ffmpeg 4.4.
   roundel scales with it), so scene code can pass the brand-scaled size.
 - 10 October 2026 (afternoon, later): `check-script` reads and checks a scene's `### Cast`, `### Moves`,
   `### Mistake` and `### Right way` sections (PLAN.md item 15), opening the video-elements library
-  when a cast names one of its elements; a script without them checks exactly as before. Nothing
-  draws a described scene yet.
+  when a cast names one of its elements; a script without them checks exactly as before. A step
+  scene with a `### Cast` needs no `code`, and a described panel no `mistake`/`right_way`
+  function: `stills` and `render` draw its chrome and empty panels, since nothing draws a
+  described cast yet. The refusal for a step scene with no `code` now reads "has no 'code'
+  property and no Cast, so nothing can draw it".
 - 10 October 2026 (afternoon): two config settings, `VIDEO_ELEMENTS_DIR` and `RSVG_CONVERT`,
   and the flags `--elements` and `--renderer` on the commands that draw and on `check-script`,
   for the video-elements library (PLAN.md item 15, in progress): the root named goes on the

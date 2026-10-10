@@ -25,7 +25,7 @@ def test_a_well_formed_script_with_its_modules_has_no_problems(video):
 
 def test_a_step_scene_without_code_is_a_problem_at_its_heading_and_a_card_without_is_not(video):
     text = TWO_SCENES.replace("| code | first_loop | |\n", "").replace("| code | end_card | |\n", "")
-    assert check(text, video) == ["line 33: scene A: no 'code' property, so no scene code can be found for it"]
+    assert check(text, video) == ["line 33: scene A has no 'code' property and no Cast, so nothing can draw it"]
 
 
 def test_a_code_whose_module_is_missing_names_the_path(video):
@@ -57,3 +57,39 @@ def test_a_missing_scene_code_folder_is_one_problem(video):
     data, _ = script.parse(TWO_SCENES)
     folder = str(video / "nowhere")
     assert scenes.check_code(folder, data) == [f"line 19: Settings: scene-code folder not found: {folder}"]
+
+
+DESCRIBED = """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 0 0 | | text="near side" | |
+
+### Moves
+
+- cue 1: show a
+
+### Mistake
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| b | badge | 0 0 | | ok=no | |
+
+### Right way
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| c | badge | 0 0 | | ok=yes | |
+"""
+
+
+def test_a_described_step_scene_needs_no_code_and_its_module_if_any_no_draw_or_panel_functions(video):
+    text = TWO_SCENES.replace("| code | first_loop | |\n", "")
+    assert check(text, video) == ["line 33: scene A has no 'code' property and no Cast, so nothing can draw it"]
+    marker = "## Scene end: End card"
+    assert text.count(marker) == 1
+    described = text.replace(marker, DESCRIBED.lstrip("\n") + "\n" + marker)
+    assert check(described, video) == []
+    with_code = TWO_SCENES.replace(marker, DESCRIBED.lstrip("\n") + "\n" + marker)
+    assert check(with_code, video, {"first_loop": "x = 1\n", "end_card": "def draw(frame):\n    pass\n"}) == []

@@ -267,7 +267,8 @@ def mistake_panels(ctx, video, scene, tl, t, frame):
     ctx.set_source_rgba(*kit["colours"]["background"], 0.96)
     ctx.fill()
     module = video.module(scene)
-    for side, (x, body) in enumerate(((52, module.mistake), (764, module.right_way))):
+    bodies = (getattr(module, "mistake", None), getattr(module, "right_way", None))   # None: described, or no module
+    for side, (x, body) in enumerate(((52, bodies[0]), (764, bodies[1]))):
         y, w, h = 134, 690, 790
         draw.fill_rrect(ctx, x, y, w, h, 16, kit["colours"]["surface"], stroke=kit["colours"]["rule"], lw=2)
         head = kit["colours"]["mistake"] if side == 0 else kit["colours"]["correct"]
@@ -286,7 +287,8 @@ def mistake_panels(ctx, video, scene, tl, t, frame):
         ctx.save()
         ctx.rectangle(x + 2, y + 62, w - 4, h - 64)
         ctx.clip()
-        body(frame, (x, y + 62, w, h - 62))
+        if body:
+            body(frame, (x, y + 62, w, h - 62))
         ctx.restore()
     ctx.pop_group_to_source()
     ctx.paint_with_alpha(p)
@@ -389,7 +391,9 @@ def draw_frame(ctx, video, scene, tl, t, curtain=True):
         ctx.save()
         ctx.rectangle(ax - 20, ay, aw + 40, ah + 10)
         ctx.clip()
-        video.module(scene).draw(frame)
+        module = video.module(scene)            # None for a described scene with no code
+        if module and hasattr(module, "draw"):
+            module.draw(frame)
         if curtain:
             mistake_panels(ctx, video, scene, tl, t, frame)
         ctx.restore()

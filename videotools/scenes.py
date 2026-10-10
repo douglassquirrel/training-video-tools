@@ -112,13 +112,23 @@ class Frame:
 HAND_DEFAULTS = {"skin": (0.93, 0.80, 0.66), "skin-dark": (0.45, 0.33, 0.25), "sleeve": (0.30, 0.33, 0.38)}
 
 
+def described(scene):
+    """True when the scene has a Cast: the script describes its choreography (PLAN.md item 15)."""
+    return bool(scene.get("cast"))
+
+
 def needed(scene):
-    """The functions a scene's module must define: [(name, signature, why)]."""
-    out = [("draw", "(frame)", "")]
+    """The functions a scene's module must define: [(name, signature, why)]. A described scene
+    needs no `draw`, and a described panel (a Mistake or Right way section) no function of its own."""
+    out = [] if described(scene) else [("draw", "(frame)", "")]
     mistake_cue = next((cue for cue in scene["cues"] if "mistake" in cue), None)
     if mistake_cue:
         why = f", and cue {mistake_cue['n']} is a mistake"
-        out += [("mistake", "(frame, rect)", why), ("right_way", "(frame, rect)", why)]
+        panels = scene.get("panels", {})
+        if "mistake" not in panels:
+            out.append(("mistake", "(frame, rect)", why))
+        if "right way" not in panels:
+            out.append(("right_way", "(frame, rect)", why))
     if script.side_panel(scene)[0] == "custom":
         out.append(("panel", "(frame, rect)", f", and its side-panel is '{scene['props']['side-panel']}'"))
     return out
@@ -135,9 +145,9 @@ def check_code(folder, data):
     for scene in data["scenes"]:
         key, code = scene["key"], scene["props"].get("code")
         if not code:
-            if script.kind(scene) not in ("title", "end"):
-                problems.append(f"line {scene['line']}: scene {key}: no 'code' property, so no scene code can be "
-                                "found for it")
+            if script.kind(scene) not in ("title", "end") and not described(scene):
+                problems.append(f"line {scene['line']}: scene {key} has no 'code' property and no Cast, so nothing "
+                                "can draw it")
             continue
         where = f"line {data['lines'][(key, 'code')]}: scene {key}"
         path = os.path.join(folder, code + ".py")
@@ -164,9 +174,9 @@ def load(folder, scene):
     """The scene's module from `folder`, checked for the functions the scene needs."""
     code = scene["props"].get("code")
     if not code:
-        if script.kind(scene) in ("title", "end"):
-            return None                     # the chrome draws the whole card; nothing to add
-        raise cli.Failure(f"scene {scene['key']} has no 'code' property, so no scene code can be found for it")
+        if script.kind(scene) in ("title", "end") or described(scene):
+            return None                     # the chrome draws the whole card, or the script describes the scene
+        raise cli.Failure(f"scene {scene['key']} has no 'code' property and no Cast, so nothing can draw it")
     path = os.path.join(folder, code + ".py")
     if not os.path.isfile(path):
         raise cli.Failure(f"scene {scene['key']}: no scene code {path} (the scene's 'code' is '{code}')")

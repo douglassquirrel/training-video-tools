@@ -236,3 +236,15 @@ def test_a_picture_faded_out_under_the_curtain_gives_no_warning(prepared, tmp_pa
     three_cues(prepared, FIXED)
     code, out, err = run("stills", prepared, "--cue-changes", "--scenes", "A", "--out", tmp_path / "s.png")
     assert (code, err) == (0, "")
+
+
+def test_a_described_scene_with_no_code_draws_its_chrome_and_panels_and_needs_no_module(prepared, tmp_path):
+    from tests.tier2.test_check_script_choreography import described
+    narrated(prepared)
+    script = described(prepared)
+    text = open(script, encoding="utf-8").read().replace("| code | fold_in_half | |\n", "")
+    open(script, "w", encoding="utf-8").write(text)
+    sheet = tmp_path / "sheet.png"
+    code, out, err = run("stills", script, "A:1.0,A:5.0", "--out", sheet)
+    assert (code, err) == (0, "")
+    assert sheet.exists()
