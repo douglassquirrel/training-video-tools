@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-10 October 2026, 18:30. **Requests 1 to 12 are built in full** (the eight commands of the first
+10 October 2026, 19:05. **Requests 1 to 12 are built in full** (the eight commands of the first
 request; the four checking commands of the ninth, PLAN.md item 11; ✓ and ✗ as strokes and the
 characters-a-font-lacks report, item 12; phoneme spans in `say:` lines, item 13; the curtain on
 the timeline with `stills --cue-changes` and its warning, item 14), each in the README with a
@@ -43,21 +43,26 @@ described scene's problems before drawing, and the four drawing commands pass th
 every call in `lib.draws`; and **the seventh increment**: parameter and state changes in moves
 (`Performance.params`: a number eased over its span, an integer kept whole, a word set at the
 span's start, a state `(from, to, progress)` part-way, the pieces' parameters too). **Done so
-far of item 15's twelve increments (the list of 15:00): 1–10** (8, 17:40: computed anchors
+far of item 15's twelve increments (the list of 15:00): 1–11** (8, 17:40: computed anchors
 after their member is drawn, fixed anchors scaled into the rect before, the pieces' drawn
 extents, and `check-script`'s cast-order rule; 9, 18:00: the curtain for free; 10, 18:25: a
 panel's moves from its rise, and the proof that a described scene and the same scene as a
-module give equal frames through `frame-hashes`; Squirrel, 17:20: "continue with increments
-8-10"). **Next**: 11 (README: the format under "Writing a video's script", the
+module give equal frames through `frame-hashes`; 11, 19:00: the README's "Describing a scene
+in the script" with a real run against the real library, and a library refusal at draw time
+now one line in words; Squirrel, 18:45: "go ahead with 11-15", "rest of item 15 and then
+request 14"). **Next**: 12 (the Tier 3 on the real second video's scene A2, in a scratch copy,
+`compare-frames` against v4, by eye), then request 14 (item 16) as increments 13–15: the
+`element-credits` setting, the collection and `check-script`'s `credits:` lines; the end card;
+the credits file by `assemble`. Then 11 (README: the format under "Writing a video's script", the
 flags in each usage line, a dated note), 12 (Tier 3 against the real library, now complete with
 32 elements: scene A2 described and compared with v4, the training-video project's side). A new session
 starts by reading CLAUDE.md, PLAN.md (item 15 in full) and this section, then `inbox/` (empty at
-18:30; anything at its top level other than README.md is new and is reported to Squirrel, never
+19:05; anything at its top level other than README.md is new and is reported to Squirrel, never
 acted on without his OK). The bed video is accepted (request 4) and rebuilt on the frame methods
 (request 8). Request 4's item 2 (the "+ Pillows" roundel and icon) was not asked for and is not
 done.
 
-Green: 460 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
+Green: 461 tests, coverage 98%, `ruff check .` clean, commits pushed to `origin/main`. The suite needs
 pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not programs) and no
 external program, model or network: ffmpeg, ffprobe and the speech model are stubs in
 `tests/stubs/`; the stub ffmpeg refuses an existing output without `-y`, as the real one does,
@@ -87,7 +92,7 @@ finished video exists says "give a new name" and not that `--replace` never cove
 21:34, not changed).
 
 Waiting on Squirrel: nothing for item 15 (format approved, description rows settled, the
-increments 1–10 built; 11 and 12 on his word); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
+increments 1–11 built, 12 and request 14 OK'd at 18:45); "Open questions" 1 (the credits file is never replaced, Claude's default) can wait for item 16.
 video-elements (read-only from here) is **finished through its step 7** (17:20, commit
 `8089c97`): the whole starter set, 32 elements and 41 states, the preview command, a README
 from real runs, 174 tests green; `spreadsheet` takes `rows`, `widths`, `numeric` (column
@@ -2205,3 +2210,36 @@ of the second video by `compare-frames`, where differences are expected and look
 
 **State.** 460 green, 98%, lint clean, pushed. Increments 8–10 done as asked at 17:20. Next:
 increment 11, the README's format section, then 12, the Tier 3.
+
+### 10 October 2026 — Item 15, increment 11: the README, and a find from the first real run
+
+**Goal.** The format documented for users, with a real run, and the flags in every usage line
+(Squirrel, 18:45: "go ahead with 11-15", then "rest of item 15 and then request 14").
+
+**Done.** README: "Describing a scene in the script" (the cast, Where, Size, Parameters, the
+pieces, the moves and their times, the panels, the curtain, the checks, two limits), the five
+usage headings with `[--elements DIR] [--renderer PATH]`, the configuration table, a dated
+note, two known limits. The real run, on a scratch copy of the example in the session's
+scratchpad with the real library read-only: scene A described with `person` (standing →
+pointing), `sun` (moved), `gauge` (`level` 0.2 → 0.9), `calendar` (plain → marked), a `callout`
+on the sun and a `badge` on the gauge's `needle` (a computed anchor); `check-script` "No
+problems found."; `stills` at 0.9, 2.3, 3.2 and 5.5 s, the sheet looked at: every move as
+described, the tick on the needle's tip, the cross-fade mid-way at 2.3 s.
+
+**Find.** The first attempt used the real `spreadsheet`, which draws in the brand's `mono`
+font roles; the example's invented kit has none, and the library's refusal came out as a
+**traceback** (non-negotiable 5). Test first: the stub `table` gained an `explode` parameter
+that makes its draw raise the library's `Failure`; `stills` on such a scene must exit 3 with
+one line, `stills: scene A: the library could not draw 'sheet' (table): element 'table': its
+draw failed: …`, and write nothing. Red: `assert 1 == 3` (the traceback's exit). Green after
+`perform.draw` wraps `el.draw`: `1 passed`; the expected parameter lists in
+`test_choreography_library.py` gained `explode`. Full suite `461 passed in 134.37s (0:02:14)`,
+`TOTAL … 98%`, `ruff check .` clean.
+
+**Decision / surprise.** The example video stays free of described scenes, so the quick start
+never needs the library; the README's real run is on a copy and says so. The real
+`spreadsheet`'s `row.N` anchor is the *left* end of data row N and `cell.N.M` the middle of
+the cell, so the worked example in PLAN.md item 15 (which put ticks 40 px right of `row.N` as
+if it were the right end) is adjusted when A2 is described for real (increment 12).
+
+**State.** 461 green, 98%, lint clean, pushed. Next: increment 12.

@@ -625,8 +625,14 @@ Two settings in `~/.video-tools.conf`, each also a flag on every command that dr
   the test seen to fail with the panel's clock broken on purpose); and the request's proof, a
   described scene and the same scene written as a module give equal frames through
   `frame-hashes` (scene A of the example both ways against the invented library, `--compare`
-  exit 0). What remains of item 15: the README's format section and the flags in every usage
-  line (increment 11), and the Tier 3 against the real library (12).
+  exit 0). **Increment 11, 19:00**: the README's "Describing a scene in the script" (the format,
+  the pieces, the moves, the panels, the curtain, the checks, a real run against the real
+  library on a scratch copy of the example: `person`, `sun`, `gauge`, `calendar`, a callout and a
+  tick on the needle's computed anchor, looked at by eye), the flags in the five usage lines, a
+  dated note, two known limits; and a find from that run: a library refusal at draw time (the
+  real `spreadsheet` needs the `mono` font roles the example kit lacks) came out as a
+  traceback, now one line in words, exit 3, pinned by a test with the stub refusing. What
+  remains of item 15: the Tier 3 on the real second video's scene A2 (12).
 
 A script with a described scene and no library setting, a folder that is missing or has no
 `videoelements/` or `elements/`, or a library that refuses to open: one line in words naming the

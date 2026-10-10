@@ -379,3 +379,16 @@ def test_a_described_scene_and_the_same_scene_as_a_module_give_equal_frames(exam
         f.write(MODULE)
     code, out, err = run("frame-hashes", example, "--compare", hashes, "--scenes", "A", "--step", "10")
     assert (code, err) == (0, ""), out
+
+
+# ---- a library refusal at draw time is reported in words, never as a traceback
+
+def test_a_library_refusal_while_drawing_is_one_message_in_words(example, tmp_path):
+    cropped(example)
+    narrated(example)
+    script = describe(example, CAST.replace("rows=assets/sample.csv |", "rows=assets/sample.csv explode=yes |"))
+    code, out, err = run("stills", script, "A:2.0", "--out", tmp_path / "s.png", "--elements", INVENTED)
+    assert code == 3
+    assert err == ("stills: scene A: the library could not draw 'sheet' (table): element 'table': its draw failed: "
+                   "Failure: no font role 'mono' in the brand kit\n")
+    assert not (tmp_path / "s.png").exists()

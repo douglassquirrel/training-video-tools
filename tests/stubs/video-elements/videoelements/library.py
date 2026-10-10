@@ -89,6 +89,8 @@ class Element(dict):
         pixels: fixed ones scaled into the rect, `row.N` down the right edge and `cell.N.M` across
         the rows for a `rows` parameter, any other computed one at the rect's top-left."""
         params = dict(params or {})
+        if params.get("explode"):
+            raise Failure(f"element '{self['name']}': its draw failed: Failure: no font role 'mono' in the brand kit")
         x, y, w, h = rect
         self.library.draws.append({"name": self["name"], "rect": tuple(float(v) for v in rect), "state": state,
                                    "params": params, "alpha": alpha})

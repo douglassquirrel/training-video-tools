@@ -179,7 +179,7 @@ No problems found.
 
 ## Usage
 
-### `check-script SCRIPT.md [--json OUT.json]`
+### `check-script SCRIPT.md [--json OUT.json] [--elements DIR] [--renderer PATH]`
 
 Reads a video's `script.md` (the format is the training-video project's
 `videos/SCRIPT-FORMAT.md`), checks it, and prints a summary: scenes, cues, words and an estimate
@@ -204,9 +204,8 @@ never reported: the tools draw them (below). The fonts' character maps are read 
 standard library, so this still needs nothing installed. It also checks the `[[…]]` phoneme
 spans in `say:` lines (`narrate`, above): an unclosed `[[`, an empty span, a symbol the voice
 would drop (with its code point), and a span in a caption, each by its line. On a scene with a
-`### Cast` (choreography described in the script and drawn from the video-elements library,
-PLAN.md item 15, being built: the format is documented here once the tools draw it), it checks
-the choreography too: the cast table and the moves list are read into data, every malformed line
+`### Cast` (choreography described in the script and drawn from the video-elements library:
+"Describing a scene in the script", below), it checks the choreography too: the cast table and the moves list are read into data, every malformed line
 a problem; then each element (one of the tools' own pieces, or the library's, opened from
 `--elements` or `VIDEO_ELEMENTS_DIR` when a cast needs it, one problem when it cannot be), the
 anchors members are placed by, the parameters by name, kind and range (indices from 1, a data
@@ -302,8 +301,8 @@ fonts/EBG-SemiBold.ttf  EBG SemiBold  (wght 600)
 fonts/EBG-Bold.ttf  EBG Bold  (wght 700)
 ```
 
-### `stills SCRIPT.md SCENE:SECONDS[,…] --out SHEET.png [--grid CxR]`
-### `stills SCRIPT.md --cue-changes [--scenes KEY,…] --out SHEET.png [--grid CxR]`
+### `stills SCRIPT.md SCENE:SECONDS[,…] --out SHEET.png [--grid CxR] [--elements DIR] [--renderer PATH]`
+### `stills SCRIPT.md --cue-changes [--scenes KEY,…] --out SHEET.png [--grid CxR] [--elements DIR] [--renderer PATH]`
 
 Draws the frames at the given times (a negative time counts back from the scene's end) onto
 one 1920×1080 sheet, `--grid` columns by rows (default `2x2`; more frames than cells is
@@ -333,7 +332,7 @@ start.) The fix is the curtain helper under "Writing a video's scene code". The 
 one moment: a change that happens later than the lift, or a picture that fades under the
 panels and comes back, is not reported. The sheets are written either way (exit 0).
 
-### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run]`
+### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH]`
 
 Draws every frame of each scene (all, or `--scenes`) and pipes them to ffmpeg as raw BGRA
 (`libx264`, the script's `quality` as CRF, `veryfast`, `yuv420p`, the script's `fps`) into
@@ -352,8 +351,8 @@ A video's own drawing lives in the folder its script's `scene-code` names, one P
 per scene, named by the scene's `code` property (`examples/videos/paper-boat/scenes/` is the
 worked example; its README has the details). A title or end card needs none: the chrome draws
 the whole card, and a card that names a `code` has that module's `draw` add to it. A scene the
-script describes (a `### Cast`, PLAN.md item 15, being built: the format is documented here
-once it is complete) needs no module either, and a described Mistake or Right way panel needs
+script describes (a `### Cast`: "Describing a scene in the script", below) needs no module
+either, and a described Mistake or Right way panel needs
 no function; a scene may have both a description and a module, the module drawing over what the
 description draws. A described scene whose cast names a library element needs the video-elements
 library (`--elements` or `VIDEO_ELEMENTS_DIR`), and a problem in the description refuses the
@@ -416,6 +415,145 @@ view in `videotools.camera` (`Camera`, `between`, `front`, `top`, `end`, with `r
 for cloth and paper). Import the primitives as `d` (`from videotools import draw as d`), since
 the module's own function is called `draw`. The example's `_sheet.py` shows both styles.
 
+### Describing a scene in the script
+
+Most of a video's scene code is choreography: this appears at cue 2 after 0.4 s, moves there,
+highlights, gets a label. A scene can say that in the script instead, in four sections after
+`### On screen` (`### Pictures`, prose for people, stays), and the tools draw it, taking the
+things themselves from the **video-elements** library (a separate repository of drawn elements:
+a spreadsheet, a chat window, a person, a calendar, …; its folder is `VIDEO_ELEMENTS_DIR` in the
+config file or `--elements DIR` on the command, and the SVG renderer it uses is `RSVG_CONVERT`
+or `--renderer PATH` when `rsvg-convert` is not on PATH). A scene with a `### Cast` needs no
+`code`; a scene may have both, the module drawing over the described cast; a scene with
+neither is refused.
+
+```
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| helper | person | left | 560 | state=standing | Open Peeps, from the library |
+| sun | sun | 760 40 | 160 | | a Tabler icon |
+| fuel | gauge | 760 260 | 400 | level=0.2 | |
+| crease | callout | sun.centre + 120 -20 | | text=crease target=sun.centre | |
+| tick | badge | fuel.needle + 0 -40 | | ok=yes r=22 | follows the needle |
+
+### Moves
+
+- cue 1: show helper, sun
+- cue 1, 0.4 s: show fuel
+- cue 1, 0.8–1.4 s: show crease
+- cue 1, 1.0–2.4 s: fuel.level 0.2 → 0.9
+- cue 1, 2.0–2.5 s: helper standing → pointing
+- cue 1, 2.4 s: show tick
+- cue 1, 2.6–3.0 s: move sun to 760 100
+
+### Mistake
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| wrong | text | 345 300 | | text="diagonal fold" size=40 role=display colour=mistake anchor=centre | |
+
+### Right way
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| right | pill | 345 300 | | text="edge fold" size=30 fill=correct anchor=centre | |
+```
+
+**The cast** is everything on screen, named once, drawn in the table's order (later over
+earlier). The tools read the first five columns; Notes is for people.
+
+- **Name**: letters, digits and hyphens, unique in the scene; moves and anchors refer to it.
+- **Element**: a library element by name (`spreadsheet`, `person`, `sun`), or one of the tools'
+  own pieces: `pill`, `callout`, `text` (a label, drawn by `frame.tag`, `frame.callout`,
+  `frame.text`), `badge`, `hand`, `arrow`. A label is a cast member, so it is shown, hidden and
+  moved like anything else.
+- **Where**: the member's top-left (its anchor point for a label, hand or badge) as `X Y` in the
+  animation area's pixels (0 0 is the area's top-left; the area is 1422 × 818); or a region,
+  `left`, `right`, `centre`, `top-left`, `top-right`, `bottom-left`, `bottom-right`, `full` (the
+  halves and quarters of the area, the middle, or all of it: the member is centred in it, and
+  fitted into it when it has no Size); or another member's anchor with an optional offset,
+  `fuel.needle + 0 -40`. Anchors are the element's own, from its description (`centre`, `head`,
+  `hand`, `needle`; a spreadsheet's `row.N`, `cell.N.M`, `tab.N`, counted from 1), plus
+  `top-left`, `top-right`, `bottom-left`, `bottom-right` and `centre` of any member's box. A
+  member placed by another follows it when that one moves. An anchor the element works out
+  while drawing (a row, a cell, a needle's tip: "computed" in its description) exists once that
+  member is drawn, so a member placed by one, moved to one, or pointing a callout or an arrow at
+  one comes **after** that member in the cast; `check-script` says so.
+- **Size**: `W` (the width in pixels, the height from the element's own proportions) or `WxH`;
+  blank for the element's own size, or, in a region, fitted to it.
+- **Parameters**: `name=value` pairs, space-separated, values with spaces in double quotes. The
+  names are the element's, from its description; `state=standing` is a multi-state element's
+  first state. A value naming a file under the video's folder (`rows=assets/sales.csv`) is read
+  by the tools (CSV into rows) and handed to the element; the library never reads a video's
+  folder. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
+  name, a pill's `text`) must be in the scene's On screen list; data (cell values) need not. An
+  indexed parameter is written with dots: `highlight.3`, `cell-alpha.3.2`. The pieces' own
+  parameters: `pill` and `callout`: `text`, `size`, `fill`, `colour`, `anchor` (`left`, `centre`,
+  `right`), and for `callout` `target` (an anchor); `text`: `text`, `size`, `role`, `colour`,
+  `anchor`; `badge`: `ok` (`yes`/`no`), `r`; `hand`: `angle`, `scale`, `mirror`, `label`;
+  `arrow`: `from`, `to` (anchors), `colour`, `width`. Colours by name, as `frame.colour` resolves
+  them.
+
+**The moves**, one a line, each `cue N[, TIME]: ACTION`. `cue N` is the cue's number in the
+scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 s), `A–B s`
+(from A to B), or `over the cue` (the cue's whole length); A or B may be negative, or `end`,
+`end-1.2` (counted from the cue's end). No TIME means the first 0.6 s. Every change is eased
+(smoothstep, as `tl.p` eases) over its span; an empty span is a step. The actions:
+
+| Action | What happens |
+|---|---|
+| `show NAME[, NAME…]` / `hide NAME[, …]` | Fades in / out. Before its first show a member is not drawn at all. |
+| `move NAME to WHERE` | Glides to a place written as in the Where column. |
+| `NAME.PARAM A → B` | Animates a parameter: `fuel.level 0.2 → 0.9`, `sheet.rows-shown 0 → 3` (an integer stays whole). Before the span the cast's value or the element's default holds. |
+| `NAME.PARAM VALUE` | Sets it: a number eases from its current value over the span, a word takes effect at the span's start (`sheet.highlight-colour.3 correct`). |
+| `NAME STATE → STATE` | Changes state: `helper standing → pointing` (a cross-fade for drawn states, a morph for a coded element such as the potter's clay). |
+
+`→` may be written `->`.
+
+**The mistake panels.** `### Mistake` and `### Right way` each hold a Cast table (Where in the
+panel body's own pixels, 0 0 its top-left under the heading band, 690 × 728) and an optional
+Moves list whose lines have no `cue N`: `0.4–0.8 s: show total` counts from the moment the
+panels start to rise. A panel member with no show is shown from the start. A panel section in a
+scene with no `mistake:` cue is a problem.
+
+**The curtain for free.** A member shown before the mistake cue and not named in any move at
+or after the cue that follows it fades while the panels cover it, so the glimpse
+`stills --cue-changes` warns of cannot be written by accident. One named after the mistake
+(hidden, moved or changed at a later cue) is left to its moves.
+
+**Checks.** `check-script` reads the choreography and lists, each with its line: a malformed
+row or move; an element that is neither a piece nor in the library; an anchor, state or
+parameter the element's description does not have, a value out of its range, an index of 0 or
+past the data's rows, a data file that is not under the video's folder; a cue the scene does not
+have; a time past the cue's length (measured from `work/narration/timing.json` when it exists,
+else estimated, said which); a label not in On screen; a move naming no cast member; a member
+never shown, shown again while still shown, or hidden while not; a member placed by a computed
+anchor of a member not before it in the cast; a panel section with no mistake cue. The same
+problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
+drawn (exit 3), as does a library that is missing or refuses to open, or an element the
+library cannot draw (one line, in the library's words).
+
+The example above is scene A of the example video, described in a copy, checked and drawn
+against the real library on 10 October 2026 (`stills` with four frames at 0.9, 2.3, 3.2 and
+5.5 s: the person fading in, the gauge filling, the calendar marked, the person pointing, the
+tick on the needle's tip, the sun moved):
+
+```
+$ ./check-script …/paper-boat/script.md --elements ~/projects/code/video-elements | tail -1
+No problems found.
+$ ./stills …/paper-boat/script.md A:0.9,A:2.3,A:3.2,A:5.5 --out A.png --elements ~/projects/code/video-elements
+A at 0.900 s (of 12.800 s, cue 1)
+…
+Wrote …/A.png: 4 frames, 2x2
+```
+
+A described scene is flat: the camera and the bed's turning stay in a module. A member placed
+by a library element's fixed anchor before that element is drawn is placed as if the element
+were fitted uniformly and centred in its rect; a text's box for its corners is its width by its
+type size above the baseline.
+
 ### `assemble SCRIPT.md [--out FILE] [--replace]`
 
 Joins the rendered segments (`work/segments/<scene>_<frame>.mp4`) in script order with ffmpeg's
@@ -450,7 +588,7 @@ narration in every cue's window: OK
 No problems found.
 ```
 
-### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N]`
+### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N] [--elements DIR] [--renderer PATH]`
 
 Proof that a change (to scene code, a brand kit, or video-tools itself) changes no pixel of a
 video, or exactly which frames it changes, without rendering: every N-th frame of each scene
@@ -506,7 +644,7 @@ sheet of 5 pairs written to compare.png
 (That run: the example re-made with one colour changed in its last step scene; the five largest
 differences are all in that scene, and the sheet shows the colour.)
 
-### `compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …]`
+### `compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …] [--elements DIR] [--renderer PATH]`
 
 For a remake or a revision: the frame the scene code draws now beside an earlier video's frame
 at the same moment, with a number for how different they are. Times are read as `stills` reads
@@ -566,7 +704,7 @@ one under 3 `fails (under 3)`.
 |---|---|
 | `SPEECH_MODEL_DIR` | The folder holding `model.onnx` and `voices.npz`. Required by `narrate`. |
 | `VOICE`, `SPEED` | Defaults for a script that does not set its own. |
-| `VIDEO_ELEMENTS_DIR` | The video-elements repository: the folder holding `videoelements/` and `elements/`. Needed only by a script that describes a scene's cast (being built: PLAN.md item 15). |
+| `VIDEO_ELEMENTS_DIR` | The video-elements repository: the folder holding `videoelements/` and `elements/`. Needed only by a script that describes a scene's cast ("Describing a scene in the script"). |
 | `RSVG_CONVERT` | The SVG renderer the library uses, when it is not `rsvg-convert` on PATH (the Linux device shell runs one extracted from a package). Optional. |
 
 The last two can also be given as flags, `--elements DIR` and `--renderer PATH`, on
@@ -574,7 +712,7 @@ The last two can also be given as flags, `--elements DIR` and `--renderer PATH`,
 file. The folder is put on Python's import path when a command needs the library, which is
 imported from there (never installed into the venv) and opened; a missing setting or folder,
 a folder without the package, or a library that refuses are each one line in words (exit 3).
-Until a script can describe a scene, nothing calls for the library.
+A script that describes no scene never needs the library.
 
 ## Errors and exit codes
 
@@ -629,6 +767,8 @@ with ffmpeg 4.4.
 - No timeline editing and no graphical interface; no slide decks.
 - Anything particular to one video (its drawing, narration, sources) belongs in that video's
   folder, not here.
+- A described scene is flat (no camera), its text's box for anchors is approximate, and a fixed
+  anchor of an element not yet drawn assumes the element is fitted uniformly and centred.
 
 ## Notes for users
 
@@ -656,6 +796,9 @@ with ffmpeg 4.4.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 10 October 2026 (evening, last): a scene can be described in the script and drawn from the video-elements
+  library: "Describing a scene in the script", above, has the format, the checks and a real run.
+  A library refusal while drawing is one line in words (exit 3), never a traceback.
 - 10 October 2026 (afternoon, later): `check-script` reads and checks a scene's `### Cast`, `### Moves`,
   `### Mistake` and `### Right way` sections (PLAN.md item 15), opening the video-elements library
   when a cast names one of its elements; a script without them checks exactly as before. A step

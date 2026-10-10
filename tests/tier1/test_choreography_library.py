@@ -100,13 +100,13 @@ def test_a_library_elements_parameters_are_checked_by_name_kind_range_and_what_i
     assert _check(text, lib, folder) == [
         "line 25: scene A2, cast: 't': a table needs 'rows'",
         "line 25: scene A2, cast: 't': a table has no parameter 'colour' (its parameters are rows, tab, note, "
-        "rows-shown, highlight.*, highlight-colour.*, cell-alpha.*.*, striped)",
+        "rows-shown, highlight.*, highlight-colour.*, cell-alpha.*.*, striped, explode)",
         "line 25: scene A2, cast: 't': 'rows-shown' is 0 to 1000, not '2000'",
         "line 25: scene A2, cast: 't': 'highlight.3' should be a number, not 'x'",
         "line 25: scene A2, cast: 't': 'highlight-colour.1' needs a colour name",
         "line 25: scene A2, cast: 't': 'striped' is yes or no (true or false), not 'maybe'",
         "line 25: scene A2, cast: 't': a table has no parameter 'highlight.3.2' (its parameters are rows, tab, note, "
-        "rows-shown, highlight.*, highlight-colour.*, cell-alpha.*.*, striped)",
+        "rows-shown, highlight.*, highlight-colour.*, cell-alpha.*.*, striped, explode)",
         "line 26: scene A2, cast: 'u': 'rows-shown' should be a whole number, not '1.5'",
         "line 26: scene A2, cast: 'u' draws 'Sheet2', which is not in the script's On screen list "
         "(Sample output, checked ✓)",

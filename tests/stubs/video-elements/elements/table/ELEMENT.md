@@ -28,6 +28,7 @@
 | highlight-colour.* | colour accent | |
 | cell-alpha.*.* | number 0 1 1 | |
 | striped | boolean false | |
+| explode | boolean false | the stub refuses to draw when true, as the real library refuses in words |
 
 ## Colours
 

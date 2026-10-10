@@ -249,7 +249,11 @@ class Performance:
                            frame.colour(p.get("colour", "ink")), lw=float(p.get("width", 6)), alpha=alpha)
             else:
                 el = self.lib.element(element)
-                self._anchors[name] = el.draw(frame, (x, y, w, h), state=state, params=p, alpha=alpha)
+                try:
+                    self._anchors[name] = el.draw(frame, (x, y, w, h), state=state, params=p, alpha=alpha)
+                except Exception as e:      # the library refuses in words (its Failure) or fails: one line, exit 3
+                    raise cli.Failure(f"scene {frame.scene['key']}: the library could not draw '{name}' ({element}): "
+                                      f"{e}") from e
 
     def _point(self, text):
         where = choreography.parse_where(text)
