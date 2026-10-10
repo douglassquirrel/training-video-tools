@@ -2373,3 +2373,40 @@ Assumed: video-tools reads that Notes cell from the description's `folder`; reco
 "Open questions" 1 for Squirrel.
 
 **State.** 480 green as left. Next: item 17, 1, the offset bug, a reproducing test first.
+
+### 10 October 2026 — Item 17, 1: an arrow's ends and a callout's target at their offsets
+
+**Goal.** `from`, `to` and `target` written `member.anchor + X Y` land on the anchor plus the
+offset, as a Where does (request 15, item 1: a bug).
+
+**Test.** `test_an_arrows_ends_are_its_anchors_plus_their_offsets` and
+`test_a_callouts_target_is_its_anchor_plus_the_offset` (tier 2, `test_perform.py`): scene A of
+the example described with two pots, an arrow `from="pot1.centre + 10 0" to="pot2.centre + 0 -5"`
+and a callout `target="pot1.top-right + -20 30"`; `draw.arrow` and `Frame.callout` replaced by
+recorders, so the assertion is on the exact points handed over.
+
+**Red.** The bug reproduced, the points on the bare anchors:
+
+```
+E       assert [(240.0, 318....590.0, 468.0)] == [(250.0, 318....590.0, 463.0)]
+E         At index 0 diff: (240.0, 318.0) != (250.0, 318.0)
+E       assert [(340.0, 218.0)] == [(320.0, 248.0)]
+E         At index 0 diff: (340.0, 218.0) != (320.0, 248.0)
+2 failed, 19 deselected in 1.15s
+```
+
+**Green.** `perform.Performance._point` adds the parsed `dx`, `dy`:
+
+```
+2 passed, 19 deselected in 0.66s
+482 passed in 142.49s (0:02:22)
+```
+
+**Decision / surprise.** It escaped because no test put an offset in `from`, `to` or `target`;
+`check-script` had always accepted the offset (the same `parse_where`), so the script read
+clean and drew wrong. First written as one test, split in two so that each assertion was seen
+to fail. The suite now takes about 2 min 20 s, longer than a foreground command's two minutes
+here: run it with a longer timeout.
+
+**State.** 482 green, 98%. Next: item 17, 2, `progress` on an arrow (its two tests are written
+and red).

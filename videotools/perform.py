@@ -256,8 +256,10 @@ class Performance:
                                       f"{e}") from e
 
     def _point(self, text):
+        """A point written as a member's anchor with an optional offset (an arrow's ends, a callout's target)."""
         where = choreography.parse_where(text)
-        return self.anchors_of(where["member"], where["anchor"])
+        x, y = self.anchors_of(where["member"], where["anchor"])
+        return (x + where["dx"], y + where["dy"])
 
 
 def draw_scene(frame, video, scene, tl, t):

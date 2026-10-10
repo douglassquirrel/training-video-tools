@@ -392,3 +392,49 @@ def test_a_library_refusal_while_drawing_is_one_message_in_words(example, tmp_pa
     assert err == ("stills: scene A: the library could not draw 'sheet' (table): element 'table': its draw failed: "
                    "Failure: no font role 'mono' in the brand kit\n")
     assert not (tmp_path / "s.png").exists()
+
+
+# ---- item 17 (request 15): offsets where an anchor is read, an arrow that draws on, a blank Where
+
+POINTED = """### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| pot1 | pot | 100 100 | 200 | | frame rect 140 218, 200 x 200: centre 240 318 |
+| pot2 | pot | 500 300 | 100 | | frame rect 540 418, 100 x 100: centre 590 468 |
+| line | arrow | 100 500 | | from="pot1.centre + 10 0" to="pot2.centre + 0 -5" | |
+| note | callout | 400 600 | | text="edge fold" target="pot1.top-right + -20 30" | |
+
+### Moves
+
+- cue 1: show pot1, pot2, line, note
+
+"""
+
+
+def recorded(monkeypatch):
+    """(arrows, targets): every draw.arrow call as (its two ends, its keywords) and every callout's
+    target, recorded in place of the drawing."""
+    from videotools import draw, scenes
+    arrows, targets = [], []
+    monkeypatch.setattr(draw, "arrow", lambda ctx, control, colour, **kw: arrows.append((control, kw)))
+    monkeypatch.setattr(scenes.Frame, "callout", lambda self, s, target, at, **kw: targets.append(target))
+    return arrows, targets
+
+
+def pointed(example, cast=POINTED):
+    cropped(example)
+    narrated(example)
+    return frame.Video(describe(example, cast), INVENTED, None)
+
+
+def test_an_arrows_ends_are_its_anchors_plus_their_offsets(example, monkeypatch):
+    arrows, _targets = recorded(monkeypatch)
+    rendered(pointed(example), "A", 2.0)
+    assert arrows[0][0] == [(250.0, 318.0), (590.0, 463.0)]
+
+
+def test_a_callouts_target_is_its_anchor_plus_the_offset(example, monkeypatch):
+    _arrows, targets = recorded(monkeypatch)
+    rendered(pointed(example), "A", 2.0)
+    assert targets == [(320.0, 248.0)]
