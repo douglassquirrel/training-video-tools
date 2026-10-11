@@ -598,7 +598,8 @@ or after the cue that follows it fades while the panels cover it, so the glimpse
 **Checks.** `check-script` reads the choreography and lists, each with its line: a malformed
 row or move; an element that is neither a piece nor in the library; an anchor, state or
 parameter the element's description does not have, a value out of its range, an index of 0 or
-past the data's rows, a data file that is not under the video's folder; a cue the scene does not
+past the data's rows, columns or lines (whichever the element's description says it counts), a
+data file that is not under the video's folder; a cue the scene does not
 have; a time past the cue's length (measured from `work/narration/timing.json` when it exists,
 else estimated, said which); a label not in On screen; a move naming no cast member; a member
 never shown, shown again while still shown, or hidden while not; a member placed by a computed
