@@ -3213,3 +3213,47 @@ refuses in words too, for a caller that did not check first.
 
 **State.** Item 20's four parts built. 554 green, 98%, lint clean. Next: item 21, `flash`; then
 the README and the Tier 3 for both.
+
+### 11 October 2026 — Item 21: a repeating flash
+
+**Goal.** `flash NAME[, NAME…] [rate=R] [phase=P] [low=L]`: over its span the members' opacity
+is multiplied by a sine between `low` and 1 (request 19).
+
+**Tests.** Tier 1: `test_flash_names_members_and_takes_a_rate_a_phase_and_a_low` (the parser);
+`test_a_flash_needs_a_cast_member_a_rate_and_a_low_in_range_and_no_other_flash_at_the_same_time`
+(the check); and four on `Performance.alpha` in `test_perform_curtain.py`:
+`test_a_flash_is_a_sine_from_the_spans_start_and_the_plain_opacity_outside_it` (0.5 at the
+start, 1 a quarter-beat on, 0 at three quarters, 1 before the span),
+`test_a_flashs_rate_phase_and_low_shape_it`,
+`test_a_flash_multiplies_what_the_member_already_is_so_a_hidden_member_stays_hidden`,
+`test_a_flash_does_not_name_its_member_for_the_curtain_so_it_still_fades_under_the_panels`.
+
+**Red.**
+
+```
+E   At index 0 diff: "line 32: scene A2, moves: 'flash sample' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, …" != "line 34: scene A2, moves: 'flash pot speed=2': a flash's options are rate, phase and low, each a number, not 'speed=2'"
+E       assert 1.0 == 0.5 ± 5.0e-07
+E       assert 1.0 == 0.6 ± 6.0e-07
+E       AssertionError: assert 1.0 == 0.0
+```
+
+**Green.** `328 passed in 14.00s` (tier 1 and `test_perform.py`); suite `560 passed in 159.58s
+(0:02:39)`, 98%; `All checks passed!`.
+
+**Find, from the request's own example.** With the flash built, two of my new tests still
+failed in the parser: `cue 1, 1 s – end: flash a` was refused. A bare `end` had always needed a
+` s` after it (`0–end s`), and the span rules of item 20, 3 kept that; but `end` with no offset
+is not a number of seconds, and request 19 writes it bare (`cue 2, 2.6 s – end: flash warn-1`).
+Now a bare `end` may be written with or without ` s`; `end-0.5` still takes it. `parse_span`
+rewritten round one small rule (each time says whether it needs ` s`: seconds yes, a
+percentage no, a bare `end` either), pinned in the parser's flash test.
+
+**Decision / surprise.** The five adjustments told to Squirrel at 00:38 are built as told
+("Settled" 40): options `name=value`; `phase` a fraction of a beat; `rate` above 0 and at most
+3, default 1.4; a flash does not name its members for the curtain rule; `end of scene`. Within
+its span a flash multiplies last, after show, hide, dim and the curtain; at the span's end the
+opacity steps back to the plain one (no easing in or out was asked). Overlap is by the same
+`choreography.window` the drawing uses, so "overlap" means the same thing in both.
+
+**State.** Items 20 and 21 built. 560 green, 98%, lint clean. Next: the README (written), the
+Tier 3 against the real library, the note to training-video.

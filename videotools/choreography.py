@@ -35,6 +35,7 @@ _PANEL_MOVE_RE = re.compile(r"^(?:([^:]+): )?(.+)$")
 _VALUE = r'"[^"]*"|\S+'
 _SHOW_RE = re.compile(rf"^(show|hide|keep) ({NAME}(?:, {NAME})*)$")
 _DIM_RE = re.compile(rf"^dim ({NAME}(?:, {NAME})*) to ({NUM})$")
+_FLASH_RE = re.compile(rf"^flash ({NAME}(?:, {NAME})*)((?: \S+)*)$")
 _MOVE_RE = re.compile(rf"^move ({NAME}) to (.+)$")
 _ANIMATE_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE}) (?:→|->) ({_VALUE})$")
 _SET_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE})$")
@@ -45,8 +46,10 @@ _PARAM_NAME_RE = re.compile(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*|[a-z][a-z0-9
 
 WHERE_HELP = ("is not X Y in area pixels, a region ({}) or a member's anchor like sample.row.3 + 40 -12"
               .format(", ".join(REGIONS)))
-ACTION_HELP = ("is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, NAME.PARAM A → B, "
-               "NAME.PARAM VALUE or NAME STATE → STATE")
+ACTION_HELP = ("is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, flash NAME, move NAME to WHERE, "
+               "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE")
+FLASH = {"rate": 1.4, "phase": 0.0, "low": 0.0}  # a flash's options and their defaults: flashes a second (9 radians a
+MAX_FLASH_RATE = 3.0                             # second is 1.43), a fraction of a beat, the lowest opacity
 
 
 def parse_where(text):
@@ -177,6 +180,16 @@ def parse_action(text):
     m = _DIM_RE.match(text)
     if m:
         return {"kind": "dim", "names": [n.strip() for n in m.group(1).split(",")], "level": float(m.group(2))}, None
+    m = _FLASH_RE.match(text)
+    if m:
+        act = dict({"kind": "flash", "names": [n.strip() for n in m.group(1).split(",")]}, **FLASH)
+        for token in m.group(2).split():
+            option, eq, value = token.partition("=")
+            if option not in FLASH or not re.match(f"^{NUM}$", value):
+                return None, (f"'{text}': a flash's options are {', '.join(list(FLASH)[:-1])} and {list(FLASH)[-1]}, "
+                              f"each a number, not '{token}'")
+            act[option] = float(value)
+        return act, None
     m = _MOVE_RE.match(text)
     if m:
         where = parse_where(m.group(2))
@@ -197,10 +210,13 @@ def parse_action(text):
 
 
 def _time(s):
-    """A written time as data, and whether it is in seconds: ('start' | 'end', offset seconds) from
-    '0.4', '-0.3', 'end', 'end-1.2'; ('fraction', share of the cue's length) from '74%'."""
+    """A written time as data, and whether it is written with ' s': ('start' | 'end', offset
+    seconds) from '0.4', '-0.3', 'end-1.2' (True: seconds), or from a bare 'end' (None: either
+    way); ('fraction', share of the cue's length) from '74%' (False: never)."""
+    if s == "end":
+        return ("end", 0.0), None
     if s.startswith("end"):
-        return ("end", float(s[3:] or 0)), True
+        return ("end", float(s[3:])), True
     if s.endswith("%"):
         return ("fraction", float(s[:-1]) / 100), False
     return ("start", float(s)), True
@@ -213,7 +229,7 @@ def parse_span(text):
     from there), ('fraction', share) or ('scene', 0.0), the scene's end; a lone 'P%' ends
     ('fraction', share, 0.6), the usual 0.6 s later. `text` None is the default, the first 0.6 s.
     (None, None, None) when not understood: seconds are written with ' s' (once, at the end,
-    for 'A–B s'), a percentage without."""
+    for 'A–B s'), a percentage without, a bare 'end' either way."""
     if text is None:
         return ("start", 0.0), ("start", DEFAULT_SPAN), None
     text = text.strip()
@@ -223,20 +239,24 @@ def parse_span(text):
     m = across or _SPAN_RE.match(text)
     if not m:
         return None, None, None
-    a, a_seconds = _time(m.group("a"))
-    if bool(m.group("as")) and not a_seconds:
+
+    def written_right(needs, has):
+        return needs is None or needs == bool(has)
+
+    a, a_needs = _time(m.group("a"))
+    has_b = bool(m.group("b"))
+    b, b_needs = _time(m.group("b")) if has_b else (None, None)
+    if has_b and not written_right(b_needs, m.group("bs")):
+        return None, None, None                 # '0.5–50% s', or seconds without their ' s'
+    shared = has_b and not across and bool(m.group("bs"))     # 'A–B s': the one ' s' is for both
+    if a_needs is False and m.group("as"):
         return None, None, None                 # '74% s'
+    if a_needs and not m.group("as") and not shared:
+        return None, None, None                 # seconds without their ' s'
     if across and across.group("scene"):
-        return (a, ("scene", 0.0), None) if a_seconds == bool(m.group("as")) else (None, None, None)
-    if not m.group("b"):
-        if a_seconds != bool(m.group("as")):
-            return None, None, None             # seconds without their ' s'
-        return a, ((a[0], a[1] + DEFAULT_SPAN) if a_seconds else ("fraction", a[1], DEFAULT_SPAN)), None
-    b, b_seconds = _time(m.group("b"))
-    if b_seconds != bool(m.group("bs")):
-        return None, None, None                 # '0.5–50% s', or seconds without ' s'
-    if a_seconds and not m.group("as") and (across or not b_seconds):
-        return None, None, None                 # the first time's ' s' is shared only with seconds in the same cue
+        return a, ("scene", 0.0), None
+    if not has_b:
+        return a, ((a[0], a[1] + DEFAULT_SPAN) if a[0] != "fraction" else ("fraction", a[1], DEFAULT_SPAN)), None
     return a, b, (int(across.group("cue")) if across else None)
 
 
@@ -821,7 +841,7 @@ def _resolve(tl, cue, when):
 def _check_moves(scene, ctx, moves, where, tl, panel):
     """([members never shown], [problems]) for a cast's moves."""
     members, lib = ctx["members"], ctx["lib"]
-    problems, events = [], []
+    problems, events, flashes = [], [], {}
     for mv in moves:
         at = f"line {mv['line']}: {where}: "
         cue, act = mv["cue"], mv["action"]
@@ -855,6 +875,19 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
         if missing:
             continue
         if act["kind"] == "keep":           # names the members, so the curtain leaves them; nothing else
+            continue
+        if act["kind"] == "flash":          # multiplies the opacity over its span; one at a time for a member
+            if not 0 < act["rate"] <= MAX_FLASH_RATE:
+                problems.append(f"{at}a flash's rate is above 0 and at most {MAX_FLASH_RATE:g} a second, not "
+                                f"'{act['rate']:g}'")
+            if not 0 <= act["low"] < 1:
+                problems.append(f"{at}a flash's low is from 0 to below 1, not '{act['low']:g}'")
+            a, b = window(mv, tl, panel)
+            for n in names:
+                clash = next((line for a2, b2, line in flashes.get(n, []) if a < b2 and a2 < b), None)
+                if clash:
+                    problems.append(f"{at}'{n}' is already flashing then (line {clash})")
+                flashes.setdefault(n, []).append((a, b, mv["line"]))
             continue
         if act["kind"] == "dim" and not 0 <= act["level"] <= 1:
             problems.append(f"{at}a level is 0 to 1, not '{act['level']:g}'")

@@ -2,6 +2,8 @@
 cue and not named in any move at or after the cue that follows it fades under the panels
 (before_curtain); one named after the mistake is left to its moves. Pure: no library, no frame."""
 
+import pytest
+
 from videotools import perform, timeline
 
 TL = timeline.Timeline([0.7, 3.7, 7.7], [3.0, 4.0, 2.0], 10.7, 30, estimated=[], mistake=2)
@@ -56,3 +58,43 @@ def test_a_member_in_a_span_that_ends_at_a_later_cue_or_at_the_scenes_end_is_lef
     assert perform.Performance([_member("e")], [_move(1, "show", ["e"]), across], AREA, TL, 5.0, None).alpha("e") == 1.0
     to_the_end = dict(_move(1, "keep", ["f"]), end=("scene", 0.0))
     assert perform.Performance([_member("f")], [_move(1, "show", ["f"]), to_the_end], AREA, TL, 5.0, None).alpha("f") == 1.0
+
+
+# ---- item 21 (request 19): a repeating flash multiplies a member's opacity over its span
+
+def _flash(cue, names, start, end, **options):
+    action = dict({"kind": "flash", "names": names, "rate": 1.0, "phase": 0.0, "low": 0.0}, **options)
+    return {"cue": cue, "start": start, "end": end, "action": action, "line": 1}
+
+
+def _alpha(moves, t, name="g"):
+    return perform.Performance([_member(name)], moves, AREA, TL, t, None).alpha(name)
+
+
+def test_a_flash_is_a_sine_from_the_spans_start_and_the_plain_opacity_outside_it():
+    moves = [_move(1, "show", ["g"]), _flash(1, ["g"], ("start", 1.0), ("start", 3.0))]     # 1.7 to 3.7 s, once a second
+    assert _alpha(moves, 1.5) == 1.0                         # before the span: its plain opacity
+    assert _alpha(moves, 1.7) == pytest.approx(0.5)          # the start
+    assert _alpha(moves, 1.95) == pytest.approx(1.0)         # a quarter-beat on
+    assert _alpha(moves, 2.45) == pytest.approx(0.0)         # three quarters
+
+
+def test_a_flashs_rate_phase_and_low_shape_it():
+    def at(t, **options):
+        return _alpha([_move(1, "show", ["g"]), _flash(1, ["g"], ("start", 1.0), ("start", 3.0), **options)], t)
+    assert at(1.7, phase=0.25) == pytest.approx(1.0)         # a quarter-beat ahead
+    assert at(2.45, low=0.6) == pytest.approx(0.6)           # never below its low
+    assert at(1.7 + 0.25 / 1.4, rate=1.4) == pytest.approx(1.0)
+
+
+def test_a_flash_multiplies_what_the_member_already_is_so_a_hidden_member_stays_hidden():
+    assert _alpha([_flash(1, ["g"], ("start", 1.0), ("start", 3.0))], 1.95) == 0.0          # never shown
+    dimmed = [_move(1, "show", ["g"]), dict(_move(1, "dim", ["g"], 0.6, 0.8), action={"kind": "dim", "names": ["g"],
+                                                                                      "level": 0.5}),
+              _flash(1, ["g"], ("start", 1.0), ("start", 3.0))]
+    assert _alpha(dimmed, 1.95) == pytest.approx(0.5)        # at the flash's top: the dim's level
+
+
+def test_a_flash_does_not_name_its_member_for_the_curtain_so_it_still_fades_under_the_panels():
+    moves = [_move(1, "show", ["g"]), _flash(1, ["g"], ("start", 1.0), ("scene", 0.0))]
+    assert _alpha(moves, 5.0) == 0.0                         # covered, cue 2 + 1.3 s: gone, though flashing to the end

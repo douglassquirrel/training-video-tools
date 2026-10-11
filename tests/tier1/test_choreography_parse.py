@@ -200,7 +200,7 @@ just prose
 """
     scene, problems = _scene(text)
     assert problems == [
-        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
+        "line 31: scene A2, moves: 'wave sample' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, flash NAME, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 32: scene A2, moves: a scene's move starts 'cue N' (a panel's moves and those of a scene with no cues have none)",
         "line 33: scene A2, moves: 'cue 1, soon: show sample' is not cue N[, TIME][, linear]: ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, or A s – end of scene)",
@@ -209,7 +209,7 @@ just prose
         "line 35: scene A2, moves: 'prose in the list' is not cue N[, TIME][, linear]: ACTION (TIME: A s, A–B s, over the cue, P%–Q%, A s – cue M, B s, or A s – end of scene)",
         "line 36: scene A2, moves: not a move (a list item '- cue N[, TIME]: ACTION'): just prose",
         "line 44: scene A2, mistake: a panel's moves have no 'cue N': times count from the panel's rise",
-        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, move NAME to WHERE, "
+        "line 45: scene A2, mistake: 'what is this' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, flash NAME, move NAME to WHERE, "
         "NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert len(scene["moves"]) == 0 and scene["panels"]["mistake"]["moves"] == []
@@ -337,9 +337,9 @@ def test_dim_names_members_and_a_level():
     scene, problems = _scene(text)
     assert problems == [
         "line 33: scene A2, moves: 'dim pot to faint' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, "
-        "move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
+        "flash NAME, move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
         "line 34: scene A2, moves: 'dim pot' is not show NAME, hide NAME, keep NAME, dim NAME to LEVEL, "
-        "move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
+        "flash NAME, move NAME to WHERE, NAME.PARAM A → B, NAME.PARAM VALUE or NAME STATE → STATE",
     ]
     assert scene["moves"][1]["action"] == {"kind": "dim", "names": ["sample", "pot"], "level": 0.55}
 
@@ -379,3 +379,29 @@ def test_a_time_may_be_a_percentage_and_a_span_may_end_in_a_later_cue_or_at_the_
         (2, None, ("start", 2.6), ("scene", 0.0)),
     ]
     assert scene["moves"][5]["linear"] is True
+
+
+# ---- item 21 (request 19): a repeating flash
+
+def test_flash_names_members_and_takes_a_rate_a_phase_and_a_low():
+    text = HEAD + CAST + """
+### Moves
+
+- cue 1: show sample, pot
+- cue 2, 2.6 s – end of scene: flash sample
+- cue 2, 1 s – end: flash sample, pot rate=2 phase=0.5 low=0.6
+- cue 3: flash pot speed=2
+- cue 3: flash pot rate=fast
+"""
+    scene, problems = _scene(text)                          # the first move is line 31
+    assert problems == [
+        "line 34: scene A2, moves: 'flash pot speed=2': a flash's options are rate, phase and low, each a number, "
+        "not 'speed=2'",
+        "line 35: scene A2, moves: 'flash pot rate=fast': a flash's options are rate, phase and low, each a number, "
+        "not 'rate=fast'",
+    ]
+    assert scene["moves"][1]["action"] == {"kind": "flash", "names": ["sample"], "rate": 1.4, "phase": 0.0, "low": 0.0}
+    assert scene["moves"][1]["end"] == ("scene", 0.0)
+    assert (scene["moves"][2]["start"], scene["moves"][2]["end"]) == (("start", 1.0), ("end", 0.0))   # a bare `end`
+    assert scene["moves"][2]["action"] == {"kind": "flash", "names": ["sample", "pot"], "rate": 2.0, "phase": 0.5,
+                                           "low": 0.6}

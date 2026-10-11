@@ -572,3 +572,34 @@ def test_each_time_of_a_span_is_checked_against_its_own_cue_and_the_later_cue_mu
         "line 32: scene A2, moves: cue 9: the scene has 3 cues",
         "line 33: scene A2, moves: 5 s is past the end of cue 3, which is 2.0 s long" + choreography.ESTIMATE_NOTE,
     ]
+
+
+# ---- item 21 (request 19): a repeating flash
+
+def test_a_flash_needs_a_cast_member_a_rate_and_a_low_in_range_and_no_other_flash_at_the_same_time():
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pill | 70 100 | | text="Sample output" | |
+| b | badge | 70 100 | | ok=yes | |
+
+### Moves
+
+- cue 1: show a, b
+- cue 1, 1 s – end: flash a
+- cue 1, 2 s – cue 2, 1 s: flash a, b
+- cue 2, 2 s – end: flash a rate=5
+- cue 3, 0–0.5 s: flash a rate=0
+- cue 3, 1–1.5 s: flash a low=1
+- cue 3: flash ghost
+- cue 3, 1.6 s – end of scene: flash b phase=7.25
+"""
+    assert _check(text) == [                                # the first move is line 30
+        "line 32: scene A2, moves: 'a' is already flashing then (line 31)",
+        "line 33: scene A2, moves: a flash's rate is above 0 and at most 3 a second, not '5'",
+        "line 34: scene A2, moves: a flash's rate is above 0 and at most 3 a second, not '0'",
+        "line 35: scene A2, moves: a flash's low is from 0 to below 1, not '1'",
+        "line 36: scene A2, moves: 'ghost' is not in the cast (a, b)",
+    ]

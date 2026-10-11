@@ -106,6 +106,11 @@ class Performance:
             value = timeline.lerp(value, target, progress(self.t, a, b, mv))
         if self._under_curtain(name, shows):
             value *= self.tl.before_curtain(self.t)
+        for (a, b), mv in self._moves_of(name, ("flash",)):     # a sine between its low and 1, over its span only
+            if a <= self.t < b:
+                act = mv["action"]
+                beat = math.sin(2 * math.pi * (act["rate"] * (self.t - a) + act["phase"]))
+                value *= act["low"] + (1 - act["low"]) * (0.5 + 0.5 * beat)
         return value
 
     def _under_curtain(self, name, shows):
@@ -120,7 +125,7 @@ class Performance:
         for mv in self.moves:               # named at the cue its span ends in; to the scene's end, at every cue
             act = mv["action"]
             last = math.inf if mv["end"][0] == "scene" else mv.get("end_cue", mv["cue"])
-            if last > self.tl.mistake and name in act.get("names", [act.get("name")]):
+            if act["kind"] != "flash" and last > self.tl.mistake and name in act.get("names", [act.get("name")]):
                 return False
         return True
 
