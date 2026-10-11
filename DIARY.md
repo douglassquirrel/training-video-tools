@@ -24,11 +24,18 @@ Green: 569 tests, coverage 98%, `ruff check .` clean, committed and pushed to `o
 either way: request 19's five adjustments (PLAN.md "Settled" 40), and item 22's part 4, a
 stopgap of mine: an index in a name that begins `tab` is not counted against a member's rows or
 lines, because a sheet with more tabs than rows was being refused; the description does not say
-what an index counts, which is a question for video-elements. His other answers are in
+what an index counts, which is now asked of video-elements (below). His other answers are in
 "Settled" 30 to 41; one is a rule for every session: when unsure whether an earlier OK covers a
 new inbox item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`**
 ("Settled" 38) and nowhere else in that project: replies to its requests go there, naming the
 commit to check against; four notes are there so far.
+
+**Waiting on video-elements:** its reply to our request of 11 October, 07:18
+(`video-elements/inbox/request-from-video-tools-2026-10-11.md`; PLAN.md "Settled" 42): the
+description to say what each index counts. Until then the index check counts first indices
+against rows or lines and skips names beginning `tab`. **Known wrong meanwhile:** the real
+spreadsheet's `header.N` (an anchor) and `redact.N` count columns and are checked against rows,
+so a sheet with more columns than rows refuses them; not mended, put to Squirrel.
 
 How a move's time works now, since four requests changed it in one night: a time is seconds
 from its cue's start or back from its end, a percentage of its cue's length, or the scene's
@@ -3390,3 +3397,22 @@ library's words, as it should be).
 
 **State.** Requests 1 to 20 built. Green, lint clean, pushed. Nothing in progress; the inbox is
 empty.
+
+### 11 October 2026 — A request to video-elements: what each index counts
+
+**Decision.** Squirrel (07:18): "Yes, make the request". Written into video-elements' inbox as
+`request-from-video-tools-2026-10-11.md` (PLAN.md "Settled" 42; this one file, no standing
+permission to write there): for each indexed parameter and anchor, the description to say as
+data what each `*` counts (a data row, a column, a line of a text, or something we cannot
+count), and whether a `rows` parameter's first row is a header; with a table of the library's
+indexed names today, what video-tools does with them at `8cc0302`, and what it will do with the
+answer. It asks for the reply as a file in our inbox, in the words the README there will carry.
+
+**Find, from making the table.** Reading every indexed name in the real library (read-only):
+the stopgap of item 22, 4 covers the tabs and misses two more that count columns, the
+spreadsheet's anchor `header.*` and its parameter `redact.*` (added to the library last night).
+Checked against rows, `redact.5` on a sheet of six columns and four rows would be refused,
+wrongly. Not mended: lengthening a list of another project's names in our code is the thing
+the request is meant to end, and it was not asked. Said in the request, and to Squirrel.
+
+**State.** 569 green as left; documents only. Waiting on video-elements' reply.

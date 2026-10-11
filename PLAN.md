@@ -1581,3 +1581,10 @@ None.
     items, without a `rows.skip` (Squirrel, 11 October 2026, 07:05: "1. Yrs 2. Leave out. Go
     ahead"; 07:06: "That's 1. Yes"). The `tab` names left out of the index count (item 22, 4)
     are Claude's mending of a fault found while there, told to him with the result.
+42. A request to video-elements, written into its inbox
+    (`~/projects/code/video-elements/inbox/request-from-video-tools-2026-10-11.md`): that an
+    element's description say, as data, what each index of an indexed parameter or anchor counts
+    (a data row, a column, a line, or something video-tools cannot count), so that the
+    count-against-rows rule and the `tab` stopgap of item 22, 4 can be replaced (Squirrel, 11
+    October 2026, 07:18: "Yes, make the request"; for this request, not a standing permission to
+    write there). Nothing is built here until its reply arrives and is OK'd.
