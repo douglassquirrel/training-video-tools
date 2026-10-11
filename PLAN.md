@@ -1030,7 +1030,8 @@ Four things the training-video project found describing its scenes A2 and B for 
    A Size that is given wins, as before, and the library fits the element into it.
    `check-script` cannot ask for the size (it has no frame) and does not need to; the warning
    is now given only for an element that does not offer its natural size (its `fit` is not
-   `natural`), and a library without the `fit` key is treated as offering none. That was the
+   `natural`); a library without the `fit` key was treated as offering none until item 23, 3
+   withdrew every allowance for an older library. That was the
    real `diff` until video-elements `5f98a74` gave it a natural size too (its note of 23:53);
    since then no real element is warned of, and the warning stays for any that comes later.
 4. **A `WxH` Size reaches the element as its rect**, whatever the element's own proportions,
@@ -1260,8 +1261,13 @@ index against the file's rows) and item 22, 4's stopgap (names beginning `tab` n
    `… the text has 1 line`; for an anchor, `'tick' is placed by 'sheet'.'row.9', but
    assets/sales.csv has 4 data rows`. "data rows" when a header was left out of the count,
    "rows" when the element has no header switch or it is off.
-3. **A library with no `counts`** in its descriptions (before `d203f0a`): no index is checked,
-   rather than checked wrongly.
+3. **No older library.** video-tools does not allow for a video-elements whose descriptions
+   lack what it reads (Squirrel, 11 October 2026, 07:44: "No need to support older libraries"):
+   a library with an element whose description has no `counts` (before `d203f0a`) is refused
+   when it is opened, in one line naming the folder and the element, exit 3; and nothing in the
+   code allows for a description without `fit` or `counts` (item 17, 3's "a library without the
+   `fit` key is treated as offering none" is withdrawn with it). First built the other way (no
+   `counts`, no index checked), for an hour.
 4. **A row that is not on show.** A sheet that shows a window of its rows gives anchors only for
    those; an anchor that passes the count and is then not among those the element returned is
    refused at draw time in words that say so (Squirrel, 07:33: "Both yes"), where the message
@@ -1650,3 +1656,6 @@ None.
     video-tools counts each index by them (item 23); tabs stay `other`, unchecked, and no fifth
     word is asked for; the draw-time refusal of an anchor the element did not return says the
     row may not be on show (Squirrel, 11 October 2026, 07:33: "Both yes go ahead").
+44. No older video-elements library is supported: one whose descriptions lack `counts` is
+    refused when it is opened, and the code no longer allows for a missing `fit` or `counts`
+    (item 23, 3; Squirrel, 11 October 2026, 07:44: "No need to support older libraries").

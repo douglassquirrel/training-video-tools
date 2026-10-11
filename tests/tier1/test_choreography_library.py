@@ -555,19 +555,12 @@ def test_a_header_row_is_not_a_data_row_when_the_element_has_the_switch_and_it_i
     ]
 
 
-def test_with_a_library_that_does_not_say_what_an_index_counts_no_index_is_checked(tmp_path, folder):
-    older = _copy_of_the_library(tmp_path, lambda t: t[:t.index("## Indexes")] + t[t.index("## Colours"):])
-    assert "counts" not in older.element("table")
-    text = HEAD + """
-### Cast
-
-| Name | Element | Where | Size | Parameters | Notes |
-|---|---|---|---|---|---|
-| t | table | 10 10 | 300x100 | rows=assets/sample.csv highlight.9=1 highlight.0=1 | |
-| a | badge | t.row.9 | | ok=yes | |
-
-### Moves
-
-- cue 1: show t, a
-"""
-    assert _check(text, older, folder) == []
+def test_a_library_that_does_not_say_what_an_index_counts_is_too_old_and_is_refused_when_opened(tmp_path):
+    from videotools import cli
+    with pytest.raises(cli.Failure) as e:       # the copy's table has no `## Indexes`, as before video-elements d203f0a
+        _copy_of_the_library(tmp_path, lambda t: t[:t.index("## Indexes")] + t[t.index("## Colours"):])
+    folder = tmp_path / "library"
+    assert str(e.value) == (f"the video-elements library at {folder} is older than these tools need: the "
+                            "description of table does not say what its indexes count (no 'counts'); update the "
+                            "video-elements repository")
+    assert e.value.code == cli.REFUSED

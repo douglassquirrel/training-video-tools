@@ -26,7 +26,8 @@ def open_library(folder, renderer):
     """The video-elements library at `folder` (the repository root), opened through its
     interface: the root goes on the import path at this point of use (once), `videoelements` is
     imported from it, and `library.open(folder, renderer=…)` is called; `renderer` None leaves
-    the library its own default. Every refusal is one message in words, exit 3."""
+    the library its own default. A library whose descriptions lack `counts` (and so is older
+    than video-elements d203f0a) is refused too. Every refusal is one message in words, exit 3."""
     import importlib
     import sys
 
@@ -50,11 +51,17 @@ def open_library(folder, renderer):
         raise cli.Failure(f"videoelements at {folder} could not be imported: {type(e).__name__}: {e}") from e
     kwargs = {"renderer": renderer} if renderer else {}
     try:
-        return library.open(folder, **kwargs)
+        lib = library.open(folder, **kwargs)
     except Exception as e:   # its Failure carries .problems; anything else is reported as it is
         problems = getattr(e, "problems", None) or [f"{type(e).__name__}: {e}"]
         listed = "\n".join("  - " + p for p in problems)
         raise cli.Failure(f"the video-elements library at {folder} refuses to open:\n{listed}") from e
+    old = [name for name in lib.names() if "counts" not in lib.element(name)]
+    if old:                  # no older library is allowed for: every description has `fit` and `counts`
+        raise cli.Failure(f"the video-elements library at {folder} is older than these tools need: the description "
+                          f"of {old[0]} does not say what its indexes count (no 'counts'); update the video-elements "
+                          "repository")
+    return lib
 
 
 def from_args(args):

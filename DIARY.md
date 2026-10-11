@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-11 October 2026, 07:42. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+11 October 2026, 07:47. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -23,14 +23,15 @@ Green: 573 tests, coverage 98%, `ruff check .` clean, committed and pushed to `o
 
 **Waiting on Squirrel:** nothing that blocks. One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
-to 43; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
+to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
 38) and nowhere else in that project: replies to its requests go there, naming the commit to
 check against; five notes are there so far. Writing into video-elements' inbox was OK'd once,
 for one request ("Settled" 42), and is not a standing permission.
 
-**The index check needs video-elements at `d203f0a` or later** to check anything: it reads
-`el["counts"]`, and with a library that has none it checks no index.
+**video-tools needs video-elements at `d203f0a` or later, and says so:** a library whose
+descriptions have no `counts` is refused when it is opened; nothing in the code allows for an
+older one ("Settled" 44).
 
 How a move's time works now, since four requests changed it in one night: a time is seconds
 from its cue's start or back from its end, a percentage of its cue's length, or the scene's
@@ -3511,3 +3512,29 @@ item 15's interface block has video-elements' two lines.
 
 **State.** Item 23 complete. 573 green, 98%, lint clean, pushed. Nothing in progress; the inbox
 is empty.
+
+### 11 October 2026 — No older library
+
+**Decision.** Squirrel (07:42): "No need to support older libraries". Item 23, 3 was the other
+way (a library without `counts`: no index checked); rewritten, "Settled" 44.
+
+**Test.** `test_a_library_that_does_not_say_what_an_index_counts_is_too_old_and_is_refused_when_opened`
+(tier 1), in place of `test_with_a_library_that_does_not_say_what_an_index_counts_no_index_is_checked`,
+which pinned the rule that is withdrawn: the same copy of the invented library, its table's
+`## Indexes` taken out, must now fail to open, with the message, exit 3.
+
+**Red.** `Failed: DID NOT RAISE Failure`.
+
+**Green.** `341 passed in 14.22s` (tier 1 and `test_perform.py`); suite `573 passed in 163.38s
+(0:02:43)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** "Not supported" still has to be a useful error, not a `KeyError`
+(CLAUDE.md, non-negotiable 5), so `elements.open_library` checks once, after the library
+opens, that every description has `counts`, and refuses naming the folder and the first
+element without. With that, the three allowances are gone from the code: `el.get("counts")`,
+and `el.get("fit")` in the blank-Size warning and in `Performance._natural` (item 17, 3's
+allowance, withdrawn with it). `counts` is the newest key, so its presence stands for `fit`'s.
+README: the note for users, the errors table, and yesterday's "an older library draws as
+before" taken out. A sixth note to training-video corrects the fifth's sentence on this.
+
+**State.** 573 green, 98%, lint clean, pushed. Nothing in progress; the inbox is empty.

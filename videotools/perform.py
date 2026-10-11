@@ -192,7 +192,7 @@ class Performance:
         if member["size"] is not None or member["element"] in choreography.PIECES:
             return None
         el = self.lib.element(member["element"])
-        if el.get("fit") != "natural":
+        if el["fit"] != "natural":
             return None
         params = self.params(member)[0]
         params.pop(choreography.ROTATE, None)       # the turn is ours, not one of the element's parameters

@@ -543,7 +543,7 @@ def warnings(scene, lib):
             if m["size"] is not None or _element_kind(m["element"], lib) != "library":
                 continue
             el = lib.element(m["element"])
-            if el["kind"] == "code" and el.get("fit") != "natural" and _size_is_nominal(el):
+            if el["kind"] == "code" and el["fit"] != "natural" and _size_is_nominal(el):
                 w, h = el["size"]
                 out.append(f"line {m['line']}: {where}: '{m['name']}': Size is blank and {_a(el['name'])}'s own size "
                            f"({w:g} × {h:g}) is nominal, so it will not be drawn at the size its data or text "
@@ -733,13 +733,13 @@ def _index_trouble(ctx, m, name):
     """What is wrong with the indices of an indexed parameter or anchor `name` of the member `m`,
     counted as the element's description says (`el["counts"]`: a data row, a column, a line, or
     something not ours to count): None; '0' for an index of 0; or 'FILE has N data rows as
-    chosen'. None too when the description does not say (an older library), for a piece, and
-    for an index whose data was not read."""
+    chosen'. None too for a name that is not indexed, for a piece, and for an index whose data
+    was not read."""
     if m["element"] in PIECES or ctx["lib"] is None:
         return None
     el = ctx["lib"].element(m["element"])       # its callers have already found the element in the library
-    counts = el.get("counts")
-    pattern = next((p for p in counts or {} if _anchor_matches(name, p)), None)
+    counts = el["counts"]
+    pattern = next((p for p in counts if _anchor_matches(name, p)), None)
     if pattern is None:
         return None
     data = ctx["data_of"].get(m["name"], {})

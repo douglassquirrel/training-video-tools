@@ -620,7 +620,7 @@ video's folder; a `text.skip` or `text.first` that is not a whole number above 0
 leaves no line, `skip` on a data file or `where` or `columns` on a text; a line index past the
 lines chosen. The same
 problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
-drawn (exit 3), as does a library that is missing or refuses to open, or an element the
+drawn (exit 3), as does a library that is missing, refuses to open or is too old, or an element the
 library cannot draw or cannot give the natural size of (one line, in the library's words).
 
 After the problems `check-script` lists **warnings**: things that are allowed but probably not
@@ -846,7 +846,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
 | 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, or the library itself refuses to open (its problems listed), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -959,8 +959,8 @@ the anchor `cell.3.2` accepted.
   `highlight.4` on a file of a header and three rows, accepted before, is a problem (`has 3 data
   rows`); a column index is checked against the columns (`redact.3` on two columns), as is the
   second index of `cell.3.2`; a line index against the text's lines even when the text is
-  written in the cast row; a tab's index is left to the element. With an older library no index
-  is checked at all. The refusal of an anchor an element did not give when drawn now says that
+  written in the cast row; a tab's index is left to the element. An older library is not
+  supported: it is refused when it is opened (`…is older than these tools need…`). The refusal of an anchor an element did not give when drawn now says that
   a row not on show has none.
 - 11 October 2026 (morning): a parameter an element declares as text may name a file under the
   video's folder (`text=assets/plan-v1.txt`), with `text.skip=N` and `text.first=N` to choose its
@@ -994,7 +994,7 @@ the anchor `cell.3.2` accepted.
   `prompt-box`, `file-chip` or `diff` at its natural size (the size its data and text need)
   instead of fitted into its nominal one, so **a cast row that left Size blank for one of these
   changes size**; give the Size to keep the old one. This needs video-elements at `ff50009` or
-  later (`5f98a74` for `diff`; an older library draws as before). `check-script` lists warnings
+  later (`5f98a74` for `diff`). `check-script` lists warnings
   after the problems, without changing its exit code: a blank Size on an element whose size is
   only nominal and which offers no natural size (none in the library today).
 - 10 October 2026 (night, last): the end card credits the library's art below its two credit lines
