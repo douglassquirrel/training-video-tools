@@ -498,7 +498,13 @@ earlier). The tools read the first five columns; Notes is for people.
   names are the element's, from its description; `state=standing` is a multi-state element's
   first state. A value naming a file under the video's folder (`rows=assets/sales.csv`) is read
   by the tools (CSV into rows) and handed to the element; the library never reads a video's
-  folder. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
+  folder. Part of a file can be chosen beside it, so that one asset serves several cast rows:
+  `rows.where="Date Closed = TOTAL"` (or `!=`) keeps the rows whose cell in that column equals
+  (or does not equal) the value; `rows.first=3` then keeps the first three of them;
+  `rows.columns="Sales Rep, Commission"` then keeps those columns, in that order. A column is
+  its header's name or its number from 1 (`rows.columns="2, 4, 5"`); the file's first row is its
+  header and is always kept. They are applied in that order however they are written, and the
+  element is handed the result as if it were the file. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
   name, a pill's `text`) must be in the scene's On screen list; data (cell values) need not. An
   empty label is no label and is not checked, so an element's documented "none" can be written
   as it is (`ref=""` on a `formula-bar`); one of spaces only is still a label. The pieces differ
@@ -532,15 +538,23 @@ earlier). The tools read the first five columns; Notes is for people.
   has: `colour.brick=doc`. It is fixed in the cast (a move cannot change it); the pieces keep
   their own `fill` and `colour`.
 
-**The moves**, one a line, each `cue N[, TIME]: ACTION`. `cue N` is the cue's number in the
-scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 s), `A–B s`
-(from A to B), or `over the cue` (the cue's whole length); A or B may be negative, or `end`,
-`end-1.2` (counted from the cue's end). No TIME means the first 0.6 s. Every change is eased
-(smoothstep, as `tl.p` eases) over its span; an empty span is a step. The actions:
+**The moves**, one a line, each `cue N[, TIME][, linear]: ACTION`. `cue N` is the cue's number
+in the scene's Narration; TIME is `A s` (from A seconds after the cue's start, for 0.6 s), `A–B
+s` (from A to B), or `over the cue` (the cue's whole length); A or B may be negative, or `end`,
+`end-1.2` (counted from the cue's end). No TIME means the first 0.6 s. A time may also be a
+percentage of the cue's length, `74%–80%`, `42%` (from there, for 0.6 s), mixed with seconds if
+wanted (`0.5 s–50%`): seconds are written with ` s`, a percentage without. A span may end in a
+later cue, each time counted in its own cue, `cue 1, 0.5 s – cue 2, end-0.5 s: fuel.level 0.12
+→ 0.92`, or at the scene's end, `cue 2, 2.6 s – end of scene: …`. Every change is eased
+(smoothstep, as `tl.p` eases) over its span, or runs at a steady rate when the time ends `,
+linear` (`cue 2, 0–end-0.3 s, linear: prompt.progress 0 → 1`; typing, rows arriving, a list
+scrolling); an empty span is a step. The actions:
 
 | Action | What happens |
 |---|---|
 | `show NAME[, NAME…]` / `hide NAME[, …]` | Fades in / out. Before its first show a member is not drawn at all. |
+| `dim NAME[, NAME…] to LEVEL` | Takes the opacity to a level from 0 to 1 (`dim card-1 to 0.55`); a later `show` brings it back to 1, a later `dim` to another level. The member must be shown at that moment. |
+| `flash NAME[, NAME…] [rate=R] [phase=P] [low=L]` | Over the span only, the opacity is multiplied by a sine between `low` (default 0) and 1: `rate` flashes a second (default 1.4, at most 3, the usual limit for flashing content), `phase` a fraction of a beat (two signs out of step: `phase=0.5` on one). It multiplies whatever the member already is, so a hidden one stays hidden and a sign flashing to the scene's end still fades under the mistake panels; one flash at a time for a member. |
 | `keep NAME[, NAME…]` | Changes nothing: names the members at this cue, so that the curtain (below) leaves them on screen through the mistake. |
 | `move NAME to WHERE` | Glides to a place written as in the Where column. |
 | `NAME.PARAM A → B` | Animates a parameter: `fuel.level 0.2 → 0.9`, `sheet.rows-shown 0 → 3` (an integer stays whole). Before the span the cast's value or the element's default holds. |
@@ -560,7 +574,9 @@ card.
 **The mistake panels.** `### Mistake` and `### Right way` each hold a Cast table (Where in the
 panel body's own pixels, 0 0 its top-left under the heading band, 690 × 728) and an optional
 Moves list whose lines have no `cue N`: `0.4–0.8 s: show total` counts from the moment the
-panels start to rise. A panel member with no show is shown from the start. A panel section in a
+panels start to rise, which is the mistake cue's start, and a panel's times are within that
+cue: `end` is its end and a percentage is of its length (`74%–80%: show total`). A panel member
+with no show is shown from the start. A panel section in a
 scene with no `mistake:` cue is a problem.
 
 **The curtain for free.** A member shown before the mistake cue and not named in any move at
@@ -579,7 +595,14 @@ anchor of a member not before it in the cast; a panel section with no mistake cu
 `colour.ROLE` for a role the element does not have, or naming a colour that neither the
 script's Colours nor the brand has (when the brand kit read); a `rotate` that is not a number;
 a `via` that is not two points or a `dash` that is not two numbers above 0; `cue N` on a move
-of a scene that has no cues, or a time past that scene's end. The same
+of a scene that has no cues, or a time past that scene's end; a span whose later cue is not
+there or does not come after its first, each of its times against its own cue; a `dim` to a
+level outside 0 to 1 or of a member not shown then; a `flash` with a rate above 3 a second or
+not above 0, a `low` outside 0 to below 1, or overlapping another flash of the same member; a
+`rows.where`, `rows.first` or `rows.columns` naming a column that is not in the file (by name
+or number), a `where` that is not `COLUMN = VALUE` or that no row matches, a `first` that is not
+a whole number above 0, or any of them on a parameter that is not a data file or is not given
+(row and cell indices are then counted against the rows chosen). The same
 problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
 drawn (exit 3), as does a library that is missing or refuses to open, or an element the
 library cannot draw or cannot give the natural size of (one line, in the library's words).
@@ -831,7 +854,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(531 tests on 11 October, lint clean).
+(560 tests on 11 October, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -854,6 +877,11 @@ described in the scratch copy: a spreadsheet at its natural size tilted 2.2°, a
 typing dots, three bricks in three colours of their own (one turned), a dashed curve growing
 from a brick to the sheet, a callout with a `mistake` leader, and on the end card (no cues) an
 icon shown at 0.5 s and turning to the scene's end; `check-script` clean, looked at by eye.
+Then the same copy with the moves of that night: the title's sheet taken from the video's own
+commissions file with `rows.where="Date Closed = TOTAL"` and `rows.columns="Sales Rep,
+Commission"`; scene B's prompt typed `linear`; a highlight growing from cue 3 into cue 4 (`cue
+3, 0.8 s – cue 4, 50%`); its file chips dimmed to 0.4 and shown again; two warning signs
+flashing out of step, one to the scene's end; `check-script` clean, six frames looked at by eye.
 
 ## Known limitations and non-goals
 
@@ -903,6 +931,14 @@ icon shown at 0.5 s and turning to the scene's end; `check-script` clean, looked
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 11 October 2026 (night): four more things a described scene can say, and one change. A move's
+  time may end `, linear` (a steady rate), be a percentage of its cue (`74%–80%`), end in a later
+  cue (`cue 1, 0.5 s – cue 2, end-0.5 s`) or at the scene's end (`– end of scene`); `dim NAME to
+  LEVEL` and `flash NAME` join `show` and `hide`; a data file's rows and columns can be chosen
+  with `rows.where`, `rows.first`, `rows.columns`. **The change:** in a mistake panel's moves,
+  `end` now means the end of the mistake cue (it meant the panel's rise, the same as 0), so a
+  panel move written with `end` moves to where its author most likely meant. A bare `end` may
+  be written without ` s` (`2.6 s – end`).
 - 11 October 2026 (later): more can be said in a described scene. A `callout` has `leader` (its
   leader's colour); an `arrow` has `via` (two control points: a curve) and `dash`; any member has
   `rotate` (degrees, clockwise, about its box's centre, animatable); a library member has

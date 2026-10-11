@@ -2,31 +2,38 @@
 
 ## Where things stand
 
-11 October 2026, 00:39. **Requests 1 to 17 are built in full.** The eight commands of the first
-request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
+11 October 2026, 01:05. **Requests 1 to 19 are built in full**, each in the README: the eight commands
+of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
 credits for the library's art (16); offsets where an anchor is read, the arrow's `progress`,
 `head` and blank Where, a blank Size at the natural size, the blank-Size warning (17); an empty
-label is no label (18); and **item 19 (request 17, OK'd 11 October, 00:13)**: a callout's
-`leader`; an arrow's `via` (a curve) and `dash`; `colour.ROLE=NAME` on a library member;
-a Cast and Moves on title and end cards, in frame pixels, a scene with no cues writing its moves
-without `cue N`; `rotate` on any member. Each is in the README. A new session starts by reading
-CLAUDE.md, PLAN.md (items 15 to 19 in full, and whatever follows) and this section, then `inbox/`.
+label is no label (18); a callout's `leader`, an arrow's `via` and `dash`, `colour.ROLE=NAME`,
+casts on title and end cards, a scene with no cues, `rotate` (19); **`linear` moves, `dim`,
+percentages and spans across cues and to the scene's end, a CSV's rows and columns chosen with
+`rows.where`, `rows.first`, `rows.columns` (20, request 18); `flash` (21, request 19)**. A new
+session starts by reading CLAUDE.md, PLAN.md (items 15 to 21 in full) and this section, then
+`inbox/`.
 
-**Inbox: empty. In PLAN.md and next, in this order:** item 20 (request 18): a move marked
-`linear`; `dim NAME to LEVEL`; times as a percentage of a cue and a span that ends in a later
-cue; a CSV's columns and rows chosen with `rows.columns`, `rows.where`, `rows.first`. Then item
-21 (request 19): `flash`, a repeating opacity over a span. The log's last entries say how far
-each has got.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
 
-Green: 531 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
+Green: 560 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
-**Waiting on Squirrel:** nothing. His answers are in PLAN.md "Settled" (30 to 38); one is a
-rule for every session: when unsure whether an earlier OK covers a new inbox item, ask.
-**video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled" 38; the
-folder was made on 11 October at his word) and nowhere else in that project: replies to its
-requests go there, naming the commit to check against.
+**Waiting on Squirrel:** nothing that blocks. One thing he was told and did not answer either
+way: request 19 was built with five adjustments to what it asked (PLAN.md "Settled" 40: options
+written `name=value`; `phase` a fraction of a beat; `rate` at most 3 a second; a flash does not
+name its members for the curtain rule; `end of scene` as a span's end). His other answers are in
+"Settled" 30 to 39; one is a rule for every session: when unsure whether an earlier OK covers a
+new inbox item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`**
+("Settled" 38) and nowhere else in that project: replies to its requests go there, naming the
+commit to check against; three notes are there so far.
+
+How a move's time works now, since four requests changed it in one night: a time is seconds
+from its cue's start or back from its end, a percentage of its cue's length, or the scene's
+end; a span may end in a later cue; `choreography.window(move, tl, panel)` is the one place
+that turns a move into scene seconds, used by the check and by `perform`; with no cue, a
+panel's times are within the mistake cue and a cue-less scene's within the scene. A parsed
+move carries `end_cue` and `linear` only when it has them.
 
 The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -3257,3 +3264,30 @@ opacity steps back to the plain one (no easing in or out was asked). Overlap is 
 
 **State.** Items 20 and 21 built. 560 green, 98%, lint clean. Next: the README (written), the
 Tier 3 against the real library, the note to training-video.
+
+### 11 October 2026 — Items 20 and 21: README and the Tier 3 against the real library
+
+**Tier 3** (01:20–01:30, the scratch copy of the second video; nothing written in that
+project). The title card's sheet read from the video's own `assets/commissions-2024-04.csv`
+with `rows.where="Date Closed = TOTAL"` and `rows.columns="Sales Rep, Commission"` in place of
+the hand-made totals file: the six reps and their commissions, as before. Scene B: the prompt
+typed `linear`; `cue 3, 0.8 s – cue 4, 50%: reply.highlight.1 0 → 0.2`; `cue 3, 20%–40%: dim
+chip-1, chip-2, chip-3 to 0.4` and `cue 4, 1.0 s: show` them; two `warning` icons, `cue 1,
+1.5 s – end of scene: flash warn` and `cue 1, 1.5 s – end: flash warn-2 phase=0.5 low=0.3`.
+`check-script`: `No problems found.` `stills` at title 3.2 s and B 2.2, 2.4, 2.55, 6.0 and
+17.5 s, by eye: the sheet right; the two signs at different strengths in each of the three
+close frames, out of step, the second never gone; the second sign plain again after cue 1 while
+the first goes on; the prompt part typed at 6.0 s; the chips back at full strength in cue 4.
+
+**README.** The moves' paragraph (percentages, a later cue, the scene's end, `linear`); `dim`
+and `flash` in the actions table; a panel's times within the mistake cue; the CSV qualifiers
+under Parameters; the checks; a dated note for users that names the one change (a panel's
+`end`); the testing paragraph (560 tests) and this Tier 3.
+
+**Also.** A third note in the training-video project's inbox
+(`reply-from-video-tools-2026-10-11-3.md`): requests 18 and 19 built, the commit, the rules as
+built, the five adjustments to request 19 and the change to a panel's `end`.
+
+**Green.** `560 passed in 159.58s (0:02:39)`, 98%; `All checks passed!`.
+
+**State.** Requests 1 to 19 built and pushed. Nothing in progress; the inbox is empty.
