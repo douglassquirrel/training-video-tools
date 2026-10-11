@@ -16,7 +16,10 @@ parameter read from a file, `text.skip` and `text.first`, indices counted agains
 chosen, a tab's index not counted against rows (22, request 20)**. A new session starts by
 reading CLAUDE.md, PLAN.md (items 15 to 22 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
+**In the inbox, read and reported, waiting for Squirrel's OK:** video-elements' reply
+(`inbox/reply-from-video-elements-2026-10-11.md`, 07:29): `el["counts"]` says what each index
+counts and a `rows` parameter's description names its header switch (its `d203f0a`). The log's
+last entry has what it says and what is proposed. Everything else is in `inbox/done/`.
 
 Green: 569 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
@@ -30,12 +33,10 @@ new inbox item, ask. **video-tools may write into `~/projects/non-code/training-
 ("Settled" 38) and nowhere else in that project: replies to its requests go there, naming the
 commit to check against; four notes are there so far.
 
-**Waiting on video-elements:** its reply to our request of 11 October, 07:18
-(`video-elements/inbox/request-from-video-tools-2026-10-11.md`; PLAN.md "Settled" 42): the
-description to say what each index counts. Until then the index check counts first indices
-against rows or lines and skips names beginning `tab`. **Known wrong meanwhile:** the real
-spreadsheet's `header.N` (an anchor) and `redact.N` count columns and are checked against rows,
-so a sheet with more columns than rows refuses them; not mended, put to Squirrel.
+**The index check is known wrong until that reply is built on:** it counts first indices
+against rows (the header among them) or lines and skips names beginning `tab`, so the real
+spreadsheet's `header.N` and `redact.N`, which count columns, are refused on a sheet with more
+columns than rows.
 
 How a move's time works now, since four requests changed it in one night: a time is seconds
 from its cue's start or back from its end, a percentage of its cue's length, or the scene's
@@ -3416,3 +3417,27 @@ wrongly. Not mended: lengthening a list of another project's names in our code i
 the request is meant to end, and it was not asked. Said in the request, and to Squirrel.
 
 **State.** 569 green as left; documents only. Waiting on video-elements' reply.
+
+### 11 October 2026 — video-elements' reply arrives; read and reported, not started
+
+**What arrived.** `inbox/reply-from-video-elements-2026-10-11.md` (07:29), to our request of
+07:17: all three asks built in its `d203f0a`. A `## Indexes` table in each `ELEMENT.md`, read
+into `el["counts"]`: a dict by pattern, one `{"what", "of"}` for each `*`, `what` one of `row`
+(a data row of the `rows` parameter `of`, its header not counted), `column`, `line` (a
+non-blank line of the text parameter `of`) or `other` (not for a caller to check; `of` None);
+required for every indexed name, so the library refuses to open without it. And
+`el["params"][rows]["header"]`: the name of the boolean parameter that says the first row is a
+header, or None. It gives the words for the interface block, notes that our stub needs the
+same, and three things we will meet: a row scrolled off a windowed sheet has no anchor; tabs
+are `other` on purpose; `line` counts as we do. Checked read-only: three real elements have
+`## Indexes` (`spreadsheet`, `document`, `range-bars`; `ledgers` per the reply), and the
+spreadsheet's `rows` row reads `rows header=header`.
+
+**Decision.** Squirrel (07:30): "Video-elements replied". Read and reported; **nothing done**;
+the item stays in `inbox/`. Proposed to him: replace the count-against-rows rule and the `tab`
+stopgap with one driven by `el["counts"]` (each index against the data rows, columns or lines
+chosen for the member, `other` not checked, a second index checked as the first; a library
+without `counts` not checked at all), put the two interface lines in PLAN.md, give the invented
+library an `## Indexes` table. My question of 07:17 (lengthen the stopgap meanwhile) falls away.
+
+**State.** 569 green as left, pushed. Waiting on Squirrel's OK for the reply.
