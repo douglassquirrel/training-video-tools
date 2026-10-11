@@ -201,17 +201,23 @@ class Performance:
         return float(w), float(h)
 
     def _kind(self, member, name):
-        """The type of a parameter: the library description's, or the piece's (number or a word)."""
+        """The type of a parameter: the library description's, or the piece's (number, or a word:
+        never `text`, which for a library element may name a file to read)."""
         if name == choreography.ROTATE:
             return "number"
         if member["element"] in choreography.PIECES:
-            return "number" if choreography.PIECE_PARAMS[member["element"]][name] in ("number", "unit") else "text"
+            return "number" if choreography.PIECE_PARAMS[member["element"]][name] in ("number", "unit") else "word"
         return choreography._param_match(name, self.lib.element(member["element"])["params"])["type"]
 
     def _convert(self, kind, value):
         if kind == "rows":
             with open(os.path.join(self.folder, value), encoding="utf-8", newline="") as f:
                 return [row for row in csv.reader(f)]
+        if kind == "text":                      # a file under the video's folder, or the text itself
+            path = choreography.text_file(self.folder, value)
+            if path:
+                with open(path, encoding="utf-8") as f:
+                    return f.read()
         if kind == "number":
             return float(value)
         if kind == "integer":
@@ -241,8 +247,9 @@ class Performance:
             elif not (pname.startswith(choreography.OWN_COLOUR) or choreography.is_qualifier(pname)):
                 kind = self._kind(member, pname)        # its own colours and a file's qualifiers are not the element's
                 out[pname] = self._convert(kind, value)
-                if kind == "rows":
-                    out[pname], problems = choreography.select_rows(out[pname], member["params"], pname)
+                if kind in ("rows", "text"):
+                    choose = choreography.select_rows if kind == "rows" else choreography.select_lines
+                    out[pname], problems = choose(out[pname], member["params"], pname)
                     if problems:
                         raise cli.Failure(f"'{name}': " + "; ".join(problems))
         if state is None and member["element"] not in choreography.PIECES:

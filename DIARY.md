@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-11 October 2026, 01:05. **Requests 1 to 19 are built in full**, each in the README: the eight commands
+11 October 2026, 07:13. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -11,24 +11,24 @@ credits for the library's art (16); offsets where an anchor is read, the arrow's
 label is no label (18); a callout's `leader`, an arrow's `via` and `dash`, `colour.ROLE=NAME`,
 casts on title and end cards, a scene with no cues, `rotate` (19); **`linear` moves, `dim`,
 percentages and spans across cues and to the scene's end, a CSV's rows and columns chosen with
-`rows.where`, `rows.first`, `rows.columns` (20, request 18); `flash` (21, request 19)**. A new
-session starts by reading CLAUDE.md, PLAN.md (items 15 to 21 in full) and this section, then
-`inbox/`.
+`rows.where`, `rows.first`, `rows.columns` (20, request 18); `flash` (21, request 19); a text
+parameter read from a file, `text.skip` and `text.first`, indices counted against the lines
+chosen, a tab's index not counted against rows (22, request 20)**. A new session starts by
+reading CLAUDE.md, PLAN.md (items 15 to 22 in full) and this section, then `inbox/`.
 
-**Inbox: empty. In PLAN.md and in progress:** item 22 (request 20): a `text` parameter read from a
-file, `text.skip` and `text.first`, indices counted against the lines chosen. The log's last
-entries say how far it has got.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
 
-Green: 560 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
+Green: 569 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
-**Waiting on Squirrel:** nothing that blocks. One thing he was told and did not answer either
-way: request 19 was built with five adjustments to what it asked (PLAN.md "Settled" 40: options
-written `name=value`; `phase` a fraction of a beat; `rate` at most 3 a second; a flash does not
-name its members for the curtain rule; `end of scene` as a span's end). His other answers are in
-"Settled" 30 to 39; one is a rule for every session: when unsure whether an earlier OK covers a
+**Waiting on Squirrel:** nothing that blocks. Two things he was told and has not answered
+either way: request 19's five adjustments (PLAN.md "Settled" 40), and item 22's part 4, a
+stopgap of mine: an index in a name that begins `tab` is not counted against a member's rows or
+lines, because a sheet with more tabs than rows was being refused; the description does not say
+what an index counts, which is a question for video-elements. His other answers are in
+"Settled" 30 to 41; one is a rule for every session: when unsure whether an earlier OK covers a
 new inbox item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`**
 ("Settled" 38) and nowhere else in that project: replies to its requests go there, naming the
-commit to check against; three notes are there so far.
+commit to check against; four notes are there so far.
 
 How a move's time works now, since four requests changed it in one night: a time is seconds
 from its cue's start or back from its end, a percentage of its cue's length, or the scene's
@@ -3329,3 +3329,64 @@ counts, so the mending is a stopgap, written into item 22 as part 4: a name begi
 not counted against rows or lines.
 
 **State.** 560 green as left. Next: item 22, `select_lines`, test first.
+
+### 11 October 2026 — Item 22: a text parameter read from a file, and its lines chosen
+
+**Goal.** Request 20: a `text` parameter's value that names a file is read; `text.skip` and
+`text.first` choose its lines; indices are counted against the lines chosen. And item 22, 4: a
+tab's index is not one of rows or lines.
+
+**Tests.** Tier 1: `test_choreography_lines.py`, new, six tests (the pure `select_lines` and
+`lines_of`; `text_file`); in `test_choreography_library.py`,
+`test_a_text_file_is_checked_its_lines_chosen_and_indices_counted_against_them` (eleven cast
+rows: a file with a skip; an index past the chosen lines, in the cast and in a move; a file
+that is not there; the text itself with a qualifier; the wrong qualifier for a text and for a
+data file; a skip that leaves nothing; a tab's index and a tab's anchor; rows winning over a
+text; plain text with nothing to count against),
+`test_a_member_is_handed_a_files_text_or_its_chosen_lines_and_never_the_qualifiers`,
+`test_a_pieces_words_are_never_read_from_a_file_even_when_a_file_has_that_name`.
+
+**Red.** `AttributeError: module 'videotools.choreography' has no attribute 'select_lines'`;
+then `Parameters: 'text.skip=1' is not name=value` from the parser for the check and the
+parameters (`2 failed, 16 deselected`).
+
+**Green.** `5 passed in 0.02s`; `335 passed in 13.77s` (tier 1 and `test_perform.py`); suite
+`568 passed in 148.68s (0:02:28)`, 98%, then one test more (`text_file`, below): `569 passed in 145.19s (0:02:25)`; `All checks passed!`.
+
+**A fault I introduced and caught by reading, before it was committed.** Reading files for a
+parameter of kind `text` also caught the pieces: `Performance._kind` called every piece
+parameter that is not a number `text`, so a pill whose label happened to be a file's name
+(`text=assets/plan.txt`) would have been drawn with the file's contents. Reproduced first
+(`assert {'text': 'Sal…', …} == {'text': 'assets/plan.txt', …}`), then mended: a piece's
+words are kind `word`, never `text`.
+
+**Decision / surprise.** A value is a file when a file of that name is under the video's
+folder, nothing more; `check-script` adds the guard the other way (a value with no spaces
+ending `.txt` or `.md` and no such file). `_rows_file` now answers "what are this member's
+indices counted against": its rows, or else its one text that names a file or has a qualifier,
+with the unit in the message (`has 2 lines as chosen`, `the text has 1 line as chosen`). The
+`tab` exemption is two guards (`NOT_COUNTED`), in the parameter check and the anchor check. The
+invented `pot` gained a `text`, a `line-alpha.*`, a `tab-box.*` and a `tab.*` anchor; I first put
+the anchor on the invented `table` and took it off again, because an existing test uses
+`t.tab.2` as its example of an anchor a table does not have. One expectation changed on
+purpose: the pot's list of anchors in a refusal now includes `tab.*`. Coverage showed
+`text_file`'s guard (no folder; a value of more than a line) unreached: a test added, seen to
+fail with the guard removed (`TypeError: expected str, bytes or os.PathLike object, not
+NoneType`), the guard restored.
+
+**Tier 3** (07:20, the scratch copy of the second video; nothing written in that project). Its
+scene A with the `code` row taken out and three real `document`s from `assets/plan-v1.txt`: one
+with `text.skip=1`, `title="Commission plan"` and `highlight.2` animated; one with the file as
+it is; one with `text.skip=1 text.first=2 bullets=yes`. `check-script`: `No problems found.`
+`stills` at 2.5 s, by eye: the first card under its tag with the four rules and the second
+highlighted, the second card with "Sales commission plan" above them, the third with two
+bulleted rules. With the file's name changed: `'whole': 'text' names assets/plan-v9.txt, which
+is not under …/videos/app-for-that`. The real `document` has no `icon` parameter (my first row
+gave it one, from the training-video project's request to video-elements; refused in the
+library's words, as it should be).
+
+**Also.** A fourth note in the training-video project's inbox
+(`reply-from-video-tools-2026-10-11-4.md`).
+
+**State.** Requests 1 to 20 built. Green, lint clean, pushed. Nothing in progress; the inbox is
+empty.

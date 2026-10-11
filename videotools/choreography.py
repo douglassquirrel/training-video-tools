@@ -14,6 +14,8 @@ import shlex
 NAME = r"[A-Za-z0-9][A-Za-z0-9-]*"
 DOTTED = r"[a-z][a-z0-9-]*(?:\.\d+)*"            # a parameter or anchor name, maybe indexed: highlight.3
 QUALIFIERS = ("where", "first", "columns")        # rows.where, .first, .columns: part of a data file, in that order
+TEXT_QUALIFIERS = ("skip", "first")               # text.skip, .first: some of a text's lines, in that order
+NOT_COUNTED = "tab"                               # an index of tabs (tab.N, tab-box.N) is not one of rows or lines
 ROTATE = "rotate"                                 # on any member: degrees clockwise about its box's centre
 OWN_COLOUR = "colour."                            # colour.<role>=<name>: a member's own colour for an element's role
 NUM = r"-?\d+(?:\.\d+)?"
@@ -41,8 +43,9 @@ _ANIMATE_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE}) (?:→|->) ({_VALUE
 _SET_RE = re.compile(rf"^({NAME})\.({DOTTED}) ({_VALUE})$")
 _STATE_RE = re.compile(rf"^({NAME}) ([a-z][a-z0-9-]*) (?:→|->) ([a-z][a-z0-9-]*)$")
 _LIST_RE = re.compile(r"^-\s+(.+)$")
-# a parameter's name: the element's own, maybe indexed; colour.<role>; or <rows parameter>.where / .first / .columns
-_PARAM_NAME_RE = re.compile(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*|[a-z][a-z0-9-]*\.(?:where|first|columns))$")
+# a parameter's name: the element's own, maybe indexed; colour.<role>; or a qualifier of a data file or a text:
+# <rows parameter>.where / .first / .columns, <text parameter>.skip / .first
+_PARAM_NAME_RE = re.compile(rf"^(?:{DOTTED}|colour\.[a-z][a-z0-9-]*|[a-z][a-z0-9-]*\.(?:where|first|columns|skip))$")
 
 WHERE_HELP = ("is not X Y in area pixels, a region ({}) or a member's anchor like sample.row.3 + 40 -12"
               .format(", ".join(REGIONS)))
@@ -140,6 +143,34 @@ def select_rows(rows, params, name):
             picked = [i for i, _problem in found]
             header, data = [header[i] for i in picked], [[r[i] if i < len(r) else "" for i in picked] for r in data]
     return [header] + data, problems
+
+
+def lines_of(text):
+    """A text's lines, the blank ones left out, each as written."""
+    return [line for line in text.splitlines() if line.strip()]
+
+
+def select_lines(text, params, name):
+    """(text, [problems]) for a text as a cast row chooses its lines beside the parameter `name`:
+    `name.skip` drops the first N lines, `name.first` then keeps the first N of the rest, lines
+    counted without the blank ones. With either, the result is the chosen lines alone, a line a
+    line; with neither, the text exactly as it is. With a problem, that choice is left unmade."""
+    skip, first = (params.get(f"{name}.{q}") for q in TEXT_QUALIFIERS)
+    if skip is None and first is None:
+        return text, []
+    lines, problems = lines_of(text), []
+    for q, value in (("skip", skip), ("first", first)):
+        if value is None:
+            continue
+        if not value.isdigit() or int(value) < 1:
+            problems.append(f"'{name}.{q}' should be a whole number above 0, not '{value}'")
+        elif q == "first":
+            lines = lines[:int(value)]
+        elif int(value) >= len(lines):
+            problems.append(f"'{name}.skip': the text has only {len(lines)} line{'' if len(lines) == 1 else 's'}")
+        else:
+            lines = lines[int(value):]
+    return "\n".join(lines), problems
 
 
 def parse_size(text):
@@ -623,8 +654,8 @@ def _anchor_problem(ctx, where, self_name=None, placed=None):
         index = _first_index(anchor)
         if index == 0:
             return f"'{target}'.'{anchor}', but rows count from 1"
-        if rows and index is not None and index > rows[1]:
-            return f"'{target}'.'{anchor}', but {rows[0]} has {rows[1]} rows{rows[2]}"
+        if rows and index is not None and index > rows[1] and not anchor.startswith(NOT_COUNTED):
+            return f"'{target}'.'{anchor}', but {_counted(rows)}"
         order = ctx.get("order", {})
         if (placed in order and _is_computed(members[target], anchor, ctx["lib"])
                 and order[target] >= order[placed]):
@@ -643,25 +674,61 @@ def _first_index(name):
 
 
 def is_qualifier(name):
-    """True for `<parameter>.where`, `.first` or `.columns`: a choice of a data file's rows or columns."""
+    """True for `<parameter>.where`, `.first`, `.columns` or `.skip`: a choice of a data file's
+    rows or columns, or of a text's lines."""
     base, dot, last = name.rpartition(".")
-    return bool(dot) and last in QUALIFIERS
+    return bool(dot) and last in QUALIFIERS + TEXT_QUALIFIERS
+
+
+def text_file(folder, value):
+    """The path of the file a text parameter's value names under the video's folder, or None when
+    the value is the text itself."""
+    if folder is None or "\n" in value:
+        return None
+    path = os.path.join(folder, value)
+    return path if os.path.isfile(path) else None
+
+
+def _counted(c):
+    """'FILE has N rows as chosen', from what `_rows_file` found."""
+    return f"{c[0]} has {c[1]} {c[4]}{'' if c[1] == 1 else 's'}{c[2]}"
 
 
 def _rows_file(m, lib, folder):
-    """(file as written, its row count, a note, [problems]) for a library member whose `rows`
-    parameter names a readable CSV under the video's folder: the rows counted are those its
-    qualifiers choose (the note says so), and the problems are those of the choosing; else None."""
-    if m["element"] in PIECES or lib is None or folder is None or "rows" not in m["params"]:
+    """What a library member's indices are counted against, or None: (the file as written, how
+    many, a note, [problems of the choosing], 'row' | 'line', the parameter). Its `rows`
+    parameter when that names a readable CSV under the video's folder: the rows its qualifiers
+    choose. Else its one text parameter that names a file or has a qualifier: the lines chosen,
+    blank ones not counted (labelled 'the text' when the value is the text itself)."""
+    if m["element"] in PIECES or lib is None:
         return None
-    path = os.path.join(folder, m["params"]["rows"])
-    if not os.path.isfile(path):
+    if "rows" in m["params"]:
+        path = os.path.join(folder, m["params"]["rows"]) if folder is not None else None
+        if path is None or not os.path.isfile(path):
+            return None
+        import csv
+        with open(path, encoding="utf-8", newline="") as f:
+            rows, problems = select_rows(list(csv.reader(f)), m["params"], "rows")
+        chosen = any(f"rows.{q}" in m["params"] for q in QUALIFIERS)
+        return m["params"]["rows"], len(rows), " as chosen" if chosen else "", problems, "row", "rows"
+    try:
+        described = lib.element(m["element"])["params"]
+    except Exception:
         return None
-    import csv
-    with open(path, encoding="utf-8", newline="") as f:
-        rows, problems = select_rows(list(csv.reader(f)), m["params"], "rows")
-    chosen = any(f"rows.{q}" in m["params"] for q in QUALIFIERS)
-    return m["params"]["rows"], len(rows), " as chosen" if chosen else "", problems
+    texts = [n for n, d in described.items() if d["type"] == "text" and n in m["params"]
+             and (text_file(folder, m["params"][n]) or any(f"{n}.{q}" in m["params"] for q in TEXT_QUALIFIERS))]
+    if len(texts) != 1:
+        return None
+    name, value = texts[0], m["params"][texts[0]]
+    path = text_file(folder, value)
+    if path:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    else:
+        text = value
+    chosen, problems = select_lines(text, m["params"], name)
+    note = " as chosen" if any(f"{name}.{q}" in m["params"] for q in TEXT_QUALIFIERS) else ""
+    return (value if path else "the text"), len(lines_of(chosen)), note, problems, "line", name
 
 
 def _param_match(name, params):
@@ -693,6 +760,10 @@ def _library_value_problem(desc, name, value, ctx):
     elif kind == "rows":
         if ctx["folder"] is not None and not os.path.isfile(os.path.join(ctx["folder"], value)):
             return f"'{name}' names {value}, which is not under {ctx['folder']}"
+    elif kind == "text":                        # a file's name, or the text itself: a name with no file is a slip
+        looks_like_a_file = re.match(r"^\S+\.(?:txt|md)$", value)
+        if ctx["folder"] is not None and looks_like_a_file and not text_file(ctx["folder"], value):
+            return f"'{name}' names {value}, which is not under {ctx['folder']}"
     return None
 
 
@@ -700,8 +771,8 @@ def _index_problem(name, rows):
     index = _first_index(name)
     if index == 0:
         return f"'{name}' counts from 1"
-    if rows and index is not None and index > rows[1]:
-        return f"'{name}': {rows[0]} has {rows[1]} rows{rows[2]}"
+    if rows and index is not None and index > rows[1] and not name.startswith(NOT_COUNTED):
+        return f"'{name}': {_counted(rows)}"
     return None
 
 
@@ -739,9 +810,14 @@ def _library_params(m, ctx):
             out.append(f"'{m['name']}': {_a(el['name'])} needs '{name}'")
     for name, value in m["params"].items():
         if is_qualifier(name):
-            base = name.rpartition(".")[0]
-            problem = (f"'{name}' qualifies '{base}', which {_a(el['name'])} does not take as a data file"
-                       if params.get(base, {}).get("type") != "rows"
+            base, _dot, q = name.rpartition(".")
+            kind = params.get(base, {}).get("type")
+            problem = (f"'{name}' qualifies '{base}', which is a data file: it takes where, first and columns"
+                       if kind == "rows" and q not in QUALIFIERS
+                       else f"'{name}' qualifies '{base}', which is text: it takes skip and first"
+                       if kind == "text" and q not in TEXT_QUALIFIERS
+                       else f"'{name}' qualifies '{base}', which {_a(el['name'])} does not take as "
+                            f"{'text' if q == 'skip' else 'a data file'}" if kind not in ("rows", "text")
                        else f"'{name}' qualifies '{base}', which is not given" if base not in m["params"] else None)
         elif name.startswith(OWN_COLOUR):
             problem = _own_colour_problem(el, name, value, ctx["colours"])
@@ -759,8 +835,9 @@ def _library_params(m, ctx):
                        or _library_value_problem(desc, name, value, ctx))
         if problem:
             out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
-        if name == "rows" and ctx["rows_of"].get(m["name"]):
-            out += [f"'{m['name']}': {p}" for p in ctx["rows_of"][m["name"]][3]]
+        counted = ctx["rows_of"].get(m["name"])
+        if counted and name == counted[5]:      # the problems of choosing its rows or lines, where it is given
+            out += [f"'{m['name']}': {p}" for p in counted[3]]
     return out
 
 

@@ -70,7 +70,7 @@ def test_an_anchor_the_element_does_not_have_or_an_index_of_0_is_a_problem(lib, 
 - cue 2: move a to t.tab.2
 """
     assert _check(text, lib, folder) == [
-        "line 27: scene A2, cast: 'a' is placed by 'p'.'lid', but a pot's anchors are rim, base, top-left, top-right, "
+        "line 27: scene A2, cast: 'a' is placed by 'p'.'lid', but a pot's anchors are rim, base, tab.*, top-left, top-right, "
         "bottom-left, bottom-right and centre",
         "line 28: scene A2, cast: 'b' is placed by 't'.'row.0', but rows count from 1",
         "line 29: scene A2, cast: 'c' is placed by 't'.'cell.3', but a table's anchors are title, row.*, cell.*.*, "
@@ -410,3 +410,79 @@ def test_a_choice_that_cannot_be_made_is_refused_in_words_when_the_parameters_ar
     with pytest.raises(cli.Failure) as e:
         p.params(scene["cast"][0])
     assert str(e.value) == "'v': 'rows.columns': no column 'Bonus' (the columns are Sales Rep, Commission)"
+
+
+# ---- item 22 (request 20): a text parameter read from a file, its lines chosen, and what an index counts
+
+PLAN_TEXT = "Sales commission plan\n\n1. Eight per cent.\n2. A sector bonus.\n\n3. A timing bonus.\n4. Totalled per rep.\n"
+
+
+@pytest.fixture
+def planned(folder):
+    with open(os.path.join(folder, "assets", "plan.txt"), "w", encoding="utf-8") as f:
+        f.write(PLAN_TEXT)
+    return folder
+
+
+def test_a_text_file_is_checked_its_lines_chosen_and_indices_counted_against_them(lib, planned):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| a | pot | 10 10 | 100 | text=assets/plan.txt text.skip=1 line-alpha.4=0 | four lines chosen |
+| b | pot | 10 10 | 100 | text=assets/plan.txt text.skip=1 text.first=2 line-alpha.3=0 | |
+| c | pot | 10 10 | 100 | text=assets/missing.txt | |
+| d | pot | 10 10 | 100 | text="A line of its own" text.first=1 line-alpha.2=0 | the text itself, with a qualifier |
+| e | pot | 10 10 | 100 | text=assets/plan.txt text.where="1 = x" | |
+| f | table | 10 10 | 300x100 | rows=assets/sample.csv rows.skip=1 | |
+| g | pot | 10 10 | 100 | text=assets/plan.txt text.skip=9 | |
+| h | pot | 10 10 | 100 | text=assets/plan.txt text.first=1 tab-box.4=1 | a tab's index does not count lines |
+| i | table | 10 10 | 300x100 | rows=assets/sample.csv note=assets/plan.txt note.first=1 highlight.3=1 | rows are what is counted |
+| j | badge | h.tab.9 | | ok=yes | nor does a tab's anchor |
+| k | pot | 10 10 | 100 | text="No file, no qualifier: the text itself" line-alpha.7=0 | nothing to count against |
+
+### Moves
+
+- cue 1: show a, b, c, d, e, f, g, h, i, j, k
+- cue 2: a.line-alpha.5 1 → 0
+"""
+    assert _check(text, lib, planned) == [                  # the first cast row is line 25
+        "line 26: scene A2, cast: 'b': 'line-alpha.3': assets/plan.txt has 2 lines as chosen",
+        f"line 27: scene A2, cast: 'c': 'text' names assets/missing.txt, which is not under {planned}",
+        "line 28: scene A2, cast: 'd': 'line-alpha.2': the text has 1 line as chosen",
+        "line 29: scene A2, cast: 'e': 'text.where' qualifies 'text', which is text: it takes skip and first",
+        "line 30: scene A2, cast: 'f': 'rows.skip' qualifies 'rows', which is a data file: it takes where, first "
+        "and columns",
+        "line 31: scene A2, cast: 'g': 'text.skip': the text has only 5 lines",
+        "line 40: scene A2, moves: 'a': 'line-alpha.5': assets/plan.txt has 4 lines as chosen",
+    ]
+
+
+def test_a_member_is_handed_a_files_text_or_its_chosen_lines_and_never_the_qualifiers(lib, planned):
+    from videotools import perform
+    scene = _scene(HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| whole | pot | 10 10 | 100 | text=assets/plan.txt | |
+| rules | pot | 10 10 | 100 | text=assets/plan.txt text.skip=1 text.first=2 | |
+| said | pot | 10 10 | 100 | text="Not a file: the text itself" | |
+""")
+    p = perform.Performance(scene["cast"], [], (40, 118, 1422, 818), TL, 1.0, lib, folder=planned)
+    assert [p.params(m)[0] for m in scene["cast"]] == [
+        {"text": PLAN_TEXT}, {"text": "1. Eight per cent.\n2. A sector bonus."}, {"text": "Not a file: the text itself"}]
+
+
+def test_a_pieces_words_are_never_read_from_a_file_even_when_a_file_has_that_name(lib, planned):
+    from videotools import perform
+    scene = _scene(HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| tag | pill | 10 10 | | text=assets/plan.txt fill=accent | a label that happens to be a file's name |
+""")
+    p = perform.Performance(scene["cast"], [], (40, 118, 1422, 818), TL, 1.0, lib, folder=planned)
+    assert p.params(scene["cast"][0])[0] == {"text": "assets/plan.txt", "fill": "accent"}

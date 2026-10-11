@@ -504,7 +504,14 @@ earlier). The tools read the first five columns; Notes is for people.
   `rows.columns="Sales Rep, Commission"` then keeps those columns, in that order. A column is
   its header's name or its number from 1 (`rows.columns="2, 4, 5"`); the file's first row is its
   header and is always kept. They are applied in that order however they are written, and the
-  element is handed the result as if it were the file. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
+  element is handed the result as if it were the file. A parameter the element declares as
+  *text* (a `document`'s page) may name a file in the same way, `text=assets/plan-v1.txt`, and
+  is handed the file's text; any other value is the text itself. `text.skip=1` drops its first
+  line and `text.first=2` then keeps the first two of the rest (lines counted without the blank
+  ones; with either, the element gets the chosen lines alone), so one file serves the card that
+  shows its title line and the one that does not. A row or line index (`highlight.3`,
+  `line-alpha.2`, the anchor `row.3`) counts the rows or lines chosen; a tab's index
+  (`tab-box.2`, `tab.2`) counts tabs and is not checked against them. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
   name, a pill's `text`) must be in the scene's On screen list; data (cell values) need not. An
   empty label is no label and is not checked, so an element's documented "none" can be written
   as it is (`ref=""` on a `formula-bar`); one of spaces only is still a label. The pieces differ
@@ -602,7 +609,11 @@ not above 0, a `low` outside 0 to below 1, or overlapping another flash of the s
 `rows.where`, `rows.first` or `rows.columns` naming a column that is not in the file (by name
 or number), a `where` that is not `COLUMN = VALUE` or that no row matches, a `first` that is not
 a whole number above 0, or any of them on a parameter that is not a data file or is not given
-(row and cell indices are then counted against the rows chosen). The same
+(row and cell indices are then counted against the rows chosen); a text parameter's value
+that looks like a file's name (no spaces, ending `.txt` or `.md`) with no such file under the
+video's folder; a `text.skip` or `text.first` that is not a whole number above 0, a `skip` that
+leaves no line, `skip` on a data file or `where` or `columns` on a text; a line index past the
+lines chosen. The same
 problems refuse `stills`, `render`, `frame-hashes` and `compare-frames` before anything is
 drawn (exit 3), as does a library that is missing or refuses to open, or an element the
 library cannot draw or cannot give the natural size of (one line, in the library's words).
@@ -854,7 +865,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(560 tests on 11 October, lint clean).
+(569 tests on 11 October, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -882,6 +893,10 @@ commissions file with `rows.where="Date Closed = TOTAL"` and `rows.columns="Sale
 Commission"`; scene B's prompt typed `linear`; a highlight growing from cue 3 into cue 4 (`cue
 3, 0.8 s – cue 4, 50%`); its file chips dimmed to 0.4 and shown again; two warning signs
 flashing out of step, one to the scene's end; `check-script` clean, six frames looked at by eye.
+And (11 October 2026, morning) the library's `document` in that video's scene A, three cards
+from its one plan file: the file as it is, the file with `text.skip=1` under a title tag and a
+highlight on its second line, and its first two rules with bullets; `check-script` clean, and a
+file that is not there refused by name; looked at by eye.
 
 ## Known limitations and non-goals
 
@@ -931,6 +946,11 @@ flashing out of step, one to the scene's end; `check-script` clean, six frames l
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 11 October 2026 (morning): a parameter an element declares as text may name a file under the
+  video's folder (`text=assets/plan-v1.txt`), with `text.skip=N` and `text.first=N` to choose its
+  lines, and its line indices are checked against the lines chosen. A tab's index (`tab-box.4`,
+  the anchor `tab.4`) is no longer counted against the rows of a data file: a sheet with more
+  tabs than rows was refused, wrongly.
 - 11 October 2026 (night): four more things a described scene can say, and one change. A move's
   time may end `, linear` (a steady rate), be a percentage of its cue (`74%–80%`), end in a later
   cue (`cue 1, 0.5 s – cue 2, end-0.5 s`) or at the scene's end (`– end of scene`); `dim NAME to
