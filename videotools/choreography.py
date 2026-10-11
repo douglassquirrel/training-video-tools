@@ -15,7 +15,6 @@ NAME = r"[A-Za-z0-9][A-Za-z0-9-]*"
 DOTTED = r"[a-z][a-z0-9-]*(?:\.\d+)*"            # a parameter or anchor name, maybe indexed: highlight.3
 QUALIFIERS = ("where", "first", "columns")        # rows.where, .first, .columns: part of a data file, in that order
 TEXT_QUALIFIERS = ("skip", "first")               # text.skip, .first: some of a text's lines, in that order
-NOT_COUNTED = "tab"                               # an index of tabs (tab.N, tab-box.N) is not one of rows or lines
 ROTATE = "rotate"                                 # on any member: degrees clockwise about its box's centre
 OWN_COLOUR = "colour."                            # colour.<role>=<name>: a member's own colour for an element's role
 NUM = r"-?\d+(?:\.\d+)?"
@@ -568,8 +567,8 @@ def _size_is_nominal(el):
 
 def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, folder, panel, colours=None):
     members = {m["name"]: m for m in cast}
-    rows_of = {m["name"]: _rows_file(m, lib, folder) for m in cast}   # name -> (file, row count) or None
-    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "rows_of": rows_of, "colours": colours,
+    data_of = {m["name"]: _data_of(m, lib, folder) for m in cast}     # what was read for each member, by parameter
+    ctx = {"members": members, "lib": lib, "labels": labels, "folder": folder, "data_of": data_of, "colours": colours,
            "order": {m["name"]: i for i, m in enumerate(cast)}}
     problems = []
     for m in cast:
@@ -650,12 +649,9 @@ def _anchor_problem(ctx, where, self_name=None, placed=None):
     if names is None:
         return None
     if any(_anchor_matches(anchor, n) for n in names):
-        rows = ctx["rows_of"].get(target)
-        index = _first_index(anchor)
-        if index == 0:
-            return f"'{target}'.'{anchor}', but rows count from 1"
-        if rows and index is not None and index > rows[1] and not anchor.startswith(NOT_COUNTED):
-            return f"'{target}'.'{anchor}', but {_counted(rows)}"
+        trouble = _index_trouble(ctx, members[target], anchor)
+        if trouble:
+            return f"'{target}'.'{anchor}', but " + ("rows count from 1" if trouble == "0" else trouble)
         order = ctx.get("order", {})
         if (placed in order and _is_computed(members[target], anchor, ctx["lib"])
                 and order[target] >= order[placed]):
@@ -665,12 +661,6 @@ def _anchor_problem(ctx, where, self_name=None, placed=None):
     element = members[target]["element"]
     listed = ", ".join(names[:-1]) + " and " + names[-1]
     return f"'{target}'.'{anchor}', but {_a(element)}'s anchors are {listed}"
-
-
-def _first_index(name):
-    """The first index in a dotted name ('highlight.3' -> 3, 'cell.3.2' -> 3), or None."""
-    parts = name.split(".")
-    return int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
 
 
 def is_qualifier(name):
@@ -689,46 +679,86 @@ def text_file(folder, value):
     return path if os.path.isfile(path) else None
 
 
-def _counted(c):
-    """'FILE has N rows as chosen', from what `_rows_file` found."""
-    return f"{c[0]} has {c[1]} {c[4]}{'' if c[1] == 1 else 's'}{c[2]}"
-
-
-def _rows_file(m, lib, folder):
-    """What a library member's indices are counted against, or None: (the file as written, how
-    many, a note, [problems of the choosing], 'row' | 'line', the parameter). Its `rows`
-    parameter when that names a readable CSV under the video's folder: the rows its qualifiers
-    choose. Else its one text parameter that names a file or has a qualifier: the lines chosen,
-    blank ones not counted (labelled 'the text' when the value is the text itself)."""
+def _data_of(m, lib, folder):
+    """What video-tools read for a library member, by parameter: for a `rows` parameter that names
+    a readable CSV under the video's folder, {"rows": the rows its qualifiers choose}; for a text
+    parameter, {"lines": its non-blank lines as chosen} (from the file it names, or the value
+    itself). Each also has "label" (the file as written, or 'the text'), "note" (' as chosen' when
+    a qualifier chose) and "problems" (those of the choosing). {} for a piece or with no library."""
     if m["element"] in PIECES or lib is None:
-        return None
-    if "rows" in m["params"]:
-        path = os.path.join(folder, m["params"]["rows"]) if folder is not None else None
-        if path is None or not os.path.isfile(path):
-            return None
-        import csv
-        with open(path, encoding="utf-8", newline="") as f:
-            rows, problems = select_rows(list(csv.reader(f)), m["params"], "rows")
-        chosen = any(f"rows.{q}" in m["params"] for q in QUALIFIERS)
-        return m["params"]["rows"], len(rows), " as chosen" if chosen else "", problems, "row", "rows"
+        return {}
     try:
         described = lib.element(m["element"])["params"]
     except Exception:
+        return {}
+    out = {}
+    for name, desc in described.items():
+        if name not in m["params"] or desc["type"] not in ("rows", "text"):
+            continue
+        value = m["params"][name]
+        if desc["type"] == "rows":
+            path = os.path.join(folder, value) if folder is not None else None
+            if path is None or not os.path.isfile(path):
+                continue
+            import csv
+            with open(path, encoding="utf-8", newline="") as f:
+                rows, problems = select_rows(list(csv.reader(f)), m["params"], name)
+            chosen = any(f"{name}.{q}" in m["params"] for q in QUALIFIERS)
+            out[name] = {"label": value, "rows": rows, "note": " as chosen" if chosen else "", "problems": problems}
+        else:
+            path = text_file(folder, value)
+            if path:
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+            else:
+                text = value
+            text, problems = select_lines(text, m["params"], name)
+            chosen = any(f"{name}.{q}" in m["params"] for q in TEXT_QUALIFIERS)
+            out[name] = {"label": value if path else "the text", "lines": lines_of(text),
+                         "note": " as chosen" if chosen else "", "problems": problems}
+    return out
+
+
+def _has_header(el, m, rows_param):
+    """True when the member's rows have a header row that is not a data row: the element names a
+    boolean parameter that says so, and the member's value of it (or its default) is yes."""
+    switch = el["params"][rows_param].get("header")
+    if not switch:
+        return False
+    value = m["params"].get(switch)
+    return bool(el["params"][switch]["default"]) if value is None else value in ("yes", "true")
+
+
+def _index_trouble(ctx, m, name):
+    """What is wrong with the indices of an indexed parameter or anchor `name` of the member `m`,
+    counted as the element's description says (`el["counts"]`: a data row, a column, a line, or
+    something not ours to count): None; '0' for an index of 0; or 'FILE has N data rows as
+    chosen'. None too when the description does not say (an older library), for a piece, and
+    for an index whose data was not read."""
+    if m["element"] in PIECES or ctx["lib"] is None:
         return None
-    texts = [n for n, d in described.items() if d["type"] == "text" and n in m["params"]
-             and (text_file(folder, m["params"][n]) or any(f"{n}.{q}" in m["params"] for q in TEXT_QUALIFIERS))]
-    if len(texts) != 1:
+    el = ctx["lib"].element(m["element"])       # its callers have already found the element in the library
+    counts = el.get("counts")
+    pattern = next((p for p in counts or {} if _anchor_matches(name, p)), None)
+    if pattern is None:
         return None
-    name, value = texts[0], m["params"][texts[0]]
-    path = text_file(folder, value)
-    if path:
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
-    else:
-        text = value
-    chosen, problems = select_lines(text, m["params"], name)
-    note = " as chosen" if any(f"{name}.{q}" in m["params"] for q in TEXT_QUALIFIERS) else ""
-    return (value if path else "the text"), len(lines_of(chosen)), note, problems, "line", name
+    data = ctx["data_of"].get(m["name"], {})
+    for index, count in zip((int(part) for part in name.split(".")[1:]), counts[pattern]):
+        if index == 0:
+            return "0"
+        read = data.get(count["of"])
+        if count["what"] == "other" or read is None:
+            continue
+        if count["what"] == "line":
+            n, unit = len(read["lines"]), "line"
+        elif count["what"] == "column":
+            n, unit = (len(read["rows"][0]) if read["rows"] else 0), "column"
+        else:
+            header = _has_header(el, m, count["of"])
+            n, unit = max(len(read["rows"]) - header, 0), "data row" if header else "row"
+        if index > n:
+            return f"{read['label']} has {n} {unit}{'' if n == 1 else 's'}{read['note']}"
+    return None
 
 
 def _param_match(name, params):
@@ -767,13 +797,10 @@ def _library_value_problem(desc, name, value, ctx):
     return None
 
 
-def _index_problem(name, rows):
-    index = _first_index(name)
-    if index == 0:
-        return f"'{name}' counts from 1"
-    if rows and index is not None and index > rows[1] and not name.startswith(NOT_COUNTED):
-        return f"'{name}': {_counted(rows)}"
-    return None
+def _index_problem(ctx, m, name):
+    """The problem with an indexed parameter's indices, as a sentence's end, or None."""
+    trouble = _index_trouble(ctx, m, name)
+    return f"'{name}' counts from 1" if trouble == "0" else f"'{name}': {trouble}" if trouble else None
 
 
 def _state_problem(el, state):
@@ -831,13 +858,13 @@ def _library_params(m, ctx):
                 out.append(f"'{m['name']}': {_a(el['name'])} has no parameter '{name}' "
                            f"(its parameters are {', '.join(params)})")
                 continue
-            problem = (_index_problem(name, ctx["rows_of"].get(m["name"]))
+            problem = (_index_problem(ctx, m, name)
                        or _library_value_problem(desc, name, value, ctx))
         if problem:
             out.append(f"'{m['name']}'" + (" " if problem.startswith("draws") else ": ") + problem)
-        counted = ctx["rows_of"].get(m["name"])
-        if counted and name == counted[5]:      # the problems of choosing its rows or lines, where it is given
-            out += [f"'{m['name']}': {p}" for p in counted[3]]
+        read = ctx["data_of"].get(m["name"], {}).get(name)
+        if read:                                # the problems of choosing its rows or lines, where it is given
+            out += [f"'{m['name']}': {p}" for p in read["problems"]]
     return out
 
 
@@ -1001,7 +1028,7 @@ def _check_moves(scene, ctx, moves, where, tl, panel):
                     problems.append(f"{at}'{act['name']}': {_a(el['name'])} has no parameter '{act['param']}' "
                                     f"(its parameters are {', '.join(el['params'])})")
                     continue
-                problem = _index_problem(act["param"], ctx["rows_of"].get(act["name"]))
+                problem = _index_problem(ctx, member, act["param"])
                 for v in values:
                     problem = problem or _library_value_problem(desc, act["param"], v, ctx)
                 if problem:

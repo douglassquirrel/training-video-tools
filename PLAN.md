@@ -686,9 +686,18 @@ el.natural_size(frame, params=None)           # request 3, item 5: (w, h) in pix
 #   fit is "natural" (spreadsheet, prompt-box, file-chip, diff): the size at which it is drawn at scale 1
 #   for those params, text measured at the brand's font-size-scale; params are checked as for draw;
 #   None for any other element (its size does not come from its parameters)
+el["counts"]                                  # what each * of an indexed parameter or anchor counts, by pattern:
+#   {"cell-alpha.*.*": [{"what": "row", "of": "rows"}, {"what": "column", "of": "rows"}], "tab-box.*": [{"what": "other", "of": None}]}
+#   what: "row" (a data row of the rows parameter `of`, its header not counted), "column" (a column of it),
+#   "line" (a non-blank line of the text parameter `of`), "other" (not something a caller can count; `of` None).
+#   Every indexed name of the element is a key; an element with none has {}
+el["params"]["rows"]["header"]                # for a rows parameter: the name of the boolean parameter that says its
+#   first row is a header (not a data row), or None when the element has no such switch
 lib.credits(names)                            # request 2: credit lines for the elements a video used
 ```
 
+The `counts` and `header` lines are video-elements' additions of 11 October 2026, 07:29 (its
+reply, `inbox/done/reply-from-video-elements-2026-10-11.md`; "Settled" 43), used by item 23.
 The `fit` and `natural_size` lines and the longer `rect` comment are video-elements' additions of
 10 October 2026, 23:32 (its note, `inbox/done/request-from-video-elements-2026-10-10-2.md`;
 "Settled" 30), used by item 17, 3; `diff` joined the natural elements with its note of 23:53

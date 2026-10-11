@@ -31,6 +31,16 @@
 | striped | boolean false | |
 | explode | boolean false | the stub refuses to draw when true, as the real library refuses in words |
 
+## Indexes
+
+| Key | Value | Notes |
+|---|---|---|
+| row.* | row | |
+| cell.*.* | row column | |
+| highlight.* | row | |
+| highlight-colour.* | row | |
+| cell-alpha.*.* | row column | |
+
 ## Colours
 
 | Key | Value | Notes |

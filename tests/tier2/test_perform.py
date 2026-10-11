@@ -822,3 +822,16 @@ def test_an_element_is_handed_the_rows_and_columns_its_cast_row_chooses_and_size
     drawn = video.library.draws[0]
     assert drawn["params"] == {"rows": [["Commission"], ["1"], ["3"]]}       # the qualifiers are not the element's
     assert drawn["rect"] == (140.0, 518.0, 120.0, 90.0)                      # its natural size, from what was chosen
+
+
+# ---- item 23, 4: an anchor the element did not give because its row is not on show
+
+def test_an_anchor_within_the_count_that_the_element_did_not_give_is_refused_saying_it_may_not_be_on_show(example):
+    windowed = NATURAL.replace("| sheet | table | 100 400 | | rows=assets/sample.csv |",
+                               "| sheet | table | 100 400 | | rows=assets/sample.csv rows-shown=2 |").replace(
+        "| corner | pot | sheet.bottom-right | 20 | |", "| corner | pot | sheet.row.3 | 20 | |")
+    video = pointed(example, windowed)
+    with pytest.raises(cli.Failure) as e:
+        rendered(video, "A", 2.0)
+    assert str(e.value) == ("'sheet' did not give the anchor 'row.3' when it was drawn: a row or a cell that is not "
+                            "among those on show has none")

@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-11 October 2026, 07:13. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+11 October 2026, 07:42. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -13,28 +13,24 @@ casts on title and end cards, a scene with no cues, `rotate` (19); **`linear` mo
 percentages and spans across cues and to the scene's end, a CSV's rows and columns chosen with
 `rows.where`, `rows.first`, `rows.columns` (20, request 18); `flash` (21, request 19); a text
 parameter read from a file, `text.skip` and `text.first`, indices counted against the lines
-chosen, a tab's index not counted against rows (22, request 20)**. A new session starts by
-reading CLAUDE.md, PLAN.md (items 15 to 22 in full) and this section, then `inbox/`.
+chosen (22, request 20); every index counted as the element's description says: data rows,
+columns, lines, tabs left to the element (23, video-elements' reply)**. A new session starts by
+reading CLAUDE.md, PLAN.md (items 15 to 23 in full) and this section, then `inbox/`.
 
-**Inbox: empty. In PLAN.md and in progress:** item 23: an index counted as the element's
-description says (`el["counts"]`, video-elements' reply). The log's last entries say how far.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
 
-Green: 569 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
+Green: 573 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
-**Waiting on Squirrel:** nothing that blocks. Two things he was told and has not answered
-either way: request 19's five adjustments (PLAN.md "Settled" 40), and item 22's part 4, a
-stopgap of mine: an index in a name that begins `tab` is not counted against a member's rows or
-lines, because a sheet with more tabs than rows was being refused; the description does not say
-what an index counts, which is now asked of video-elements (below). His other answers are in
-"Settled" 30 to 41; one is a rule for every session: when unsure whether an earlier OK covers a
-new inbox item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`**
-("Settled" 38) and nowhere else in that project: replies to its requests go there, naming the
-commit to check against; four notes are there so far.
+**Waiting on Squirrel:** nothing that blocks. One thing he was told and has not answered either
+way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
+to 43; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
+item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
+38) and nowhere else in that project: replies to its requests go there, naming the commit to
+check against; five notes are there so far. Writing into video-elements' inbox was OK'd once,
+for one request ("Settled" 42), and is not a standing permission.
 
-**The index check is known wrong until that reply is built on:** it counts first indices
-against rows (the header among them) or lines and skips names beginning `tab`, so the real
-spreadsheet's `header.N` and `redact.N`, which count columns, are refused on a sheet with more
-columns than rows.
+**The index check needs video-elements at `d203f0a` or later** to check anything: it reads
+`el["counts"]`, and with a library that has none it checks no index.
 
 How a move's time works now, since four requests changed it in one night: a time is seconds
 from its cue's start or back from its end, a percentage of its cue's length, or the scene's
@@ -3448,3 +3444,70 @@ the draw-time refusal for an anchor a windowed sheet did not return. PLAN.md ite
 
 **State.** 569 green as left. Next: the invented library's `## Indexes`, then the rule, test
 first.
+
+### 11 October 2026 — Item 23: an index is counted as the element's description says
+
+**Goal.** Replace "every first index against the file's rows" and the `tab` stopgap with a rule
+read from `el["counts"]`: data rows (the header left out when the element has one), columns,
+lines; `other` not checked; every index of a name, not only the first.
+
+**Tests.** Tier 1 (`test_choreography_library.py`):
+`test_each_index_is_counted_as_the_description_says_rows_columns_and_never_tabs` (parameters in
+the cast and in a move, anchors; a second index past the columns);
+`test_a_header_row_is_not_a_data_row_when_the_element_has_the_switch_and_it_is_on` (the switch
+at its default, switched off in the cast row, and with rows chosen);
+`test_with_a_library_that_does_not_say_what_an_index_counts_no_index_is_checked`. Tier 2:
+`test_an_anchor_within_the_count_that_the_element_did_not_give_is_refused_saying_it_may_not_be_on_show`.
+The invented library first: an `## Indexes` table on both elements read into `counts`, `rows
+header=NAME`, row and cell anchors only for the rows on show; with that alone, `337 passed`,
+nothing moved.
+
+**Red.**
+
+```
+E   At index 0 diff: "line 26: scene A2, cast: 'u': 'highlight.5': assets/sample.csv has 4 rows" != "line 25: scene A2, cast: 't': 'cell-alpha.2.3': assets/sample.csv has 2 columns"
+E   assert [] == ['line 25: sc...ws as chosen']
+E   Left contains 3 more items, first extra item: "line 25: scene A2, cast: 't': 'highlight.9': assets/sample.csv has 4 rows"
+E   assert "'row.3' of '...' in the cast" == "'sheet' did ...show has none"
+4 failed, 66 deselected in 0.53s
+```
+
+**Green.** `341 passed in 14.22s` (tier 1 and `test_perform.py`); suite `573 passed in 151.33s
+(0:02:31)`, 98%; `All checks passed!`.
+
+**Decision / surprise.** `_rows_file` (one counted thing for a member) became `_data_of` (what
+was read for it, by parameter: a rows parameter's chosen rows, a text parameter's chosen
+lines), and `_index_trouble` walks a name's indices beside the description's words for them.
+`NOT_COUNTED` and `_first_index` are gone. Two existing expectations changed on purpose, both
+because the rule is now exact: `cell-alpha.2.9` on a file of two columns is a problem (a second
+index was never looked at), and `line-alpha.7` on a one-line text written in the cast row is a
+problem (a text with no file and no qualifier was not counted). The invented `table` has no
+header switch, so its existing "has 4 rows" messages stand; the header rule is tested on a copy
+of the library given one, as the real spreadsheet has. Coverage showed a `try` in
+`_index_trouble` that could not fail (its callers have already found the element): removed
+rather than left untested.
+
+**Tier 3** (the scratch copy of the second video, against video-elements `d718dba`). The whole
+described script as left last night: `No problems found.` under the new rule. Then scene B's
+`reply` sheet (a header and three rows of two columns) given indices on purpose:
+
+```
+3 problems:
+  - line 448: scene B, cast: 'reply': 'highlight.4': assets/sample-output-2024-04.csv has 3 data rows
+  - line 448: scene B, cast: 'reply': 'redact.3': assets/sample-output-2024-04.csv has 2 columns
+  - line 451: scene B, cast: 'past' is placed by 'reply'.'header.3', but assets/sample-output-2024-04.csv has 2 columns
+```
+
+and in the same run `redact.2`, `box.3.2`, `tab-box.2` and the anchor `cell.3.2` accepted. The
+scratch script put back as it was.
+
+**README, PLAN.md.** The cast's Parameters paragraph says what an index counts; a dated note
+for users names the change (a row index counts data rows; `highlight.4` on a header and three
+rows was accepted and is now a problem); the testing paragraph (573) and this Tier 3. PLAN.md
+item 15's interface block has video-elements' two lines.
+
+**Also.** A fifth note in the training-video project's inbox
+(`reply-from-video-tools-2026-10-11-5.md`).
+
+**State.** Item 23 complete. 573 green, 98%, lint clean, pushed. Nothing in progress; the inbox
+is empty.

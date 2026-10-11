@@ -37,9 +37,21 @@ def _param(value):
         return {"type": "boolean", "default": rest == "true"}
     if kind in ("text", "label"):
         return {"type": kind, "default": rest}
-    if kind == "rows":
-        return {"type": "rows"}
+    if kind == "rows":                      # `rows`, or `rows header=NAME`: NAME says the first row is a header
+        return {"type": "rows", "header": rest.partition("header=")[2] or None}
     raise Failure(f"stub library: unknown parameter type '{kind}'")
+
+
+def _counts(params, value):
+    """A `## Indexes` row: one {"what", "of"} for each word; `of` filled in with the element's one
+    rows (or text) parameter when the word does not name it, None for `other`."""
+    out = []
+    for word in value.split():
+        what, _, of = word.partition(":")
+        kind = "text" if what == "line" else "rows"
+        out.append({"what": what, "of": None if what == "other"
+                    else of or next(n for n, d in params.items() if d["type"] == kind)})
+    return out
 
 
 def _anchor(value):
@@ -51,12 +63,14 @@ def _element(folder):
     ident = t["Identity"]
     w, h = ident["size"].split()
     states = dict(t.get("States", {}))
-    return {"name": ident["name"], "kind": ident["kind"], "size": (float(w), float(h)),
+    params = {k: _param(v) for k, v in t.get("Parameters", {}).items()}
+    counts = {"counts": {k: _counts(params, v) for k, v in t["Indexes"].items()}} if "Indexes" in t else {}
+    return {"name": ident["name"], "kind": ident["kind"], "size": (float(w), float(h)), **counts,
             "description": ident.get("description", ""), "fit": ident.get("fit", "ratio"),
             "default-state": ident.get("default-state", next(iter(states), None)),
             "anchors": {k: _anchor(v) for k, v in t.get("Anchors", {}).items()},
             "states": states,
-            "params": {k: _param(v) for k, v in t.get("Parameters", {}).items()},
+            "params": params,
             "colours": dict(t.get("Colours", {})),
             "provenance": _provenance(folder), "folder": folder}
 
@@ -113,7 +127,7 @@ class Element(dict):
             else:
                 anchors[name] = (x + value[0] * w / w0, y + value[1] * h / h0)
         rows = params.get("rows") or []
-        for i in range(1, len(rows) + 1):
+        for i in range(1, min(len(rows), int(params.get("rows-shown", len(rows)))) + 1):    # only the rows on show
             anchors[f"row.{i}"] = (x + w, y + h * i / (len(rows) + 1))
             for j in range(1, len(rows[i - 1]) + 1):
                 anchors[f"cell.{i}.{j}"] = (x + w * j / (len(rows[i - 1]) + 1), y + h * i / (len(rows) + 1))

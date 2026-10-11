@@ -32,6 +32,14 @@
 | line-alpha.* | number 0 1 1 | of line N |
 | tab-box.* | number 0 1 0 | of tab N: an index that does not count lines |
 
+## Indexes
+
+| Key | Value | Notes |
+|---|---|---|
+| tab.* | other | a tab: not for a caller to count |
+| line-alpha.* | line | |
+| tab-box.* | other | |
+
 ## Colours
 
 | Key | Value | Notes |

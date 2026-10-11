@@ -136,6 +136,7 @@ def test_a_data_file_must_exist_under_the_video_and_an_index_may_not_pass_its_ro
     assert _check(text, lib, folder) == [
         f"line 25: scene A2, cast: 't': 'rows' names assets/missing.csv, which is not under {folder}",
         "line 26: scene A2, cast: 'u': 'highlight.0' counts from 1",      # highlight.4: a 4-row file, allowed
+        "line 26: scene A2, cast: 'u': 'cell-alpha.2.9': assets/sample.csv has 2 columns",    # item 23: every index
         "line 27: scene A2, cast: 'v' is placed by 'u'.'row.5', but assets/sample.csv has 4 rows",
         "line 32: scene A2, moves: 'u': 'highlight.6': assets/sample.csv has 4 rows",
     ]
@@ -440,7 +441,7 @@ def test_a_text_file_is_checked_its_lines_chosen_and_indices_counted_against_the
 | h | pot | 10 10 | 100 | text=assets/plan.txt text.first=1 tab-box.4=1 | a tab's index does not count lines |
 | i | table | 10 10 | 300x100 | rows=assets/sample.csv note=assets/plan.txt note.first=1 highlight.3=1 | rows are what is counted |
 | j | badge | h.tab.9 | | ok=yes | nor does a tab's anchor |
-| k | pot | 10 10 | 100 | text="No file, no qualifier: the text itself" line-alpha.7=0 | nothing to count against |
+| k | pot | 10 10 | 100 | text="No file, no qualifier: the text itself" line-alpha.7=0 | one line, whatever it holds |
 
 ### Moves
 
@@ -455,6 +456,7 @@ def test_a_text_file_is_checked_its_lines_chosen_and_indices_counted_against_the
         "line 30: scene A2, cast: 'f': 'rows.skip' qualifies 'rows', which is a data file: it takes where, first "
         "and columns",
         "line 31: scene A2, cast: 'g': 'text.skip': the text has only 5 lines",
+        "line 35: scene A2, cast: 'k': 'line-alpha.7': the text has 1 line",          # item 23: a line is a line
         "line 40: scene A2, moves: 'a': 'line-alpha.5': assets/plan.txt has 4 lines as chosen",
     ]
 
@@ -486,3 +488,86 @@ def test_a_pieces_words_are_never_read_from_a_file_even_when_a_file_has_that_nam
 """)
     p = perform.Performance(scene["cast"], [], (40, 118, 1422, 818), TL, 1.0, lib, folder=planned)
     assert p.params(scene["cast"][0])[0] == {"text": "assets/plan.txt", "fill": "accent"}
+
+
+# ---- item 23: an index is counted as the element's description says (video-elements' `counts`)
+
+def test_each_index_is_counted_as_the_description_says_rows_columns_and_never_tabs(lib, folder):
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| t | table | 10 10 | 300x100 | rows=assets/sample.csv highlight.4=1 cell-alpha.2.3=0 | 4 rows of 2 columns, no header switch |
+| u | table | 10 10 | 300x100 | rows=assets/sample.csv highlight.5=1 cell-alpha.5.2=0 highlight.0=1 | |
+| a | badge | t.cell.2.3 | | ok=yes | |
+| b | badge | t.row.5 | | ok=yes | |
+
+### Moves
+
+- cue 1: show t, u, a, b
+- cue 2: t.cell-alpha.4.3 1 → 0
+"""
+    assert _check(text, lib, folder) == [                   # the first cast row is line 25
+        "line 25: scene A2, cast: 't': 'cell-alpha.2.3': assets/sample.csv has 2 columns",
+        "line 26: scene A2, cast: 'u': 'highlight.5': assets/sample.csv has 4 rows",
+        "line 26: scene A2, cast: 'u': 'cell-alpha.5.2': assets/sample.csv has 4 rows",
+        "line 26: scene A2, cast: 'u': 'highlight.0' counts from 1",
+        "line 27: scene A2, cast: 'a' is placed by 't'.'cell.2.3', but assets/sample.csv has 2 columns",
+        "line 28: scene A2, cast: 'b' is placed by 't'.'row.5', but assets/sample.csv has 4 rows",
+        "line 33: scene A2, moves: 't': 'cell-alpha.4.3': assets/sample.csv has 2 columns",
+    ]
+
+
+def _copy_of_the_library(tmp_path, change):
+    """A copy of the invented library with its table's ELEMENT.md put through `change`."""
+    import shutil
+    copy = tmp_path / "library"
+    shutil.copytree(INVENTED, copy)
+    described = copy / "elements" / "table" / "ELEMENT.md"
+    text = described.read_text(encoding="utf-8")
+    changed = change(text)
+    assert changed != text
+    described.write_text(changed, encoding="utf-8")
+    return elements.open_library(str(copy), None)
+
+
+def test_a_header_row_is_not_a_data_row_when_the_element_has_the_switch_and_it_is_on(tmp_path, folder):
+    with_header = _copy_of_the_library(tmp_path, lambda t: t.replace(
+        "| rows | rows | first row is the header |",
+        "| header | boolean true | the first row is a header |\n| rows | rows header=header | |"))
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| t | table | 10 10 | 300x100 | rows=assets/sample.csv highlight.3=1 highlight.4=1 | the switch at its default, on |
+| u | table | 10 10 | 300x100 | rows=assets/sample.csv header=no highlight.4=1 | off: every row is a data row |
+| v | table | 10 10 | 300x100 | rows=assets/sample.csv rows.first=2 highlight.3=1 | the header and two rows chosen |
+
+### Moves
+
+- cue 1: show t, u, v
+"""
+    assert _check(text, with_header, folder) == [
+        "line 25: scene A2, cast: 't': 'highlight.4': assets/sample.csv has 3 data rows",
+        "line 27: scene A2, cast: 'v': 'highlight.3': assets/sample.csv has 2 data rows as chosen",
+    ]
+
+
+def test_with_a_library_that_does_not_say_what_an_index_counts_no_index_is_checked(tmp_path, folder):
+    older = _copy_of_the_library(tmp_path, lambda t: t[:t.index("## Indexes")] + t[t.index("## Colours"):])
+    assert "counts" not in older.element("table")
+    text = HEAD + """
+### Cast
+
+| Name | Element | Where | Size | Parameters | Notes |
+|---|---|---|---|---|---|
+| t | table | 10 10 | 300x100 | rows=assets/sample.csv highlight.9=1 highlight.0=1 | |
+| a | badge | t.row.9 | | ok=yes | |
+
+### Moves
+
+- cue 1: show t, a
+"""
+    assert _check(text, older, folder) == []

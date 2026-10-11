@@ -509,9 +509,13 @@ earlier). The tools read the first five columns; Notes is for people.
   is handed the file's text; any other value is the text itself. `text.skip=1` drops its first
   line and `text.first=2` then keeps the first two of the rest (lines counted without the blank
   ones; with either, the element gets the chosen lines alone), so one file serves the card that
-  shows its title line and the one that does not. A row or line index (`highlight.3`,
-  `line-alpha.2`, the anchor `row.3`) counts the rows or lines chosen; a tab's index
-  (`tab-box.2`, `tab.2`) counts tabs and is not checked against them. A value for a parameter the element declares a *label* (a tab name, a prompt, a file
+  shows its title line and the one that does not. An index is counted as the element's
+  description says it counts (its `## Indexes` table): a data row of the rows chosen, the header
+  row not among them when the element has a header (`highlight.3`, the anchor `row.3`); a column
+  of them (`redact.2`, the second index of `cell.3.2`); a line of the text chosen
+  (`line-alpha.2`); or something only the element can count, such as a tab (`tab-box.2`), which
+  the tools do not check and the element refuses when drawn. Indices count from 1. A value for
+  a parameter the element declares a *label* (a tab name, a prompt, a file
   name, a pill's `text`) must be in the scene's On screen list; data (cell values) need not. An
   empty label is no label and is not checked, so an element's documented "none" can be written
   as it is (`ref=""` on a `formula-bar`); one of spaces only is still a label. The pieces differ
@@ -865,7 +869,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(569 tests on 11 October, lint clean).
+(573 tests on 11 October, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -896,7 +900,10 @@ flashing out of step, one to the scene's end; `check-script` clean, six frames l
 And (11 October 2026, morning) the library's `document` in that video's scene A, three cards
 from its one plan file: the file as it is, the file with `text.skip=1` under a title tag and a
 highlight on its second line, and its first two rules with bullets; `check-script` clean, and a
-file that is not there refused by name; looked at by eye.
+file that is not there refused by name; looked at by eye. And the index rule against the
+real spreadsheet (a header and three rows of two columns): `highlight.4`, `redact.3` and the
+anchor `header.3` refused, each saying what the file has; `redact.2`, `box.3.2`, `tab-box.2` and
+the anchor `cell.3.2` accepted.
 
 ## Known limitations and non-goals
 
@@ -946,6 +953,14 @@ file that is not there refused by name; looked at by eye.
   `side-panel-heading` (a heading above a `steps` or `checklist` panel, or instead of KEY
   POINTS; a problem with `none` or `custom`); `draw.hand` takes `label_size` (default 28, the
   roundel scales with it), so scene code can pass the brand-scaled size.
+- 11 October 2026 (morning, later): an index is now counted as the element's description says
+  (video-elements `d203f0a` or later). So **a row index counts data rows, the header left out**:
+  `highlight.4` on a file of a header and three rows, accepted before, is a problem (`has 3 data
+  rows`); a column index is checked against the columns (`redact.3` on two columns), as is the
+  second index of `cell.3.2`; a line index against the text's lines even when the text is
+  written in the cast row; a tab's index is left to the element. With an older library no index
+  is checked at all. The refusal of an anchor an element did not give when drawn now says that
+  a row not on show has none.
 - 11 October 2026 (morning): a parameter an element declares as text may name a file under the
   video's folder (`text=assets/plan-v1.txt`), with `text.skip=N` and `text.first=N` to choose its
   lines, and its line indices are checked against the lines chosen. A tab's index (`tab-box.4`,

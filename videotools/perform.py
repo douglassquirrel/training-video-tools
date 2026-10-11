@@ -150,6 +150,9 @@ class Performance:
                     scale = min(w / w0, h / h0) if w0 and h0 else 1.0
                     fixed = (x + (w - w0 * scale) / 2 + value[0] * scale, y + (h - h0 * scale) / 2 + value[1] * scale)
                     return self._turned(name, fixed, rect)
+        if name in self._anchors:               # drawn, and it gave no such anchor: a windowed sheet's row, say
+            raise cli.Failure(f"'{name}' did not give the anchor '{anchor}' when it was drawn: a row or a cell that "
+                              f"is not among those on show has none")
         raise cli.Failure(f"'{anchor}' of '{name}' is computed when it is drawn, so a member placed by it must "
                           f"come after '{name}' in the cast")
 
