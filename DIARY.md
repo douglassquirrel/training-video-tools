@@ -15,7 +15,11 @@ percentages and spans across cues and to the scene's end, a CSV's rows and colum
 session starts by reading CLAUDE.md, PLAN.md (items 15 to 21 in full) and this section, then
 `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
+**In the inbox, read and reported, waiting for Squirrel's OK:** request 20
+(`inbox/request-from-training-video-2026-10-11-20.md`, 06:40): a `text` parameter read from a
+file, with `text.first` and `text.skip`, and indices checked against the lines chosen. Part of
+it is a gap between PLAN.md item 15 and the code (the log's last entry). Everything else that
+has arrived is in `inbox/done/`.
 
 Green: 560 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
@@ -3291,3 +3295,23 @@ built, the five adjustments to request 19 and the change to a panel's `end`.
 **Green.** `560 passed in 159.58s (0:02:39)`, 98%; `All checks passed!`.
 
 **State.** Requests 1 to 19 built and pushed. Nothing in progress; the inbox is empty.
+
+### 11 October 2026 — The twentieth request arrives; read and reported, not started
+
+**What arrived.** `inbox/request-from-training-video-2026-10-11-20.md` (06:40): video-elements'
+new `document` takes its page as one `text` parameter, a line a line, which a cast row cannot
+write. It asks (1) that a `text` parameter's value naming a file under the video's folder be
+read and handed over as the file's text, as `rows=` is read as CSV, with `check-script` saying
+when a value looks like a path and is not a file; (2) `text.first=N` and `text.skip=N` to keep
+or drop leading non-blank lines; (3) indexed parameters checked against the lines chosen.
+Squirrel (07:03): "Check your inbox". Read and reported; **nothing done**; the item stays in
+`inbox/`.
+
+**Find, from reading.** PLAN.md item 15 has said since 10 October that "a value naming a file
+under the video's folder (`assets/….csv`, `.txt`) is read by video-tools (CSV into rows, text as
+it is) and handed to the element", and the code never did the second half: `perform._convert`
+reads a file only for a parameter of type `rows`, and nothing checks a `text` value. No test
+pinned it and no element needed it until `document`. So part 1 of the request is partly a gap
+between PLAN.md and the code, not a new idea. Told to Squirrel.
+
+**State.** 560 green as left, pushed. Waiting on Squirrel's OK for request 20.
