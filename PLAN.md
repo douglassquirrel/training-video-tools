@@ -1228,6 +1228,53 @@ that is no file; the wrong qualifier; indices against lines; the `tab` names); R
 for users", lint as its own pass; a Tier 3 with the real `document` and the second video's
 plan file; a note to training-video.
 
+## 23. An index is counted as the element's description says (video-elements' reply of 11 October 2026, 07:29; Squirrel, 07:33: "Both yes go ahead")
+
+Our request to video-elements ("Settled" 42) is answered and built there (`d203f0a`): the
+description says what each index of an indexed parameter or anchor counts, and which boolean
+parameter says a data file's first row is a header. This replaces item 15's rule (every first
+index against the file's rows) and item 22, 4's stopgap (names beginning `tab` not counted).
+
+1. **The rule.** For a library member, each index of an indexed parameter or anchor is looked
+   up in `el["counts"]` by its pattern and checked by what it counts: `row`, a data row of the
+   member's `rows` parameter named there, after `rows.where`, `rows.first` and `rows.columns`,
+   **the header not counted** when the element has a header switch
+   (`el["params"][rows]["header"]`) and the member's value of it, or its default, is true;
+   `column`, a column of those rows; `line`, a non-blank line of the member's text parameter
+   named there, after `text.skip` and `text.first`, whether the text came from a file or is the
+   value itself; `other`, not checked (a tab: the element refuses a bad one when it is drawn).
+   Every index of a name is checked, not only the first (`cell.3.9` on two columns). An index
+   of 0 is a problem as before (indices count from 1). An index whose data video-tools did not
+   read (the parameter not given, the file not there: its own problem) is not checked.
+2. **In words.** `'highlight.5': assets/sales.csv has 4 data rows as chosen`, `'redact.7':
+   assets/sales.csv has 6 columns`, `'line-alpha.5': assets/plan.txt has 4 lines as chosen`,
+   `… the text has 1 line`; for an anchor, `'tick' is placed by 'sheet'.'row.9', but
+   assets/sales.csv has 4 data rows`. "data rows" when a header was left out of the count,
+   "rows" when the element has no header switch or it is off.
+3. **A library with no `counts`** in its descriptions (before `d203f0a`): no index is checked,
+   rather than checked wrongly.
+4. **A row that is not on show.** A sheet that shows a window of its rows gives anchors only for
+   those; an anchor that passes the count and is then not among those the element returned is
+   refused at draw time in words that say so (Squirrel, 07:33: "Both yes"), where the message
+   used to speak only of cast order.
+
+The interface block of item 15 gains video-elements' two lines, in its words:
+
+```python
+el["counts"]                                  # what each * of an indexed parameter or anchor counts, by pattern:
+#   {"cell-alpha.*.*": [{"what": "row", "of": "rows"}, {"what": "column", "of": "rows"}], "tab-box.*": [{"what": "other", "of": None}]}
+#   what: "row" (a data row of the rows parameter `of`, its header not counted), "column" (a column of it),
+#   "line" (a non-blank line of the text parameter `of`), "other" (not something a caller can count; `of` None).
+#   Every indexed name of the element is a key; an element with none has {}
+el["params"]["rows"]["header"]                # for a rows parameter: the name of the boolean parameter that says its
+#   first row is a header (not a data row), or None when the element has no such switch
+```
+
+Order of work, test-first: the invented library reads an `## Indexes` table and `rows
+header=NAME` as the real one does; the rule in the check (parameters in the cast and in moves,
+anchors), the old rule and the stopgap removed; the draw-time words; README, "Notes for users",
+lint as its own pass; a Tier 3 against the real library; a note to training-video.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1388,6 +1435,7 @@ remote ("Settled" 7).
 19. **Request 18** (11 October 2026, 00:22; OK'd 00:28): item 20, in its order of work, after item 19.
 20. **Request 19** (11 October 2026, 00:33; OK'd 00:36): item 21, after item 20.
 21. **Request 20** (11 October 2026, 06:40; OK'd 07:05): item 22, in its order of work.
+22. **video-elements' reply** (11 October 2026, 07:29; OK'd 07:33): item 23, in its order of work.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1588,3 +1636,8 @@ None.
     count-against-rows rule and the `tab` stopgap of item 22, 4 can be replaced (Squirrel, 11
     October 2026, 07:18: "Yes, make the request"; for this request, not a standing permission to
     write there). Nothing is built here until its reply arrives and is OK'd.
+43. video-elements' reply (`inbox/done/reply-from-video-elements-2026-10-11.md`): `el["counts"]`
+    and a `rows` parameter's `header` are in the shared interface, in its words, and
+    video-tools counts each index by them (item 23); tabs stay `other`, unchecked, and no fifth
+    word is asked for; the draw-time refusal of an anchor the element did not return says the
+    row may not be on show (Squirrel, 11 October 2026, 07:33: "Both yes go ahead").

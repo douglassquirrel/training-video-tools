@@ -16,10 +16,8 @@ parameter read from a file, `text.skip` and `text.first`, indices counted agains
 chosen, a tab's index not counted against rows (22, request 20)**. A new session starts by
 reading CLAUDE.md, PLAN.md (items 15 to 22 in full) and this section, then `inbox/`.
 
-**In the inbox, read and reported, waiting for Squirrel's OK:** video-elements' reply
-(`inbox/reply-from-video-elements-2026-10-11.md`, 07:29): `el["counts"]` says what each index
-counts and a `rows` parameter's description names its header switch (its `d203f0a`). The log's
-last entry has what it says and what is proposed. Everything else is in `inbox/done/`.
+**Inbox: empty. In PLAN.md and in progress:** item 23: an index counted as the element's
+description says (`el["counts"]`, video-elements' reply). The log's last entries say how far.
 
 Green: 569 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
@@ -3441,3 +3439,12 @@ without `counts` not checked at all), put the two interface lines in PLAN.md, gi
 library an `## Indexes` table. My question of 07:17 (lengthen the stopgap meanwhile) falls away.
 
 **State.** 569 green as left, pushed. Waiting on Squirrel's OK for the reply.
+
+### 11 October 2026 — video-elements' reply is OK'd
+
+**Decision.** Squirrel (07:33): "Both yes go ahead": build on the reply as proposed, and reword
+the draw-time refusal for an anchor a windowed sheet did not return. PLAN.md item 23 and
+"Settled" 43; the reply moved to `inbox/done/`.
+
+**State.** 569 green as left. Next: the invented library's `## Indexes`, then the rule, test
+first.
