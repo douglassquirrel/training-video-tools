@@ -29,7 +29,9 @@ colour, curved and dashed arrows, a member's own colours, a cast on title and en
 turning a member, item 19; and (11 October 2026, 00:55) from the eighteenth and nineteenth,
 `inbox/done/request-from-training-video-2026-10-11-18.md` and `…-19.md` ("Settled" 39 and 40):
 steady moves, dimming, spans across cues and percentages, a CSV's columns and rows, item 20, and a
-repeating flash, item 21. CLAUDE.md says how the work is done; this file says what
+repeating flash, item 21; and (11 October 2026, 07:08) from the twentieth,
+`inbox/done/request-from-training-video-2026-10-11-20.md` ("Settled" 41): a text parameter read
+from a file and its lines chosen, item 22. CLAUDE.md says how the work is done; this file says what
 the commands do and in what order they are built. Squirrel's instructions are recorded here
 with their date; nothing here is invented, and anything assumed is under "Open questions".
 
@@ -1190,6 +1192,42 @@ stub records it: 0.5 at the start, 1 a quarter-beat on, 0 at three quarters; `ph
 hidden stays hidden; plain outside the span); the checks; README, "Notes for users", lint; a
 Tier 3.
 
+## 22. A text parameter read from a file, and its lines chosen (request 20; Squirrel, 11 October 2026, 07:05: "1. Yrs 2. Leave out. Go ahead", and 07:06: "That's 1. Yes")
+
+video-elements' `document` takes its page as one `text` parameter, a line a line, which a cast
+row cannot write. Item 15 has said since 10 October that a `.txt` file named in a cast row is
+read "text as it is" and handed to the element; the code only ever read `rows`. This builds
+that, and what the request adds.
+
+1. **A `text` parameter's value that names a file** under the video's folder
+   (`text=assets/plan-v1.txt`) is read (UTF-8) and the element is handed the file's text; any
+   other value is the text itself, as before. `check-script`: a value with no spaces that ends
+   `.txt` or `.md` and is not a file under the folder is a problem, in the words used for `rows`.
+2. **Its lines chosen**, beside it and named after it as `rows.first` is: `text.skip=N` drops
+   the first N lines, then `text.first=N` keeps the first N of what is left, in that order
+   however written; N a whole number above 0. Lines are counted without the blank ones, and
+   when either is given the element is handed the chosen lines alone, a line a line (blank
+   lines gone); with neither, the text exactly as it is. A `skip` that leaves no line is a
+   problem. They work on a value that is the text itself too. `skip` is for text and `where`
+   and `columns` for a data file: the wrong one for a parameter is a problem saying which it
+   takes. No `rows.skip` (Squirrel, 07:05: "Leave out").
+3. **Indices counted against the lines chosen.** As a `rows` file's rows are, the non-blank
+   lines of a member's text (from a file, or with a qualifier) are what `check-script` counts
+   an indexed parameter or anchor against: `highlight.4` on three lines is a problem (`…has 3
+   lines`). When a member gives both `rows` and such a text, the rows are what is counted.
+4. **A fault in the existing rule, found while there, and mended:** an index is counted
+   against the rows (or lines) whatever the parameter or anchor indexes, so `tab-box.4` or the
+   anchor `tab.4` on a sheet of three rows with four tabs was refused, wrongly, and a refused
+   check stops the drawing. The description does not say what an index counts. Until it does,
+   a name that begins `tab` is not counted against rows or lines (the library's tabs are
+   `tab.N`, `tab-box.N`, `active-tab`); to be put to video-elements as a question.
+
+Order of work, test-first: the pure `select_lines`; the reading and the qualifiers in the
+drawing (the invented `pot` gains a `text` parameter and a `line-alpha.*`); the check (a path
+that is no file; the wrong qualifier; indices against lines; the `tab` names); README, "Notes
+for users", lint as its own pass; a Tier 3 with the real `document` and the second video's
+plan file; a note to training-video.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1349,6 +1387,7 @@ remote ("Settled" 7).
 18. **Request 17** (11 October 2026, 00:00; OK'd 00:13): item 19, in its order of work.
 19. **Request 18** (11 October 2026, 00:22; OK'd 00:28): item 20, in its order of work, after item 19.
 20. **Request 19** (11 October 2026, 00:33; OK'd 00:36): item 21, after item 20.
+21. **Request 20** (11 October 2026, 06:40; OK'd 07:05): item 22, in its order of work.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1538,3 +1577,7 @@ None.
     00:38 and not objected to: options written `name=value`; `phase` a fraction of a beat; `rate`
     at most 3 a second, default 1.4; a flash does not name its members for the curtain rule;
     `end of scene` as a span's end. If any of the five is not what he wants, it is a small change.
+41. The twentieth request (`inbox/done/request-from-training-video-2026-10-11-20.md`), all three
+    items, without a `rows.skip` (Squirrel, 11 October 2026, 07:05: "1. Yrs 2. Leave out. Go
+    ahead"; 07:06: "That's 1. Yes"). The `tab` names left out of the index count (item 22, 4)
+    are Claude's mending of a fault found while there, told to him with the result.

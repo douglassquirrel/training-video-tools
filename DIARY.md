@@ -15,11 +15,9 @@ percentages and spans across cues and to the scene's end, a CSV's rows and colum
 session starts by reading CLAUDE.md, PLAN.md (items 15 to 21 in full) and this section, then
 `inbox/`.
 
-**In the inbox, read and reported, waiting for Squirrel's OK:** request 20
-(`inbox/request-from-training-video-2026-10-11-20.md`, 06:40): a `text` parameter read from a
-file, with `text.first` and `text.skip`, and indices checked against the lines chosen. Part of
-it is a gap between PLAN.md item 15 and the code (the log's last entry). Everything else that
-has arrived is in `inbox/done/`.
+**Inbox: empty. In PLAN.md and in progress:** item 22 (request 20): a `text` parameter read from a
+file, `text.skip` and `text.first`, indices counted against the lines chosen. The log's last
+entries say how far it has got.
 
 Green: 560 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
@@ -3315,3 +3313,19 @@ pinned it and no element needed it until `document`. So part 1 of the request is
 between PLAN.md and the code, not a new idea. Told to Squirrel.
 
 **State.** 560 green as left, pushed. Waiting on Squirrel's OK for request 20.
+
+### 11 October 2026 — The twentieth request is OK'd
+
+**Decision.** Squirrel (07:05): "1. Yrs 2. Leave out. Go ahead"; (07:06): "That's 1. Yes". So
+request 20 in full, with no `rows.skip`: PLAN.md item 22, "Settled" 41, the item moved to
+`inbox/done/`.
+
+**Find, before any test.** The index rule of item 15 counts every indexed parameter and anchor
+against the data's rows, whatever it indexes. video-elements added `tab-box.N` to the
+spreadsheet last night, and `document` has it too: `tab-box.4` on a three-row sheet with four
+tabs would be refused, wrongly, and `frame.Video` refuses to draw a scene with a problem. With
+lines counted too (this request) it gets likelier. The description does not say what an index
+counts, so the mending is a stopgap, written into item 22 as part 4: a name beginning `tab` is
+not counted against rows or lines.
+
+**State.** 560 green as left. Next: item 22, `select_lines`, test first.
