@@ -374,3 +374,34 @@ def test_sheet_alone_refuses_an_empty_listing_in_words(short, ffstub, tmp_path):
     code, out, err = run("stills", short, "--sheet", tmp_path / "sheet.png", "--out", folder, env=ffstub)
     assert (code, out, err) == (3, "", f"stills: {folder / 'stills.txt'} lists no stills; there is nothing to draw\n")
     assert not (tmp_path / "sheet.png").exists()
+
+
+# Item 29: what a kill leaves is written over, a listed still is refused.
+
+def test_a_folder_as_a_kill_leaves_it_is_finished_by_the_next_window_with_files_and_listing_agreeing(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    folder.mkdir()
+    (folder / "stills.txt").write_text("0.00 t0000.00.png\n")
+    Image.new("RGB", (480, 854), (1, 2, 3)).save(folder / "t0000.00.png")
+    Image.new("RGB", (480, 854), (9, 9, 9)).save(folder / "t0002.00.png")      # written, killed before its line
+    (folder / ".t0004.04.png.part").write_bytes(b"half a png")                   # killed mid-write
+    code, out, err = run("stills", short, "--changes", "--from", "2", "--out", folder, env=ffstub)
+    assert code == 0 and err == "stills: t0002.00.png was there but not listed; written again\n"
+    assert sorted(os.listdir(folder)) == ["stills.txt", "t0000.00.png", "t0002.00.png", "t0004.04.png"]
+    assert listing(folder) == "0.00 t0000.00.png\n2.00 t0002.00.png\n4.04 t0004.04.png\n"
+    assert Image.open(folder / "t0002.00.png").getpixel((0, 0))[:3] == (40, 50, 60)     # the stub's frame, not the leftover
+    assert Image.open(folder / "t0004.04.png").getpixel((0, 0))[:3] == (70, 80, 90)
+    code, out, err = run("stills", short, "--sheet", folder / "sheet.png", "--out", folder, env=ffstub)
+    assert code == 0 and out.startswith("Drew 3 stills")
+
+
+def test_a_listed_still_is_refused_before_anything_is_read_even_beside_a_part_file(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    folder.mkdir()
+    (folder / "stills.txt").write_text("2.00 t0002.00.png\n")
+    (folder / "t0002.00.png").write_bytes(b"png")
+    (folder / ".t0004.04.png.part").write_bytes(b"half")
+    code, out, err = run("stills", short, "--changes", "--from", "2", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {folder / 't0002.00.png'} already exists; give a new name\n")
+    assert [list(c)[0] for c in ff_calls(ffstub)] == ["ffprobe", "ffmpeg"]      # the probe and the scan, no frame read
+    assert sorted(os.listdir(folder)) == [".t0004.04.png.part", "stills.txt", "t0002.00.png"]

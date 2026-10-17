@@ -4,6 +4,7 @@ pure parts live here; `stills.py` runs the command.
 """
 
 import re
+import sys
 
 from videotools import cli
 
@@ -73,6 +74,22 @@ def label(seconds):
 def listing_line(seconds):
     """One line of stills.txt: the time, then the file name."""
     return f"{seconds:.2f} {still_name(seconds)}"
+
+
+def part_name(seconds):
+    """The name a still is written under until it is listed: `.t0012.40.png.part`."""
+    return f".{still_name(seconds)}.part"
+
+
+def write_still(img, folder, seconds):
+    """Save `img` as the still at `seconds`: to its part name, then its line into stills.txt, then
+    the rename, so every still with its name is listed at every moment (PLAN.md item 29, 1)."""
+    import os
+    part, final = os.path.join(folder, part_name(seconds)), os.path.join(folder, still_name(seconds))
+    img.save(part, format="PNG")        # the part name says nothing about the format
+    with open(os.path.join(folder, "stills.txt"), "a", encoding="utf-8") as f:
+        f.write(listing_line(seconds) + "\n")
+    os.replace(part, final)
 
 
 DEFAULT_THRESHOLD = 0.3   # ffmpeg's usual scene-change score for a cut; a cut between flat colours scores 0.4
@@ -250,16 +267,18 @@ def run(args):
         if t >= length:
             raise cli.Failure(f"{t:g} s is past the end of {video} ({length:.3f} s)", cli.USAGE)
     stills = [(t, os.path.join(folder, still_name(t))) for t in times]
-    for _, path in stills:
-        cli.refuse_existing(path)
+    listed = {name for _, name in read_listing(listing)} if os.path.isfile(listing) else set()
+    for _, path in stills:                  # item 29, 2: in a window, an unlisted still is a kill's leftover
+        if window and os.path.basename(path) not in listed and os.path.lexists(path):
+            sys.stderr.write(f"stills: {os.path.basename(path)} was there but not listed; written again\n")
+        else:
+            cli.refuse_existing(path)
     sheets = Sheets(args.sheet, grid, len(times), width, height) if args.sheet else None
     os.makedirs(folder, exist_ok=True)
     for i, (t, path) in enumerate(stills):
         data = ffmpeg.frame_at(video, t, width, height)
         img = Image.frombytes("RGB", (width, height), data)
-        img.save(path)
-        with open(listing, "a", encoding="utf-8") as f:     # a line at a time: a run that dies leaves its listing
-            f.write(listing_line(t) + "\n")
+        write_still(img, folder, t)         # a line at a time, the still named only once listed
         if sheets:
             sheets.add(i, img, label(t))
         print(f"{os.path.basename(path)} at {t:.3f} s")

@@ -1583,6 +1583,35 @@ forms, the errors table, "Notes for users". Tier 3 on the Mac on a scratch 60 fp
 known times and the 60 s one of "Things checked": the times found, and `time` of the scan before
 and after (their 33-minute video is theirs; the reply asks them for the before-and-after there).
 
+## 29. Every named still is listed: atomic still writes, and an unlisted still written over (audio-description-tools' request 6 of 17 October 2026, 18:20 UTC, by mail, id `2026-10-17-1820-audio-description-tools-request-6-stills-to-write-each-still-ato`; Squirrel, 17 October 2026, 22:25: "Go ahead with request 6 as proposed")
+
+In the device shell a slice was killed between writing a still and appending its line (133 PNGs,
+132 lines); the next slice, from the listing's last time, made that still again and was refused.
+On the video form of `stills` (items 24 and 28); the script form is untouched.
+
+1. **The order of writing a still.** The frame is saved to `.NAME.part` in `--out` (`.t0807.80.png.part`),
+   its line is appended to `stills.txt`, then the part file is renamed to `NAME`. So at every
+   moment every still with its name is listed; a kill leaves at worst a part file, or a listed line
+   whose still is a part file (the next run over that time writes it again, below).
+2. **What is in the folder before any frame is read**, checked for every chosen still. **In a
+   window** (a slice, where a leftover is a kill's): a still named in `stills.txt` is refused as
+   now (exit 3, nothing read); a still present but not in the listing is written over, with one
+   line on stderr first, `stills: t0807.80.png was there but not listed; written again`; a
+   `.NAME.part` file is written over without a word. **Without a window** nothing changes: an
+   existing `stills.txt` is refused first (item 28, 6) and any existing still is refused (item 24),
+   listed or not, since a whole run has no kill to carry on from.
+3. `--sheet` alone (item 28, 7) draws what the listing names and ignores part files and unlisted
+   stills, as it does now.
+
+Tests, test-first, Tier 2 against the stub ffmpeg: a frame read that dies after the file and
+before the line (`FFSTUB_DIE=frame@T`: the stub writes the frame, then the command is made to stop
+before the line) is simulated by a folder prepared by hand as a kill leaves it: a still present and
+unlisted, a part file; then the next window over the same time finishes with the files and the
+listing agreeing; a part file written over silently; an unlisted still written over with the line
+on stderr; a listed still refused as now; the sheet of a folder ignoring a part file. A Tier 1 test
+for the part name. README: the paragraph on slices, the errors table, "Notes for users". The reply
+on Squirrel's OK.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -2044,4 +2073,8 @@ None.
     took 86 s; the whole `--changes` run now fits a three-minute call and "the reference-frames-only
     decode is not needed for these files; nothing more asked". Closed on Squirrel's OK ("ok", 17
     October 2026, 22:10).
+54. audio-description-tools' request 6 is item 29, built as proposed: a still written to a part
+    name, listed, then renamed; an unlisted still written over and said; a part file written over
+    silently; a listed still refused as before (Squirrel, 17 October 2026, 22:25: "Go ahead with
+    request 6 as proposed: write it into PLAN.md as item 29 and build it test-first").
 

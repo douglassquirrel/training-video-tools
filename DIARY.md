@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 21:40, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 22:50, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -24,28 +24,32 @@ TABLE.md --out FOLDER`, each line of a description table to its own clip at spee
 lines in one standard-library command (27, their request 4); `stills VIDEO --changes` scoring at
 10 fps with the audio skipped (`--detect-fps`), `--from`/`--until` windows on `--every` and
 `--changes` with slices into one folder, `stills.txt` a line at a time, `--sheet` alone drawing a
-folder's listing (28, their request 5)**. A new
+folder's listing (28, their request 5); each still written to a part name, listed, then renamed,
+and in a window an unlisted still or a part file written over (29, their request 6)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
-PLAN.md (items 15 to 28 in full) and this section, then `inbox/`.
+PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open**. Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one open**, request 6 (item 29, built, its reply not yet written). Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; request 4 (item 27) likewise, its reply
 sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00, and their answer with the
-device-shell timing (18:08 UTC) read and closed at 22:10. The speed samples
+device-shell timing (18:08 UTC) read and closed at 22:10; **request 6 (item 29) is in `open/`, built,
+its reply not yet written**. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
 holds the duty.
 
-Green: 694 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 698 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** nothing. PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
+**Waiting on Squirrel:** the OK to reply to audio-description-tools' request 6 (item 29 is built;
+the reply would name the commit and the rule: a still with its name is always listed; in a window
+an unlisted still or a part file is written over). PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
@@ -4248,4 +4252,55 @@ is not needed for these files; nothing more asked". Reported; Squirrel (22:10): 
 
 **State.** Items 1 to 28 built and replied to; the mailbox has nothing open; nothing waits on
 Squirrel.
+
+### 17 October 2026 — Request 6 arrived; OK'd as item 29
+
+**Decision.** The watch returned at 22:15 with audio-description-tools' request 6 (id
+`2026-10-17-1820-audio-description-tools-request-6-stills-to-write-each-still-ato`): a slice killed
+between a still and its line left an unlisted still, which the next slice made again and was
+refused on. Reported with a proposal (part name, line, rename; an unlisted still written over and
+said; a part file silently; a listed still refused). Squirrel (22:25): "Go ahead with request 6 as
+proposed: write it into PLAN.md as item 29 and build it test-first." Item 29 and "Settled" 54.
+
+### 17 October 2026 — Item 29: the order of writing a still (Tier 1)
+
+**Tests.** `test_a_still_is_saved_to_a_part_name_listed_and_only_then_renamed` (a stand-in image
+records the path it saves to: `.t0001.00.png.part`; afterwards the folder holds `t0001.00.png`
+and the listing its line) and `test_a_still_is_not_renamed_when_its_line_cannot_be_written` (the
+listing a directory: `OSError`, and the folder holds the part file, no named still).
+
+**Red.** `AttributeError: module 'videotools.video_stills' has no attribute 'write_still'` (both).
+**Green.** With Tier 2 below, `90 passed in 38.32s`.
+
+### 17 October 2026 — Item 29: a folder as a kill leaves it (Tier 2)
+
+**Tests.** `test_a_folder_as_a_kill_leaves_it_is_finished_by_the_next_window_with_files_and_listing_agreeing`
+(a listing of one, an unlisted still, a part file; `--changes --from 2`: exit 0, the one stderr
+line, both written over with the stub's frames, no part file, the listing of three; `--sheet`
+alone then draws three) and `test_a_listed_still_is_refused_before_anything_is_read_even_beside_a_part_file`.
+
+**Red.** The first: `assert (3 == 0)` (the unlisted still refused). The second passed at once (an
+existing still was refused whatever the listing said); proven after the code by making a window
+skip the listing check: `assert (0, 't0000.00...tten again\n') == (3, '', 'stil...a new name\n')`,
+then restored, `2 passed`.
+
+**Decision / surprise.** Two. PIL cannot tell the format from `.part`: the first green run was a
+traceback, `unknown file extension: .part`; the part file is saved with `format="PNG"`. And the
+item 24 test `test_an_existing_still_or_listing_is_never_written_over_and_the_folder_is_left_as_it_was`
+failed (`assert (0, 't0000.00...tten again\n') == (3, …)`): my item 29 text let an unlisted still be
+written over in a whole run too, where there is no kill to carry on from. The test is right; item
+29, 2 now says the overwrite is in a window only, and without a window any existing still is
+refused as item 24 says. **Green.** `90 passed in 38.32s`.
+
+### 17 October 2026 — Item 29: README, lint, the whole suite
+
+**Decision.** README: the slices paragraph (the part name, the leftover written over and said,
+without a window every existing still refused), the errors table, "Notes for users". **Lint**, its
+own pass: `All checks passed!`. **Green.**
+```
+videotools/video_stills.py       239      0     96      0   100%
+TOTAL                           4686     44   1868     52    99%
+======================= 698 passed in 196.51s (0:03:16) ========================
+```
+**State.** Items 1 to 29 built; the reply to request 6 waits on Squirrel's OK.
 

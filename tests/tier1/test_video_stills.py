@@ -1,6 +1,8 @@
 """stills on a video file (item 24): the times, the names, the grid and ffmpeg's scene report,
 as pure functions."""
 
+import os
+
 import pytest
 
 from videotools import cli, video_stills
@@ -122,3 +124,34 @@ def test_a_bad_window_is_refused_in_words(start, end, message):
     with pytest.raises(cli.Failure) as e:
         video_stills.parse_window(start, end, 8.342)
     assert (str(e.value), e.value.code) == (message, 2)
+
+
+# Item 29: a still is written to a part name, listed, then renamed.
+
+class Saver:
+    """Stands in for a PIL image: records the path it is asked to save to and writes a file there."""
+
+    def __init__(self):
+        self.saved_to = []
+
+    def save(self, path, format=None):
+        self.saved_to.append(path)
+        with open(path, "wb") as f:
+            f.write(b"png")
+
+
+def test_a_still_is_saved_to_a_part_name_listed_and_only_then_renamed(tmp_path):
+    folder = str(tmp_path)
+    img = Saver()
+    video_stills.write_still(img, folder, 1.0)
+    assert img.saved_to == [os.path.join(folder, ".t0001.00.png.part")]
+    assert sorted(os.listdir(folder)) == ["stills.txt", "t0001.00.png"]
+    assert (tmp_path / "stills.txt").read_text() == "1.00 t0001.00.png\n"
+
+
+def test_a_still_is_not_renamed_when_its_line_cannot_be_written(tmp_path):
+    (tmp_path / "stills.txt").mkdir()                   # the listing cannot be appended to
+    img = Saver()
+    with pytest.raises(OSError):
+        video_stills.write_still(img, str(tmp_path), 1.0)
+    assert sorted(os.listdir(tmp_path)) == [".t0001.00.png.part", "stills.txt"]   # no named still unlisted
