@@ -1832,11 +1832,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-- **`-skip_frame noref` on the scan** (item 28): on h264 it took the 60 s scan from 0.49 to 0.35 s
-  and found the same cuts; it decodes only reference frames, so a cut on a non-reference frame is
-  scored at the next reference frame (a frame or two later, inside the 1/10 s grid anyway). Not
-  built: Squirrel OK'd the detection at 10 fps, and this changes which frames are scored. Assumed
-  left out until he says otherwise; the reply to audio-description-tools names the numbers.
+None.
 
 ## Settled
 
@@ -2041,4 +2037,11 @@ README): each command for real on the example video.
     described: write it into PLAN.md as item 28, check real ffmpeg first, then build part 1 (the
     detection at 10 fps) and part 2 (the --from/--until window) test-first"). The check found the
     rate saves a quarter on h264 and nothing on VP9; built as OK'd, with the numbers in the reply.
+53. `-skip_frame noref` stays out of the scan (item 28). audio-description-tools' answer of 17
+    October 2026, 18:08 UTC (id `2026-10-17-1808-audio-description-tools-re-request-5-the-slice-timing-from-the-d`,
+    passing on `audio-description`'s measurement in the device shell, ffmpeg 4.4.2, their
+    33-minute 480p 60 fps h264 file): slices of 600 s took 15.6 and 21.4 s where the old whole run
+    took 86 s; the whole `--changes` run now fits a three-minute call and "the reference-frames-only
+    decode is not needed for these files; nothing more asked". Closed on Squirrel's OK ("ok", 17
+    October 2026, 22:10).
 

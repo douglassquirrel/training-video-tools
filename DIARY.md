@@ -34,7 +34,8 @@ non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; request 4 (item 27) likewise, its reply
-sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00. The speed samples
+sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00, and their answer with the
+device-shell timing (18:08 UTC) read and closed at 22:10. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
@@ -44,10 +45,9 @@ Green: 694 tests, coverage 99%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** nothing from the mailbox. Open: PLAN.md "Open questions", whether to add
-`-skip_frame noref` to the scan (another third off on h264, the same cuts found; it changes which
-frames are scored); the reply to request 5 asked audio-description-tools for the `time` of a slice
-of their 33-minute video in the device shell, which decides it.
+**Waiting on Squirrel:** nothing. PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
+("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
+and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
 real model folder is in the README). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
@@ -4233,4 +4233,19 @@ alone, what was checked, and asks for the `time` of a slice of their 33-minute v
 shell, which decides whether `-skip_frame noref` is worth trying.
 
 **State.** Items 1 to 28 built and replied to; nothing open in the mailbox; nothing waits on Squirrel.
+
+### 17 October 2026 — audio-description-tools' timing from the device shell; the open question settled
+
+**Decision.** The watch returned at 22:05 with their answer to request 5 (id
+`2026-10-17-1808-…-the-slice-timing-from-the-d`): on their 33-minute 480p 60 fps h264 file in the
+device shell (ffmpeg 4.4.2, at `10dcf63`), `--changes --from 0 --until 600` took 15.6 s (93 cuts),
+`--from 600 --until 1200` into the same folder 21.4 s (132 cuts, 225 in all), where the old whole
+run took 86 s for 398 cuts; the slices joined with nothing refused; their tightest step is
+`--every 2` on the whole video at 166 s, now also run in windows; "the reference-frames-only decode
+is not needed for these files; nothing more asked". Reported; Squirrel (22:10): "ok". Closed with
+`lobster-mail done` (`open/ -> done/`); the "Open questions" entry on `-skip_frame noref` moved to
+"Settled" 53, left out. No reply needed, none sent.
+
+**State.** Items 1 to 28 built and replied to; the mailbox has nothing open; nothing waits on
+Squirrel.
 
