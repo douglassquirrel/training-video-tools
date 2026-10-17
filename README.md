@@ -78,7 +78,7 @@ These are the only steps that use the network. Run once per machine.
    `~/models/kokoro` with the venv's Python):
 
    ```bash
-   ~/projects/code/video-tools/.venv/bin/python -c "import numpy as np, glob, os
+   ~/projects/code/videos/video-tools/.venv/bin/python -c "import numpy as np, glob, os
    v={os.path.basename(f)[:-4]: np.fromfile(f, dtype=np.float32).reshape(-1,1,256) for f in glob.glob('*.bin')}
    np.savez(open('voices.npz','wb'), **v); print(sorted(v))"
    ```

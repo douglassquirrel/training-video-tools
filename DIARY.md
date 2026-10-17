@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 15:30, session ended with a handover in the mailbox. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 17:05, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -29,14 +29,14 @@ non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40. The speed samples
-Squirrel listened to are in `_to_delete/speed-samples/` (ignored by git). A reply or a new
-message goes only on Squirrel's OK ("Settled" 47). The handover for the next session was left by
-`lobster-mail handover` at the end of this one (17 October, 15:30); `lobster-mail start` reads it first. No
-watch is running; nobody is on duty.
+Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
+message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
+`lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
+holds the duty.
 
 Green: 645 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
-repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
-README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
+repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
+README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
 **Waiting on Squirrel:** nothing. One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
@@ -3891,3 +3891,19 @@ session: `lobster-mail start` (the hook), CLAUDE.md, PLAN.md items 15 to 26, thi
 Two small things a session might tidy with his OK: CLAUDE.md and the README still name the old
 path `~/projects/code/video-tools` (the folder is now under `videos/`), and the README's example for
 `narrate --lines` shows the estimate running long for short lines.
+
+### 17 October 2026 — Session resumed; the two tidies
+
+**Decision.** `lobster-mail start` (the hook, 16:01) claimed and closed the 15:30 handover; nothing
+new or open in the mailbox, `inbox/` empty, tree clean at `e45b093`. `lobster-mail wait --as
+video-tools --session mac` watching in the background; `duty status` says `on duty mac since
+2026-10-17T16:02:03Z`. Squirrel (17:00): "Fix the path in CLAUDE.md and the README, and delete
+_to_delete/speed-samples/." CLAUDE.md's "Definition of done" `cd` line and the README's
+`voices.npz` example now say `~/projects/code/videos/video-tools`; no other live mention of the
+old path (the log's past entries keep it, as they should). `_to_delete/speed-samples/` (six WAVs
+and a README, excluded from git) removed with `rm -r`; `_to_delete/` itself is left, empty but
+for a `.DS_Store`. No behaviour changed, so no test.
+
+**State.** Items 1 to 26 built, 645 tests, 98%, lint clean. The README's `narrate --lines` example
+still shows the estimate running long for short lines (the other tidy the handover named), not
+raised with Squirrel yet.

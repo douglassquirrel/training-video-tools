@@ -422,7 +422,7 @@ keeping. The rest can be reconstructed from git and the suite; that cannot.
 ## Definition of done
 
 ```bash
-cd ~/projects/code/video-tools
+cd ~/projects/code/videos/video-tools
 .venv/bin/pytest                # all green, with no external programs and no network
 .venv/bin/ruff check .          # clean
 ./<command> --help                 # for each command built
