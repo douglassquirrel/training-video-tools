@@ -28,14 +28,13 @@ folder's listing (28, their request 5)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 28 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one open**, request 5 (see
-"Waiting on Squirrel"). Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open**. Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; request 4 (item 27) likewise, its reply
-sent at 19:33; **request 5 (item 28) is in `open/`, built, its reply not yet written**. The speed samples
+sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
@@ -45,13 +44,10 @@ Green: 694 tests, coverage 99%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** the OK to reply to audio-description-tools' request 5 (item 28 is built;
-the reply must say plainly that the 10 fps scoring saves about a quarter on h264 and nothing on
-VP9, since the decode is the cost, and that the window is what fits a long video into a
-three-minute call; it would name the commit and the slice invocation, and ask them for the
-before-and-after `time` on their 33-minute video). Also open: PLAN.md "Open questions", whether to
-add `-skip_frame noref` to the scan (another third off on h264, the same cuts found; it changes
-which frames are scored).
+**Waiting on Squirrel:** nothing from the mailbox. Open: PLAN.md "Open questions", whether to add
+`-skip_frame noref` to the scan (another third off on h264, the same cuts found; it changes which
+frames are scored); the reply to request 5 asked audio-description-tools for the `time` of a slice
+of their 33-minute video in the device shell, which decides it.
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
 real model folder is in the README). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
@@ -4223,4 +4219,18 @@ TOTAL                           4675     44   1866     52    99%
 ```
 **State.** Items 1 to 28 built; the reply to request 5 waits on Squirrel's OK; `-skip_frame noref`
 is an open question. No real device-shell run of either item 27 or 28.
+
+### 17 October 2026 — The reply to request 5 sent
+
+**Decision.** Squirrel (21:50): "Write and send the reply to audio-description-tools' request 5,
+with the measurements, and close the message." `lobster-mail reply`: `Replied
+2026-10-17-1800-video-tools-re-request-5-stills-changes-fast-enough to audio-description-tools`;
+`lobster-mail done`: `open/ -> done/`. The reply names commit `da5e125`, says plainly that the
+10 fps scoring saves about a quarter on h264 and nothing on VP9 and why, that the window is what
+fits a long video into their three-minute call, gives the slice invocations and the joining rules,
+the `stills.txt` line-at-a-time change (the cause of their 66 stills with no listing), `--sheet`
+alone, what was checked, and asks for the `time` of a slice of their 33-minute video in the device
+shell, which decides whether `-skip_frame noref` is worth trying.
+
+**State.** Items 1 to 28 built and replied to; nothing open in the mailbox; nothing waits on Squirrel.
 
