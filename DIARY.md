@@ -3572,3 +3572,50 @@ sent. Nothing else moved or written: no test, no code, no `inbox/` change.
 
 **State.** 573 green, 98%, lint clean as at the last entry (the suite was not run this session:
 nothing in the code changed). Item 24 waits for Squirrel's go-ahead and the three answers.
+
+### 17 October 2026 — Item 24 OK'd; the mail rules brought in; the venv rebuilt
+
+**Decision / surprise.** Squirrel's answers (open questions 1 to 3, now "Settled" 46 to 48): the
+Tier 3 check may use a real Short fetched by their tool into a scratch folder; a reply by mail
+needs his OK each time; and the mailbox belongs in CLAUDE.md: "was that not part of the
+coding-template setup used to create this folder??" It was, from 10 October; this folder was made
+from the template on 9 October and never brought up to date, so the template needed no fix and
+this CLAUDE.md gained non-negotiable 17, the "Mail" section and `.claude/settings.json` (the
+`SessionStart` hook that runs `lobster-mail start`), with a dated note in its header. Then "go
+ahead and build this request".
+
+Two things found on the way. **Real ffmpeg 9.0.2's scene detection** was run on a scratch file of
+three flat colours cut at 2 s and 4 s before any code depended on it: `select='gt(scene,0.3)',
+metadata=print` with `-f null -` prints `frame:0 pts:25600 pts_time:2` and `lavfi.scene_score=
+0.400000` per chosen frame on stderr, the first frame of the file never among them (recorded under
+"Things checked"; item 24, 5 now names that form). **The venv was broken**: `.venv/bin/python3.12`
+pointed at `~/projects/code/video-tools/.venv`, so the repository had been moved to
+`~/projects/code/videos/video-tools` since 11 October; rebuilt with the README's install block
+(python 3.12.14, same packages, `a1_coverage.pth` back for the subprocess coverage), tier 1
+green on it before any new test.
+
+### 17 October 2026 — Item 24, Tier 1: the times, the names, the grid, the scene report
+
+**Goal.** The pure parts of `stills VIDEO`, in `videotools/video_stills.py`, one red-green cycle
+a function, in `tests/tier1/test_video_stills.py`.
+
+**Tests, red, green.** Each ran red with `AttributeError: module 'videotools.video_stills' has no
+attribute '<name>'` (the module existed, empty: the right failure, the behaviour missing), then
+green:
+- `at_times_are_read_in_the_order_given_each_at_most_once` (`parse_at`: `"0,1.5,3"`, spaces,
+  and five refusals in words, exit 2): `1 passed`.
+- `every_n_seconds_runs_from_zero_while_less_than_the_length` (`every_times`: 7 s every 2 is
+  0, 2, 4, 6; the end itself is not a frame; multiples not a running sum; 0 or less refused):
+  `2 passed`.
+- `a_still_is_named_by_its_time_so_names_sort_in_time_order` (`still_name`, `t0012.40.png`,
+  `t12345.68.png`; `label` `12.40 s`; `listing_line`): `3 passed`.
+- `the_default_grid_is_the_smallest_square_that_holds_the_frames_at_most_five_across`
+  (`choose_grid`: 5 is 3x2, 26 is 5x6) and
+  `a_cell_is_360_wide_and_as_tall_as_the_video_needs_plus_the_label_strip` (`cell_size`: 480×854
+  is 360×676, 854×480 is 360×238): `5 passed`.
+- `the_changes_are_the_first_frame_then_each_pts_time_of_ffmpegs_scene_report` (`change_times`
+  on the shape ffmpeg printed; an empty report is the first frame alone; 0 not twice) and
+  `the_threshold_is_a_number_from_0_to_1`: `7 passed in 0.34s`; `ruff`: `All checks passed!`.
+
+**State.** Tier 1 of item 24 green; next the stub's fake media (width, height, scene changes,
+the `metadata=print` report) and Tier 2.
