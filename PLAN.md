@@ -1290,6 +1290,84 @@ header=NAME` as the real one does; the rule in the check (parameters in the cast
 anchors), the old rule and the stopgap removed; the draw-time words; README, "Notes for users",
 lint as its own pass; a Tier 3 against the real library; a note to training-video.
 
+## 24. Stills from any video file, singly and on a labelled sheet (audio-description-tools' request 1 of 17 October 2026, 10:06, by mail; Squirrel, 17 October 2026: "write the plan but don't start it yet"; **planned, not started**)
+
+The first request from outside the training-video pair, and the first to arrive by mail
+(`~/projects/mail/video-tools/`, message
+`2026-10-17-1006-audio-description-tools-request-1-stills-from-any-video-file-sin`, claimed
+into `open/`). `audio-description` describes short YouTube videos for blind viewers; its Claude
+sees a video only as still pictures, so for every video it needs frames at the moments it
+describes, a steady sample through the whole video, and the frames where the picture changes,
+many times over. The video is a downloaded file (`video.mp4`, 480p, vertical 480×854 or
+landscape 854×480), not a video-tools script. Squirrel told them to use and improve video-tools
+rather than make their own, and they left the form to us.
+
+1. **The form.** `stills` takes a video file in place of a script:
+
+   ```
+   stills VIDEO (--at T[,T…] | --every SECONDS | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]
+   ```
+
+   A first argument whose name does not end in `.md` is a video file (the script form and its
+   flags are untouched; `--help` says both). In this form `--out` names a folder, not a sheet,
+   and the stills go in it; `--sheet` names the sheet. The script form's `SCENE:SECONDS`,
+   `--cue-changes`, `--scenes`, `--elements` and `--renderer` are refused with a video, and
+   `--at`, `--every`, `--changes`, `--threshold` and `--sheet` with a script (exit 2).
+2. **Which frames.** Exactly one of: `--at`, the times given in seconds, in the order given,
+   each at most once; `--every N`, every N seconds from 0 while less than the video's length (a
+   7 s video, `--every 2`: 0, 2, 4, 6); `--changes`, the first frame and every frame where
+   ffmpeg's scene detection scores the change above `--threshold` (default 0.3, ffmpeg's usual;
+   0 to 1), nothing else, in time order. None or two of the three, `--every` of 0 or less, a
+   `--threshold` outside 0 to 1 or given without `--changes`: refused before ffmpeg runs (exit 2).
+   A time at or beyond the video's end is refused naming the length (`12.5 s is past the end of
+   video.mp4 (8.342 s)`, exit 2), nothing written. The length and the frame size come from
+   `ffmpeg.probe`.
+3. **What is written.** Into `FOLDER` (made if missing, with its parents): one PNG per frame at
+   the video's own size, named by its time so the names sort in time order, `t0012.40.png`
+   (seconds to two decimals, four digits before the point); and `stills.txt`, one line per frame,
+   the time then the file name (`12.40 t0012.40.png`), in time order. With `--sheet`, one sheet
+   (or `SHEET-1.png`, `SHEET-2.png`, … when the frames outnumber a given `--grid`, as
+   `--cue-changes` does), each frame in a cell 360 px wide (a Short's frames stay readable) and
+   as tall as the video's proportions need plus the label strip, its proportions kept (`sheet.py`
+   fits without stretching), labelled with its time (`12.40 s`) in the strip under the frame,
+   never over it; `--grid` default chosen to fit: columns the smallest square's side that holds
+   the frames, at most 5 (1800 px across), rows what the frames need. Before anything is read:
+   every still, `stills.txt` and every sheet it would write is checked, and one that exists is
+   refused naming it (exit 3), the folder otherwise left as it was; nothing is written over.
+   Needs ffmpeg, ffprobe and Pillow (a PNG from raw RGB, and the sheet); without them, exit 4 in
+   the usual words. A frame ffmpeg fails on is reported as today (exit 4); the stills written
+   before it stay and are named.
+4. **What is printed.** One line per frame (`t0012.40.png at 12.400 s`) and a last line, `Wrote
+   N stills to FOLDER` (and `and the sheet SHEET.png`, or `and 2 sheets SHEET-1.png, SHEET-2.png`);
+   exit 0.
+5. **Scene detection.** `--changes` runs ffmpeg once over the whole file with a `select` filter
+   on the scene score and reads the chosen frames' times from its report. The exact filter
+   (`select='gt(scene,T)',showinfo` and `pts_time:` lines, or `metadata=print` and
+   `lavfi.scene_score`) is decided by running real ffmpeg on a scratch file first and recording
+   its output under "Things checked"; the stub then imitates that format and no other. Frames
+   are then read one by one with `ffmpeg.frame_at` at the video's own size, as the other modes.
+6. **Both machines.** The Mac (`.venv`, Pillow present) and the Linux device shell through
+   `VIDEO_TOOLS_PYTHON` as the README's section says; nothing new to install.
+
+Tests, test-first, Tier 1 for the time arithmetic and names (`--every` on a length; the file
+name of a time; the grid chosen for N frames of a 9:16 and a 16:9 video; the parsing of `--at`),
+Tier 2 for the command against the stubs (the stub ffmpeg's fake media gain `width=` and
+`height=` and a `scenes=` list of change times, served as the real report's lines): `--at
+0,1.5,3` gives three files named by time, in order, and `stills.txt` listing them; `--every 2`
+on a 7 s video gives 0, 2, 4, 6; `--changes` gives the first frame and each change, nothing
+else, and `--threshold` is handed to ffmpeg as data; a time past the end refused with the
+length, nothing written and ffmpeg not run; an existing still, `stills.txt` or sheet never
+written over, the folder left as it was; a vertical and a horizontal frame each on the sheet at
+their own proportions (the pasted size asserted), the label under the frame; no option or two
+refused before ffmpeg runs; the script form unchanged (its tests as they are); `--help`; the
+exit codes; a name with spaces and non-ASCII for the video and the folder.
+
+Order of work, test-first: check real ffmpeg's scene-detection output on a scratch file and
+record it ("Things checked"); the Tier 1 functions; the stub's fake media; `--at`; `--every`;
+`--changes`; the sheet; the refusals; README (a section, the errors table, "Notes for users");
+lint as its own pass; Tier 3 on the Mac against a real file (open question 1); then the reply
+by mail (open question 2).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1451,6 +1529,9 @@ remote ("Settled" 7).
 20. **Request 19** (11 October 2026, 00:33; OK'd 00:36): item 21, after item 20.
 21. **Request 20** (11 October 2026, 06:40; OK'd 07:05): item 22, in its order of work.
 22. **video-elements' reply** (11 October 2026, 07:29; OK'd 07:33): item 23, in its order of work.
+23. **audio-description-tools' request 1** (17 October 2026, 10:06, by mail; Squirrel, 17 October 2026:
+   "write the plan but don't start it yet"): item 24, planned and not started; waits for his go-ahead
+   and open questions 1 to 3.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1484,7 +1565,19 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+1. (Item 24) The manual Tier 3 check the request names uses a real YouTube video fetched by
+   `audio-description-tools`' `fetch-video` into a scratch folder: the fetch is network use by
+   another project's tool, not by video-tools, and the file would stay out of git. Is that check
+   OK on the Mac, or should Tier 3 run only on the example's own assembled video (no download)?
+2. (Item 24) When it is done, the requester asks for a reply by mail with the exact command to
+   run and from where. Writing into another project's inbox has so far been OK'd case by case
+   ("Settled" 38, 42). May video-tools reply by `lobster-mail` to `audio-description-tools` for
+   this request, and is that a standing permission for replies to mail it receives?
+3. The mailbox (`~/projects/mail/video-tools/`, `lobster-mail start --as video-tools`) is not
+   in CLAUDE.md, whose "Inbox" section names only `inbox/`; this session found it only by looking
+   for the message. Shall CLAUDE.md's session start include reading the mail, and shall the
+   inbox rules apply to it as written (read and report; act only on an OK; mail never in a
+   fixture)?
 
 ## Settled
 
@@ -1659,3 +1752,6 @@ None.
 44. No older video-elements library is supported: one whose descriptions lack `counts` is
     refused when it is opened, and the code no longer allows for a missing `fit` or `counts`
     (item 23, 3; Squirrel, 11 October 2026, 07:44: "No need to support older libraries").
+45. audio-description-tools' request 1 (stills from any video file, by mail, 17 October 2026) is
+    planned as item 24 and not started (Squirrel, 17 October 2026: "Just tell me about it, write the
+    plan but don't start it yet"); building it waits for his go-ahead.

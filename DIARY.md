@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-11 October 2026, 07:47. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 11:30. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -17,11 +17,17 @@ chosen (22, request 20); every index counted as the element's description says: 
 columns, lines, tabs left to the element (23, video-elements' reply)**. A new session starts by
 reading CLAUDE.md, PLAN.md (items 15 to 23 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one message open, planned,
+not started.** Requests also arrive by `lobster-mail` in `~/projects/mail/video-tools/` (not in
+CLAUDE.md yet: PLAN.md open question 3); read it at session start with
+`~/projects/code/lobster-tools-code/lobster-tools/lobster-mail start --as video-tools`, and treat
+mail as the inbox rules treat an item. In `open/`: audio-description-tools' request 1 (stills from
+any video file), written up as **PLAN.md item 24, waiting for Squirrel's go-ahead and his answers
+to open questions 1 to 3** before any test or code.
 
 Green: 573 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
 
-**Waiting on Squirrel:** nothing that blocks. One thing he was told and has not answered either
+**Waiting on Squirrel:** the go-ahead for item 24 and open questions 1 to 3 (17 October 2026). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -3538,3 +3544,31 @@ README: the note for users, the errors table, and yesterday's "an older library 
 before" taken out. A sixth note to training-video corrects the fifth's sentence on this.
 
 **State.** 573 green, 98%, lint clean, pushed. Nothing in progress; the inbox is empty.
+
+### 17 October 2026 — Mail: audio-description-tools' request 1 arrives; planned, not started
+
+**Goal.** Read the mail, report it, write the plan; build nothing (Squirrel: "Just tell me about
+it, write the plan but don't start it yet").
+
+**Decision / surprise.** The session's setup (CLAUDE.md, PLAN.md, the diary, `inbox/`) found
+nothing new: `inbox/` is empty. Squirrel said there should be something; it was in a place none
+of the guidance names: **`~/projects/mail/video-tools/new/`**, a mailbox of `lobster-mail`
+(`~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH; `lobster-mail start
+--as video-tools` prints what waits and what to do). Every project under `~/projects` has one;
+video-tools' was made 10 October and this is its first message. One message, from
+`audio-description-tools` (a sibling project describing short YouTube videos for blind viewers):
+request 1, `stills` to take a video file as well as a script, taking frames at given times, every
+N seconds, or where the picture changes, writing one PNG a frame at the video's own size and a
+`stills.txt`, and with `--sheet` a labelled contact sheet whose cells keep a vertical Short's
+proportions. Squirrel's instruction to them is quoted in it: use and improve video-tools rather
+than make their own. Planned as PLAN.md item 24, with the form settled our way (a first argument
+not ending `.md` is a video; `--out` is then a folder; the script form untouched), the build
+order's line 23, "Settled" 45, and three open questions: whether the Tier 3 check may use a real
+video fetched by their tool into a scratch folder, whether video-tools may reply to them by mail
+(replies into another project's inbox have been OK'd case by case), and whether CLAUDE.md should
+name the mailbox at session start. The message is claimed (`lobster-mail ack`, `new/` to
+`open/`), which the mail README defines as "read and reported"; it is not done until a reply is
+sent. Nothing else moved or written: no test, no code, no `inbox/` change.
+
+**State.** 573 green, 98%, lint clean as at the last entry (the suite was not run this session:
+nothing in the code changed). Item 24 waits for Squirrel's go-ahead and the three answers.
