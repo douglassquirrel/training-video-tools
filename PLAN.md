@@ -1544,7 +1544,8 @@ remote ("Settled" 7).
 23. **audio-description-tools' request 1** (17 October 2026, 10:06, by mail; Squirrel, 17 October 2026:
    "write the plan but don't start it yet", then "go ahead and build this request"): item 24, in
    its order of work; "Settled" 46 to 48. **Done 17 October 2026, 11:10–12:05**: built, in the README,
-   Tier 3 on the real Short; the reply waits for Squirrel's OK ("Settled" 47).
+   Tier 3 on the real Short; the reply sent with Squirrel's OK (12:40; message
+   `2026-10-17-1040-video-tools-re-request-1-stills-from-any-video-file`), the request in `done/`.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1759,7 +1760,8 @@ None.
 46. (Item 24) The Tier 3 check may use a real Short fetched by `audio-description-tools`'
     `fetch-video` into a scratch folder, out of git (Squirrel, 17 October 2026: "yes that's fine").
 47. Replies by mail need Squirrel's OK each time: the reply to audio-description-tools' request 1
-    is drafted and shown to him first (Squirrel, 17 October 2026: "get my OK for a reply").
+    is drafted and shown to him first (Squirrel, 17 October 2026: "get my OK for a reply"); sent
+    on his "Yes, send the reply … as drafted and mark the message done" (12:40).
 48. The mailbox is part of every session: CLAUDE.md gained the template's non-negotiable 17, its
     "Mail" section and the `SessionStart` hook in `.claude/settings.json` (Squirrel, 17 October
     2026: "yes"). The template already mandated it, since 10 October 2026; this folder was made

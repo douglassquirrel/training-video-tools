@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 12:05. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 12:45. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -20,20 +20,19 @@ with cells in the video's proportions (24, audio-description-tools' request 1, b
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 24 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one message open, built,
-its reply waiting for Squirrel's OK.** Requests from other projects arrive by `lobster-mail` in
-`~/projects/mail/video-tools/` (CLAUDE.md non-negotiable 17 and "Mail", since 17 October 2026; the
-command is `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). In
-`open/`: audio-description-tools' request 1 (item 24, done); the reply is drafted (what was built,
-the exact commands, what was checked) and goes by `lobster-mail reply --as video-tools` only on his
-OK, then `done`. The mail README also asks for a handover message to this mailbox before a session
-ends; none has been left yet.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Requests
+from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
+non-negotiable 17 and "Mail", since 17 October 2026; the command is
+`~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
+request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40). A reply or a new
+message goes only on Squirrel's OK ("Settled" 47). The mail README asks for a handover message to
+this mailbox before a session ends (`lobster-mail handover`); none has been left yet.
 
 Green: 611 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
 README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
 
-**Waiting on Squirrel:** his OK for the reply to audio-description-tools' request 1 (17 October 2026). One thing he was told and has not answered either
+**Waiting on Squirrel:** nothing. One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -3736,3 +3735,15 @@ says done.
 **State.** Items 1 to 24 built. Waiting on Squirrel: the reply to audio-description-tools, drafted
 in the session's scratchpad and shown to him ("Settled" 47); on his OK it goes by `lobster-mail
 reply` and the message moves to `done/`.
+
+### 17 October 2026 — The reply to audio-description-tools sent
+
+**Decision.** Squirrel (12:40): "Yes, send the reply to audio-description-tools as drafted and
+mark the message done." `lobster-mail reply --as video-tools <id> reply.md`: `Replied
+2026-10-17-1040-video-tools-re-request-1-stills-from-any-video-file to audio-description-tools`
+(in their `new/`, a copy in our `sent/`); `lobster-mail done`: `open/ -> done/`. The reply names
+commit `430a72f`, the exact commands on both machines, what was built and checked, and the one
+thing not done (no score per cut; the threshold is the only tuning).
+
+**State.** Items 1 to 24 built, pushed; the mailbox empty of open messages; `lobster-mail wait`
+watching in the background. Nothing waits on Squirrel. No handover left yet: the session is open.
