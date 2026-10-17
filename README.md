@@ -883,7 +883,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round. | See `--help`. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`). | See `--help`. |
 | 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write). Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
@@ -908,7 +908,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 17 October 2026
-(611 tests, lint clean).
+(615 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -976,6 +976,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **17 October 2026, later.** `stills --grid 0x3` (or any grid with no column or row) is refused in words, exit 2, in both forms; it was a traceback on a video file.
 - **17 October 2026.** `stills` takes a video file as well as a script: `stills VIDEO (--at T,T… | --every N | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]` writes one PNG a frame at the video's own size and `stills.txt`, and with `--sheet` a labelled contact sheet whose cells keep the video's proportions. The script form is unchanged, but its `--help` now shows both (`SCRIPT|VIDEO`, `--out SHEET.png|FOLDER`). For the audio-description project.
 - 9 October 2026: repository created. `check-script` (replaces the training-video project's
   `tools/script-check.py`, same output) and `narrate` are the first commands. Clips are numbered

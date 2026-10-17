@@ -91,6 +91,8 @@ def parse_grid(text):
         columns, rows = (int(v) for v in text.lower().split("x"))
     except ValueError:
         raise cli.Failure(f"--grid should be COLUMNSxROWS, not '{text}'", cli.USAGE) from None
+    if columns < 1 or rows < 1:
+        raise cli.Failure(f"--grid needs at least one column and one row, not '{text}'", cli.USAGE)
     return columns, rows
 
 

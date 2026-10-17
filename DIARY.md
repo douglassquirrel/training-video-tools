@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 12:45. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 13:10. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -16,23 +16,27 @@ parameter read from a file, `text.skip` and `text.first`, indices counted agains
 chosen (22, request 20); every index counted as the element's description says: data rows,
 columns, lines, tabs left to the element (23, video-elements' reply); **`stills` on any video file:
 `--at`, `--every`, `--changes`, one PNG a frame at the video's own size, `stills.txt`, `--sheet`
-with cells in the video's proportions (24, audio-description-tools' request 1, by mail)**. A new
+with cells in the video's proportions (24, audio-description-tools' request 1, by mail); a grid of
+0 or fewer columns or rows refused in words in both forms (25, their request 2)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
-PLAN.md (items 15 to 24 in full) and this section, then `inbox/`.
+PLAN.md (items 15 to 25 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 2 open, built, its
+reply drafted in the session's scratchpad and waiting for Squirrel's OK; on it, `lobster-mail reply`
+then `done`.** Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
-request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40). A reply or a new
+request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
+the grid crash) is in `open/`. A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The mail README asks for a handover message to
 this mailbox before a session ends (`lobster-mail handover`); none has been left yet.
 
-Green: 611 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 615 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
 README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
 
-**Waiting on Squirrel:** nothing. One thing he was told and has not answered either
+**Waiting on Squirrel:** his OK for the reply to audio-description-tools' request 2 (17 October 2026, 13:10). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -65,7 +69,7 @@ noted `nominal`, `fit` `natural` with a `natural_size` of 120 a column by 30 a r
 `lib.draws`, and passes every label parameter it is given through `frame.label`, as the real
 elements do; its README says what it checks and what it does not). The warning's tests use a
 copy of it with the table's `fit` row removed (`without_fit`). One test is skipped off macOS
-(CoreText). **The whole suite takes about 2 min 50 s**, longer than a foreground command's
+(CoreText). **The whole suite takes about 3 min 15 s**, longer than a foreground command's
 default two minutes: run it with a longer timeout or in the background.
 
 How the tests work: `tests/tier1/` pure functions (`test_choreography_parse.py`, `_check.py`,
@@ -3747,3 +3751,33 @@ thing not done (no score per cut; the threshold is the only tuning).
 
 **State.** Items 1 to 24 built, pushed; the mailbox empty of open messages; `lobster-mail wait`
 watching in the background. Nothing waits on Squirrel. No handover left yet: the session is open.
+
+### 17 October 2026 — Mail: request 2 (a grid of 0x3 crashes); item 25, done
+
+**Goal.** audio-description-tools' request 2 (10:45, claimed 12:50, OK'd 12:55): `stills VIDEO …
+--grid 0x3` died with a `ZeroDivisionError` traceback, exit 1. Refuse it in words in both forms.
+
+**Tests, red, green.**
+- Tier 1 `a_grid_needs_two_whole_numbers_each_at_least_one` (`0x3`, `3x0`, `0x0`, `-1x2` refused
+  as `--grid needs at least one column and one row`; `2x`, `x`, `3`, `2x2x2`, `axb` as before):
+  red `Failed: DID NOT RAISE Failure`.
+- Tier 2, two rows in `a_bad_choice_of_frames_is_refused_before_ffmpeg_runs`: red `(1, '',
+  'Trac...lo by zero\n') == (2, '', …)` (the traceback the request reports, reproduced on the
+  stub) and, for `--grid -1x2`, argparse's own `expected one argument`: a negative grid can only
+  reach the command as `--grid=-1x2`, so the case is written that way (the test's form, not its
+  expectation). `a_grid_with_no_columns_or_rows_is_refused_in_words_in_the_script_form_too`
+  (`A:1` and `--cue-changes` with `0x3`): red `'stills: 1 frames do not fit a 0x3 grid; give a
+  bigger --grid\n' != …` (in words already for frames given; `--cue-changes` would have crashed in
+  the chunking).
+- Green with two lines in `video_stills.parse_grid`, shared by both forms: `57 passed in 30.22s`
+  (the three stills files); `ruff check .` `All checks passed!`.
+
+**Decision / surprise.** A boundary the morning's coverage missed, for all its "empty, one item"
+rule: the grid's zero. The script form had it too, behind `--cue-changes`, and would have shown a
+`ValueError` from `range(0, n, 0)`; one parser for both closes both. README: the exit-2 row and a
+note for users.
+
+**Green, the suite.** `615 passed in 193.67s (0:03:13)`, `TOTAL … 98%`. For real on the invented
+file: `stills: --grid needs at least one column and one row, not '0x3'`, exit 2, nothing made.
+
+**State.** Items 1 to 25 built and pushed; the reply to request 2 drafted, waiting for Squirrel's OK.

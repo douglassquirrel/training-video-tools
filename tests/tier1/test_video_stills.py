@@ -76,3 +76,17 @@ def test_the_threshold_is_a_number_from_0_to_1():
         with pytest.raises(cli.Failure) as e:
             video_stills.parse_threshold(bad)
         assert (str(e.value), e.value.code) == (f"--threshold should be a number from 0 to 1, not '{bad}'", cli.USAGE)
+
+
+def test_a_grid_needs_two_whole_numbers_each_at_least_one():
+    assert video_stills.parse_grid("3x2") == (3, 2)
+    assert video_stills.parse_grid("1X1") == (1, 1)
+    assert video_stills.parse_grid(None) is None
+    for bad in ("0x3", "3x0", "0x0", "-1x2"):
+        with pytest.raises(cli.Failure) as e:
+            video_stills.parse_grid(bad)
+        assert (str(e.value), e.value.code) == (f"--grid needs at least one column and one row, not '{bad}'", cli.USAGE)
+    for bad in ("2x", "x", "3", "2x2x2", "axb"):
+        with pytest.raises(cli.Failure) as e:
+            video_stills.parse_grid(bad)
+        assert (str(e.value), e.value.code) == (f"--grid should be COLUMNSxROWS, not '{bad}'", cli.USAGE)

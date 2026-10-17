@@ -251,3 +251,10 @@ def test_a_described_scene_with_no_code_draws_its_chrome_and_panels_and_needs_no
     code, out, err = run("stills", script, "A:1.0,A:5.0", "--out", sheet, "--elements", INVENTED)
     assert (code, err) == (0, "")
     assert sheet.exists()
+
+
+def test_a_grid_with_no_columns_or_rows_is_refused_in_words_in_the_script_form_too(prepared, tmp_path):
+    for flags in (["A:1"], ["--cue-changes"]):
+        code, out, err = run("stills", prepared, *flags, "--out", tmp_path / "sheet.png", "--grid", "0x3")
+        assert (code, out, err) == (2, "", "stills: --grid needs at least one column and one row, not '0x3'\n")
+        assert not (tmp_path / "sheet.png").exists() and not (tmp_path / "sheet-1.png").exists()

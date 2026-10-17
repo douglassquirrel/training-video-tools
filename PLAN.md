@@ -1370,6 +1370,22 @@ record it ("Things checked"); the Tier 1 functions; the stub's fake media; `--at
 lint as its own pass; Tier 3 on the Mac against a real file (open question 1); then the reply
 by mail (open question 2).
 
+## 25. A grid of 0 or fewer columns or rows is refused in words (audio-description-tools' request 2 of 17 October 2026, 10:45, by mail; Squirrel, 17 October 2026: "Go ahead with request 2")
+
+Found by audio-description testing item 24: `stills VIDEO --every 10 --out X --sheet X.png --grid
+0x3` died with a `ZeroDivisionError` traceback (exit 1) where the sheet count is worked out. The
+one refusal of the video form not in words, and a boundary item 24's tests missed. The script
+form has the same hole with `--cue-changes` (its chunking by zero cells).
+
+1. `--grid CxR` must be two whole numbers, each 1 or more: `0x3`, `3x0`, `0x0`, `-1x2` are refused
+   in words (`--grid needs at least one column and one row, not '0x3'`), exit 2, before anything
+   is read or made, in both forms; `2x`, `x` and `3` stay refused as `--grid should be COLUMNSxROWS`.
+2. One place: `video_stills.parse_grid`, which both forms already use.
+
+Tests: Tier 1, the six cases on `parse_grid`; Tier 2, a video case in the "refused before ffmpeg
+runs" table and the script form's `--cue-changes --grid 0x3`. Then the README's errors row, a reply
+for Squirrel's OK ("Settled" 47).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1546,6 +1562,8 @@ remote ("Settled" 7).
    its order of work; "Settled" 46 to 48. **Done 17 October 2026, 11:10–12:05**: built, in the README,
    Tier 3 on the real Short; the reply sent with Squirrel's OK (12:40; message
    `2026-10-17-1040-video-tools-re-request-1-stills-from-any-video-file`), the request in `done/`.
+24. **audio-description-tools' request 2** (17 October 2026, 10:45, by mail; OK'd 12:55): item 25,
+   test-first, both forms; the reply for his OK.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the

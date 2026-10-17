@@ -89,6 +89,8 @@ def test_changes_takes_the_first_frame_and_each_cut_ffmpeg_reports_with_the_thre
     (["--at", "1", "--threshold", "0.4"], "--threshold goes with --changes"),
     (["--changes", "--threshold", "1.5"], "--threshold should be a number from 0 to 1, not '1.5'"),
     (["--at", "1", "--grid", "3"], "--grid should be COLUMNSxROWS, not '3'"),
+    (["--every", "10", "--sheet", "s.png", "--grid", "0x3"], "--grid needs at least one column and one row, not '0x3'"),
+    (["--at", "1", "--grid=-1x2"], "--grid needs at least one column and one row, not '-1x2'"),   # argparse: -1x2 is an option otherwise
     (["--at", "1,x"], "--at: 'x' is not a time in seconds"),
 ])
 def test_a_bad_choice_of_frames_is_refused_before_ffmpeg_runs(short, ffstub, tmp_path, flags, message):
