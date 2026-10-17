@@ -20,7 +20,7 @@ def test_help_and_usage():
     code, out, err = run("stills", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png|FOLDER [--grid CxR] [--at T,T,...] "
-        "[--every SECONDS] [--changes] [--threshold N] [--sheet SHEET.png] [--elements DIR] [--renderer PATH] "
+        "[--every SECONDS] [--changes] [--threshold N] [--detect-fps N] [--from T] [--until T] [--sheet SHEET.png] [--elements DIR] [--renderer PATH] "
         "SCRIPT|VIDEO [FRAMES]")
     code, out, err = run("stills", "x.md")
     assert code == 2 and "usage: stills" in err

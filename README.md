@@ -383,7 +383,8 @@ start.) The fix is the curtain helper under "Writing a video's scene code". The 
 one moment: a change that happens later than the lift, or a picture that fades under the
 panels and comes back, is not reported. The sheets are written either way (exit 0).
 
-### `stills VIDEO (--at T[,T…] | --every SECONDS | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]`
+### `stills VIDEO (--at T[,T…] | --every SECONDS [--from T] [--until T] | --changes [--threshold N] [--detect-fps N] [--from T] [--until T]) --out FOLDER [--sheet SHEET.png] [--grid CxR]`
+### `stills VIDEO --sheet SHEET.png --out FOLDER [--grid CxR]`
 
 The same command on **any video file** (a first argument whose name does not end in `.md`; the
 script form above is unchanged), for seeing what is on screen when: one PNG per frame at the
@@ -400,6 +401,30 @@ that holds them, at most five across), and more frames than a grid holds go on n
 `SHEET-1.png`, `SHEET-2.png`, …. Refuses, before anything is read, an existing still, listing
 or sheet, no choice or two, a bad `--grid`, `--threshold` without `--changes`, `--every` of 0
 or less, and a time at or past the end (saying the length). Needs ffmpeg, ffprobe and Pillow.
+`stills.txt` is written a line at a time, as each still is written, so a run that is killed
+part-way leaves a listing of exactly the stills there.
+
+**A long video in slices** (for a shell that cuts a call off, such as the Linux device shell's
+three minutes): `--from T` and `--until T`, in seconds, with `--every` or `--changes`, take only
+the window from `--from` (default 0) up to but not including `--until` (default the end; past
+the end is the end, so slices at round numbers need not know the length). The scan seeks to the
+window, so a slice costs its own length. Slices go into the same `--out` folder: with a window an
+existing `stills.txt` is added to, not refused, and a still already there is refused as always.
+`--changes` lists the video's first frame only when the window starts at 0, and `--every` steps
+from `--from`, so slices joined give exactly what one whole run gives. With no `--at`, `--every`
+or `--changes`, `--sheet SHEET.png --out FOLDER` draws the sheet of every still `FOLDER/stills.txt`
+lists, in that order, reading nothing from the video (the file must still exist): the last call
+after the slices. `--from` at or past the end, `--until` not after `--from`, a window with `--at`,
+or a window with `--sheet` alone are refused (exit 2); a missing or empty listing, a missing still, or a
+listing line that is not `TIME NAME`, exit 3.
+
+**How `--changes` scores** (17 October 2026): ffmpeg scores the picture 10 times a second, not
+every frame (`fps=10` before the `select` filter), so a cut is reported at the first scored
+moment after it, within a tenth of a second, and the still is read there; `--detect-fps N`
+changes the rate (above 0; fewer is a little faster, more is finer). The audio track is not
+decoded. This saves about a quarter of the scan on an h264 file and nothing on VP9, since the
+frames are still decoded and the decode is most of the cost; the slices are what make a long
+video fit a short call.
 
 ```
 $ ./stills cuts.mp4 --changes --out cuts-stills --sheet cuts.png
@@ -416,10 +441,28 @@ stills: 9 s is past the end of cuts.mp4 (5.520 s)
 ```
 
 (That run, 17 October 2026, real ffmpeg 9.0.2: `cuts.mp4` is an invented 160×90 file of three
-flat colours cut at 2 s and 4 s; the sheet is 720×478, two cells across.) `--changes` runs
-ffmpeg once over the whole file (`select='gt(scene,N)',metadata=print`) and then reads each
-chosen frame; a frame ffmpeg cannot read is an error (exit 4) and the stills written before it
-stay. Built for the audio-description project, whose Claude sees a video only as stills.
+flat colours cut at 2 s and 4 s; the sheet is 720×478, two cells across. Since the scoring at 10
+a second, later that day, a cut at 4.04 s is reported at 4.10.) `--changes` runs ffmpeg once over
+the file or the window (`fps=10,select='gt(scene,N)',metadata=print`) and then reads each chosen
+frame; a frame ffmpeg cannot read is an error (exit 4) and the stills written before it stay,
+listed. Built for the audio-description project, whose Claude sees a video only as stills.
+
+```
+$ ./stills nokey.mp4 --changes --until 3 --out sliced
+t0000.00.png at 0.000 s
+t0002.00.png at 2.000 s
+Wrote 2 stills to sliced
+$ ./stills nokey.mp4 --changes --from 3 --out sliced
+t0004.10.png at 4.100 s
+Wrote 1 still to sliced
+$ ./stills nokey.mp4 --sheet sliced/sheet.png --out sliced
+Drew 3 stills from sliced/stills.txt on the sheet sliced/sheet.png
+$ ./stills nokey.mp4 --changes --from 0 --until 3 --out sliced
+stills: sliced/t0000.00.png already exists; give a new name
+```
+
+(17 October 2026, real ffmpeg 9.0.2, paths shortened: `nokey.mp4` is an invented 160×90 60 fps
+file cut at 2 s and 4.04 s; the whole run gives the same three stills, byte for byte.)
 
 ### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH]`
 
@@ -974,8 +1017,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write); for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -1067,6 +1110,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **17 October 2026, night.** `stills VIDEO --changes` scores the picture 10 times a second (`--detect-fps N` to change it) and skips the audio, so a cut is reported within a tenth of a second after it (4.10 for a cut at 4.04, where it was 4.05); about a quarter faster on h264, no faster on VP9. `--from T` and `--until T` take a window with `--every` or `--changes`, and slices go into one folder, `stills.txt` added to; `--sheet` alone draws a folder's listing. `stills.txt` is now written a line at a time. For the audio-description project's device shell.
 - **17 October 2026, evening.** `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]` does the Linux device shell's preparation in one command: the venv, the packages, the model check, the config, and the three `export` lines on stdout for `eval` or an `env.sh`. The by-hand steps still work. For the audio-description project's `setup-device`.
 - **17 October 2026, later still.** `narrate --lines TABLE.md --out FOLDER [--speed S]` (default 1.5, af_heart) speaks each line of a description table to its own clip, with `timing.json` and a warning where a line runs into the next. `narrate`'s script form is unchanged; its positional is now optional only because of `--lines`. For the audio-description project.
 - **17 October 2026, later.** `stills --grid 0x3` (or any grid with no column or row) is refused in words, exit 2, in both forms; it was a traceback on a video file.

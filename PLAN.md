@@ -1510,6 +1510,79 @@ three lines exact; non-ASCII and spaces in the paths. README: a section under "R
 Linux device shell", the errors table, "Notes for users". Tier 3: a real run in the device shell
 (counts only), later. The reply to audio-description-tools goes on Squirrel's OK ("Settled" 47).
 
+## 28. `stills --changes` fast enough for the device shell: a cheaper detection and a time window (audio-description-tools' request 5 of 17 October 2026, 17:26, by mail, id `2026-10-17-1726-audio-description-tools-request-5-stills-changes-fast-enough-for`; Squirrel, 17 October 2026, 19:45: "Go ahead with request 5 as described")
+
+For `audio-description`'s `study-video`, which runs `stills VIDEO --changes` in the Linux device
+shell, where a call is cut off at three minutes: a 33-minute 480p 60 fps video took about 4 s of
+wall time per 30 s of video and was killed with 66 stills written and no `stills.txt`. Two parts,
+both on the video form of `stills` (item 24); the script form is untouched.
+
+```
+stills VIDEO --changes [--threshold N] [--detect-fps N] [--from T] [--until T] --out FOLDER [--sheet SHEET.png] [--grid CxR]
+stills VIDEO --every SECONDS [--from T] [--until T] --out FOLDER [--sheet SHEET.png] [--grid CxR]
+stills VIDEO --sheet SHEET.png --out FOLDER [--grid CxR]        # the sheet of a folder's stills.txt, nothing read from the video
+```
+
+**Part 1, the detection at a reduced rate.**
+
+1. The scan's filter is `fps=N,select='gt(scene,T)',metadata=print`, N from `--detect-fps`
+   (default 10), and `-an` is given so the audio track is not decoded. ffmpeg scores consecutive
+   sampled frames, so a cut is reported at the first sampled frame after it, within 1/N s: a cut at
+   4.04 s is reported at 4.1 ("Things checked"). The chosen frames are read at those times exactly
+   as before, at the video's own size. `--detect-fps` must be a number above 0 (else exit 2) and
+   goes with `--changes` only (exit 2 otherwise). `stills.txt` keeps its format.
+2. **What it buys, measured** ("Things checked"): about a quarter of the scan on h264 and nothing on
+   VP9, because `fps=` drops frames *after* decoding and the decode is most of the cost; `-an` a
+   little more. The detection cannot decode fewer frames of an inter-frame codec without skipping
+   reference frames (`-skip_frame noref`, "Open questions"). Part 2 is what makes any length
+   possible; the reply says so.
+
+**Part 2, a time window and slices.**
+
+3. `--from T` (default 0) and `--until T` (default the video's length), seconds, with `--every` or
+   `--changes` (with `--at`, exit 2: `--at` names its own times). `--from` must be 0 or more and
+   less than the length (else exit 2, naming the length); `--until` more than `--from`; an
+   `--until` past the end is taken as the end (so slices at round numbers need not know the
+   length). The window is `[--from, --until)`.
+4. **The scan of a window** seeks: `-ss FROM -to UNTIL -copyts` before `-i` (an input seek decodes
+   from the nearest keyframe before FROM; `-to` is the position in the file's own clock, and
+   `-copyts` keeps the reported `pts_time` on that clock; without it the times restart at 0,
+   "Things checked"). Only times in the window are kept. Without a window the scan runs as before,
+   over the whole file, with no seek.
+5. **The first frame.** `--changes` lists the first frame of the video only when `--from` is 0 or
+   absent; a slice that starts later begins at its first reported change, so slices joined give
+   no duplicate at each boundary. `--every` steps from `--from`: FROM, FROM + S, … while less than
+   `--until`; a whole run is the same multiples as before.
+6. **Slices into one folder.** With a window, an existing `stills.txt` in `--out` is not refused:
+   the slice's lines are appended to it. Without a window it is refused as before (a whole run over
+   a folder with stills would mix two runs). A still that exists is refused as before, in either
+   case, before anything is read. `stills.txt` is now written **a line at a time, as each still is
+   written** (before: once at the end), so a run that is killed part-way leaves a listing of exactly
+   the stills there; the next slice carries on from the listing's last time.
+7. **The sheet of a folder.** `--sheet SHEET.png` with none of `--at`, `--every` and `--changes`
+   reads `--out FOLDER/stills.txt` and draws the sheet of every still it lists, in that order, from
+   the PNGs (nothing is read from the video; `VIDEO` is still given and must exist, and `--grid` as
+   before). A missing `stills.txt`, a listed still that is missing, or a line that is not `TIME
+   NAME` is refused in words, exit 3. With a window and `--sheet` together the sheet is the slice's
+   stills only, as now. The sheet is refused if it exists, as now.
+8. Refusals in words, exit 2: `--from`/`--until` with `--at` or with the script form, not a number,
+   negative, `--from` at or past the end, `--until` not above `--from`, `--detect-fps` of 0 or
+   less or without `--changes`; `--sheet` alone with a window (a window needs `--every` or
+   `--changes`).
+
+Tests, test-first, Tier 1 (`video_stills`: the filter text, the window check, `every_times` from a
+start, the first-frame rule, the listing's reader) and Tier 2 against the stub ffmpeg (which now
+reads `-ss`/`-to` before `-i` on the scan and serves only the fake's `scenes=` in the window, and
+takes `fps=` in the filter): the scan asks for `fps=10`, `-an`, and the frame reads do not; an
+invented video with cuts at known times gives the same stills and the same `stills.txt` from two
+slices (`--from 0 --until 4`, `--from 4`) as from one whole run, for `--changes` and for `--every`;
+a slice's first frame only at 0; a slice refuses a still already there; `stills.txt` after a frame
+that fails lists the stills written; `--sheet` alone draws the folder's stills in listed order and
+refuses a missing listing or still; every refusal; `--detect-fps 5` handed over as data. README: the
+forms, the errors table, "Notes for users". Tier 3 on the Mac on a scratch 60 fps file with cuts at
+known times and the 60 s one of "Things checked": the times found, and `time` of the scan before
+and after (their 33-minute video is theirs; the reply asks them for the before-and-after there).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1610,6 +1683,27 @@ package imported from there, never installed here) and, through it, `rsvg-conver
   --lines` refuses a `--speed` outside 0.5 to 2.0 in words before the model is loaded. The
   invented 15-word line at `af_heart`: 1.0 is 4.69 s (3.4 words/s), 1.5 is 2.98 s (5.4), 2.0 is
   2.62 s (6.1); the model has four voices, af_heart, am_michael, bf_emma, bm_george.
+- **ffmpeg's scene detection at a reduced rate, seeks, and what costs (17 October 2026, ffmpeg
+  9.0.2, on the Mac; scratch files made with lavfi, in the session's scratchpad).** On a 160×90
+  60 fps file of three flat colours cut at 2 s and 4.04 s, encoded with keyframes only at 0 and
+  10 s (`-g 600 -sc_threshold 0 -bf 3`, so both cuts fall on P and B frames):
+  `-vf "select='gt(scene,0.3)',metadata=print"` reports `pts_time:2` (score 1.0) and `pts_time:4.05`
+  (0.65); with `fps=10,` in front, `pts_time:2` and `pts_time:4.1`: the first sampled frame after
+  the cut, on the 1/10 s grid from 0. **Seeks:** `-ss 3 -to 8` before `-i` reports the cut as
+  `pts_time:1.1` (times restart at 0); with `-copyts` as well, `pts_time:4.1` (the file's clock);
+  `-ss 3 -to 8` after `-i` also gives 4.1 but decodes from the start. `-to` before `-i` is the
+  position in the file (`-ss 3 -to 8` with `fps=10` yields 50 frames, not 80). A slice's first
+  frame is not reported as a change. **Cost:** on a 60 s 854×480 60 fps libx264 file (3600 frames,
+  11 MB) the plain scan took 0.63 s, `fps=10,select` 0.48 s, `fps=10` alone 0.44 s and a bare
+  decode 0.45 s: the decode is the cost and `fps=` drops frames after it. On a 20 s VP9 (libvpx)
+  file: 0.70 s plain and 0.70 s with `fps=10`. With an AAC track, `-an` took the scan from 0.48 to
+  0.46 s. `-skip_frame bidir` (B-frames not decoded) was no faster on h264 and does nothing on
+  VP9; `-skip_frame nonref` is **not a value** in ffmpeg 9 (the run exits at once with `Error
+  setting option skip_frame`, which looks like a fast run); the valid `-skip_frame noref` took the
+  60 s h264 scan from 0.49 to 0.35 s and found the same two cuts at the same times on the
+  non-keyframe file, and did nothing on VP9. `-skip_frame nokey` sees only keyframes: a cut away
+  from one is lost. A red-to-green cut between lavfi `color` sources scored 0 at every threshold
+  (the file's own oddity: the frames are red and green); white, black and red score 1.0 and 0.65.
 
 ## Build order
 
@@ -1738,7 +1832,11 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+- **`-skip_frame noref` on the scan** (item 28): on h264 it took the 60 s scan from 0.49 to 0.35 s
+  and found the same cuts; it decodes only reference frames, so a cut on a non-reference frame is
+  scored at the next reference frame (a frame or two later, inside the 1/10 s grid anyway). Not
+  built: Squirrel OK'd the detection at 10 fps, and this changes which frames are scored. Assumed
+  left out until he says otherwise; the reply to audio-description-tools names the numbers.
 
 ## Settled
 
@@ -1936,3 +2034,11 @@ None.
 51. audio-description-tools' request 4 is item 27, built as proposed: a `setup-linux` command on
     the system `python3`, writing only `SPEECH_MODEL_DIR` into the config and printing the three
     environment lines alone on stdout (Squirrel, 17 October 2026, 18:30: "go ahead").
+52. audio-description-tools' request 5 is item 28, built as described in chat: the scan's filter
+    with `fps=10` in front (`--detect-fps`) and `-an`; `--from`/`--until` with `--every` and
+    `--changes`, slices appending to `stills.txt`, the first frame only from 0, `--sheet` alone
+    drawing a folder's listing (Squirrel, 17 October 2026, 19:45: "Go ahead with request 5 as
+    described: write it into PLAN.md as item 28, check real ffmpeg first, then build part 1 (the
+    detection at 10 fps) and part 2 (the --from/--until window) test-first"). The check found the
+    rate saves a quarter on h264 and nothing on VP9; built as OK'd, with the numbers in the reply.
+

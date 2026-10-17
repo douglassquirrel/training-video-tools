@@ -90,3 +90,35 @@ def test_a_grid_needs_two_whole_numbers_each_at_least_one():
         with pytest.raises(cli.Failure) as e:
             video_stills.parse_grid(bad)
         assert (str(e.value), e.value.code) == (f"--grid should be COLUMNSxROWS, not '{bad}'", cli.USAGE)
+
+
+# Item 28: a time window.
+
+def test_every_times_step_from_a_start_while_less_than_the_end():
+    assert video_stills.every_times(2, 8.342, 3) == [3.0, 5.0, 7.0]
+    assert video_stills.every_times(2, 7.0, 3) == [3.0, 5.0]          # the end itself is not a frame
+    assert video_stills.every_times(0.1, 0.35, 0.1) == [0.1, 0.2, 0.3]  # multiples from the start, no drift
+
+
+def test_a_window_is_from_and_until_in_seconds_with_until_held_to_the_length():
+    assert video_stills.parse_window(None, None, 8.342) == (0.0, 8.342)
+    assert video_stills.parse_window("3", "7.5", 8.342) == (3.0, 7.5)
+    assert video_stills.parse_window("3", None, 8.342) == (3.0, 8.342)
+    assert video_stills.parse_window(None, "4", 8.342) == (0.0, 4.0)
+    assert video_stills.parse_window("6", "100", 8.342) == (6.0, 8.342)   # past the end: the end
+
+
+@pytest.mark.parametrize("start, end, message", [
+    ("x", None, "--from: 'x' is not a time in seconds"),
+    (None, "y", "--until: 'y' is not a time in seconds"),
+    ("-1", None, "--from: a time cannot be negative (-1)"),
+    (None, "-0.5", "--until: a time cannot be negative (-0.5)"),
+    ("8.342", None, "--from 8.342 s is at or past the end of the video (8.342 s)"),
+    ("9", None, "--from 9 s is at or past the end of the video (8.342 s)"),
+    ("3", "3", "--until (3 s) must be after --from (3 s)"),
+    ("3", "2", "--until (2 s) must be after --from (3 s)"),
+])
+def test_a_bad_window_is_refused_in_words(start, end, message):
+    with pytest.raises(cli.Failure) as e:
+        video_stills.parse_window(start, end, 8.342)
+    assert (str(e.value), e.value.code) == (message, 2)

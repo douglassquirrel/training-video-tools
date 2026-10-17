@@ -6,7 +6,7 @@ where the decoded audio is loud, `colours=0:200.40.40,10:0.0.255` the colour of 
 from each time, `width=480`, `height=854` the frame size, default 1920x1080, `scenes=2,4.04`
 the times the scene scan reports). Every call is appended as a
 JSON line to FFSTUB_LOG. FFSTUB_FAIL names a job (`concat`, `mux`, `render`, `probe`, `volume`,
-`silence`, `frame`, `scenes`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
+`silence`, `frame`, `frame@T` (the frame read at -ss T only), `scenes`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
 render stop reading stdin part-way. An existing output is refused unless `-y` is given, as
 ffmpeg does. Nothing here is real ffmpeg output beyond its format.
 """
@@ -143,12 +143,20 @@ def ffmpeg(args):
     if "metadata=print" in arg_after(args, "-vf", ""):   # the scene scan: the shape ffmpeg 9.0.2 printed
         fail_if("scenes")
         fake = read_fake(arg_after(args, "-i"))
-        for i, t in enumerate(v for v in fake.get("scenes", "").split(",") if v):
+        # A seek before -i (item 28): only the cuts in [-ss, -to) are seen; times stay on the file's
+        # clock only with -copyts, as real ffmpeg does ("Things checked").
+        before = args[:args.index("-i")]
+        start, end = float(arg_after(before, "-ss", "0")), float(arg_after(before, "-to", "1e9"))
+        cuts = [float(v) for v in fake.get("scenes", "").split(",") if v]
+        cuts = [t if "-copyts" in before else t - start for t in cuts if start <= t < end]
+        for i, t in enumerate(f"{t:g}" for t in cuts):
             sys.stderr.write(f"[Parsed_metadata_1 @ 0x7a0c62280] frame:{i}    pts:{int(float(t) * 12800)}   pts_time:{t}\n"
                              f"[Parsed_metadata_1 @ 0x7a0c62280] lavfi.scene_score=0.400000\n")
         return 0
     if "-frames:v" in args:
         fail_if("frame", output if output != "-" else None)
+        if os.environ.get("FFSTUB_FAIL") == "frame@" + arg_after(args, "-ss", "0"):   # one chosen frame fails
+            fail_if("frame@" + arg_after(args, "-ss", "0"))
         if output == "-":                       # one raw rgb24 frame of the colour at -ss
             fake = read_fake(arg_after(args, "-i"))
             at = float(arg_after(args, "-ss", "0"))

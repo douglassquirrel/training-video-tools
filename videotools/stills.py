@@ -51,6 +51,11 @@ def parser():
                         "detection)")
     p.add_argument("--threshold", metavar="N",
                    help="with --changes: how big a change counts, 0 to 1 (default 0.3)")
+    p.add_argument("--detect-fps", metavar="N",
+                   help="with --changes: score the picture N times a second (default 10; less is faster)")
+    p.add_argument("--from", dest="start", metavar="T", help="with --every or --changes: only from this time (seconds)")
+    p.add_argument("--until", dest="until", metavar="T",
+                   help="with --every or --changes: only before this time (seconds); past the end is the end")
     p.add_argument("--sheet", metavar="SHEET.png", help="video file: also a contact sheet of the stills, labelled")
     elements.add_arguments(p)
     return p
@@ -127,7 +132,8 @@ def _run(args):
         from videotools import video_stills
         return video_stills.run(args)
     for given, flag in ((args.at, "--at"), (args.every, "--every"), (args.changes, "--changes"),
-                        (args.threshold, "--threshold"), (args.sheet, "--sheet")):
+                        (args.threshold, "--threshold"), (args.detect_fps, "--detect-fps"), (args.start, "--from"),
+                        (args.until, "--until"), (args.sheet, "--sheet")):
         if given is not None and given is not False:
             raise cli.Failure(f"{flag} goes with a video file, not a script", cli.USAGE)
     args.grid = args.grid or "2x2"

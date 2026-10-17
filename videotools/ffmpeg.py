@@ -54,11 +54,15 @@ def frame_at(path, seconds, width, height):
     return data
 
 
-def scene_report(path, threshold):
+def scene_report(path, threshold, rate=10, window=None):
     """ffmpeg's report of the frames whose scene-change score is above `threshold` (0 to 1): the
-    stderr of `select='gt(scene,T)',metadata=print` over the whole file (PLAN.md item 24, 5)."""
-    select = f"select='gt(scene,{threshold:g})',metadata=print"
-    return run("ffmpeg", ["-nostdin", "-hide_banner", "-i", path, "-vf", select, "-f", "null", "-"],
+    stderr of `fps=RATE,select='gt(scene,T)',metadata=print` over the whole file, the audio not
+    decoded (PLAN.md item 24, 5; item 28, 1: the scoring at `rate` frames a second, a cut reported
+    at the first sampled frame after it). With `window` (start, end) in seconds, a seek before the
+    input, `-to` the end and `-copyts` so the times stay on the file's clock (item 28, 4)."""
+    select = f"fps={rate:g},select='gt(scene,{threshold:g})',metadata=print"
+    seek = ["-ss", f"{window[0]:.3f}", "-to", f"{window[1]:.3f}", "-copyts"] if window else []
+    return run("ffmpeg", ["-nostdin", "-hide_banner"] + seek + ["-i", path, "-an", "-vf", select, "-f", "null", "-"],
                f"looking for the cuts in {path}", want_stderr=True)
 
 

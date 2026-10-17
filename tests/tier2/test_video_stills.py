@@ -8,6 +8,7 @@ import pytest
 from PIL import Image
 
 from tests.tier2.conftest import fake_media, ff_calls, run
+from videotools import sheet
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def test_help_names_both_forms():
     code, out, err = run("stills", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png|FOLDER [--grid CxR] [--at T,T,...] "
-        "[--every SECONDS] [--changes] [--threshold N] [--sheet SHEET.png] [--elements DIR] [--renderer PATH] "
+        "[--every SECONDS] [--changes] [--threshold N] [--detect-fps N] [--from T] [--until T] [--sheet SHEET.png] [--elements DIR] [--renderer PATH] "
         "SCRIPT|VIDEO [FRAMES]")
     assert "a video file (any name not ending .md)" in " ".join(out.split())
 
@@ -73,12 +74,12 @@ def test_changes_takes_the_first_frame_and_each_cut_ffmpeg_reports_with_the_thre
     calls = ff_calls(ffstub)
     assert [list(c)[0] for c in calls] == ["ffprobe", "ffmpeg", "ffmpeg", "ffmpeg", "ffmpeg"]
     scan = calls[1]["ffmpeg"]
-    assert scan[scan.index("-vf") + 1] == "select='gt(scene,0.3)',metadata=print"   # one argument, never shell text
+    assert scan[scan.index("-vf") + 1] == "fps=10,select='gt(scene,0.3)',metadata=print"   # one argument, never shell text; item 28: at 10 fps
     assert scan[scan.index("-f") + 1] == "null" and scan[-1] == "-" and "-nostdin" in scan
     assert [c["ffmpeg"][c["ffmpeg"].index("-ss") + 1] for c in calls[2:]] == ["0.000", "2.000", "4.040"]
     code, out, err = run("stills", short, "--changes", "--threshold", "0.55", "--out", tmp_path / "again", env=ffstub)
     scan = ff_calls(ffstub)[6]["ffmpeg"]
-    assert code == 0 and scan[scan.index("-vf") + 1] == "select='gt(scene,0.55)',metadata=print"
+    assert code == 0 and scan[scan.index("-vf") + 1] == "fps=10,select='gt(scene,0.55)',metadata=print"
 
 
 @pytest.mark.parametrize("flags, message", [
@@ -210,3 +211,166 @@ def test_names_with_spaces_and_non_ascii_pass_through_as_data(ffstub, tmp_path):
     assert sorted(os.listdir(folder)) == ["sheet ß.png", "stills.txt", "t0000.00.png", "t0001.50.png"]
     scan = ff_calls(ffstub)[1]["ffmpeg"]
     assert scan[scan.index("-i") + 1] == video                       # the path is one argument, as given
+
+
+# Item 28: a cheaper detection and a time window.
+
+def test_the_scan_samples_at_10_fps_and_skips_the_audio_and_the_frame_reads_do_not(short, ffstub, tmp_path):
+    code, out, err = run("stills", short, "--changes", "--out", tmp_path / "stills", env=ffstub)
+    assert (code, err) == (0, "")
+    calls = ff_calls(ffstub)
+    scan = calls[1]["ffmpeg"]
+    assert scan[scan.index("-vf") + 1] == "fps=10,select='gt(scene,0.3)',metadata=print"
+    assert scan.index("-an") > scan.index("-i") and "-ss" not in scan and "-to" not in scan and "-copyts" not in scan
+    for c in calls[2:]:
+        read = c["ffmpeg"]
+        assert "-vf" not in read and "-an" not in read and "fps=" not in " ".join(read)
+
+
+def test_detect_fps_sets_the_scans_rate_as_data_and_is_refused_when_not_a_rate_or_without_changes(short, ffstub, tmp_path):
+    code, out, err = run("stills", short, "--changes", "--detect-fps", "5", "--out", tmp_path / "stills", env=ffstub)
+    assert (code, err) == (0, "")
+    scan = ff_calls(ffstub)[1]["ffmpeg"]
+    assert scan[scan.index("-vf") + 1] == "fps=5,select='gt(scene,0.3)',metadata=print"
+    for flags, message in [
+        (["--changes", "--detect-fps", "0"], "--detect-fps should be a number above 0, not '0'"),
+        (["--changes", "--detect-fps=-2"], "--detect-fps should be a number above 0, not '-2'"),
+        (["--changes", "--detect-fps", "x"], "--detect-fps should be a number above 0, not 'x'"),
+        (["--every", "2", "--detect-fps", "5"], "--detect-fps goes with --changes"),
+    ]:
+        code, out, err = run("stills", short, *flags, "--out", tmp_path / "again", env=ffstub)
+        assert (code, out, err) == (2, "", f"stills: {message}\n"), flags
+    assert len(ff_calls(ffstub)) == 5 and not (tmp_path / "again").exists()      # the probe, the scan, three frames; the refusals ran nothing
+
+
+def test_every_with_a_window_steps_from_the_start_while_less_than_until(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    code, out, err = run("stills", short, "--every", "2", "--from", "3", "--until", "7", "--out", folder, env=ffstub)
+    assert (code, err) == (0, "")
+    assert sorted(os.listdir(folder)) == ["stills.txt", "t0003.00.png", "t0005.00.png"]
+    assert (folder / "stills.txt").read_text() == "3.00 t0003.00.png\n5.00 t0005.00.png\n"
+    assert [c["ffmpeg"][c["ffmpeg"].index("-ss") + 1] for c in ff_calls(ffstub)[1:]] == ["3.000", "5.000"]
+
+
+def test_changes_with_a_window_seeks_the_scan_on_the_files_clock_and_lists_no_first_frame(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    code, out, err = run("stills", short, "--changes", "--from", "3", "--until", "8.342", "--out", folder, env=ffstub)
+    assert (code, err) == (0, "")
+    assert sorted(os.listdir(folder)) == ["stills.txt", "t0004.04.png"]            # the cut at 2 is before the window
+    assert (folder / "stills.txt").read_text() == "4.04 t0004.04.png\n"
+    scan = ff_calls(ffstub)[1]["ffmpeg"]
+    before = scan[:scan.index("-i")]
+    assert before[before.index("-ss") + 1] == "3.000" and before[before.index("-to") + 1] == "8.342" and "-copyts" in before
+    assert scan[scan.index("-vf") + 1] == "fps=10,select='gt(scene,0.3)',metadata=print" and "-an" in scan
+    code, out, err = run("stills", short, "--changes", "--from", "0", "--until", "3", "--out", tmp_path / "first", env=ffstub)
+    assert code == 0 and sorted(os.listdir(tmp_path / "first")) == ["stills.txt", "t0000.00.png", "t0002.00.png"]  # from 0: the first frame
+
+
+def listing(folder):
+    return (folder / "stills.txt").read_text()
+
+
+def test_two_slices_into_one_folder_give_what_one_whole_run_gives_for_changes_and_for_every(short, ffstub, tmp_path):
+    whole, sliced = tmp_path / "whole", tmp_path / "sliced"
+    assert run("stills", short, "--changes", "--out", whole, env=ffstub)[0] == 0
+    code, out, err = run("stills", short, "--changes", "--from", "0", "--until", "4", "--out", sliced, env=ffstub)
+    assert (code, err) == (0, "") and listing(sliced) == "0.00 t0000.00.png\n2.00 t0002.00.png\n"
+    code, out, err = run("stills", short, "--changes", "--from", "4", "--out", sliced, env=ffstub)
+    assert (code, err) == (0, "")
+    assert sorted(os.listdir(sliced)) == sorted(os.listdir(whole)) and listing(sliced) == listing(whole)
+    assert out.splitlines()[-1] == f"Wrote 1 still to {sliced}"
+    whole, sliced = tmp_path / "whole-every", tmp_path / "sliced-every"
+    assert run("stills", short, "--every", "3", "--out", whole, env=ffstub)[0] == 0
+    assert run("stills", short, "--every", "3", "--until", "3", "--out", sliced, env=ffstub)[0] == 0      # [0, 3): 0
+    assert run("stills", short, "--every", "3", "--from", "3", "--until", "100", "--out", sliced, env=ffstub)[0] == 0   # [3, end): 3, 6
+    assert sorted(os.listdir(sliced)) == sorted(os.listdir(whole)) == ["stills.txt", "t0000.00.png", "t0003.00.png", "t0006.00.png"]
+    assert listing(sliced) == listing(whole)
+
+
+def test_a_slice_refuses_a_still_already_there_and_a_whole_run_refuses_an_existing_listing(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    assert run("stills", short, "--changes", "--until", "4", "--out", folder, env=ffstub)[0] == 0
+    before = sorted(os.listdir(folder)), listing(folder)
+    code, out, err = run("stills", short, "--changes", "--from", "0", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {folder / 't0000.00.png'} already exists; give a new name\n")
+    code, out, err = run("stills", short, "--changes", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {folder / 'stills.txt'} already exists; give a new name\n")
+    assert (sorted(os.listdir(folder)), listing(folder)) == before
+
+
+def test_the_listing_is_written_a_line_at_a_time_so_a_run_that_dies_leaves_what_it_wrote_listed(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    code, out, err = run("stills", short, "--at", "0,1,3", "--out", folder, env={**ffstub, "FFSTUB_FAIL": "frame@3.000"})
+    assert code == 4 and out.splitlines() == ["t0000.00.png at 0.000 s", "t0001.00.png at 1.000 s"]
+    assert err.startswith(f"stills: ffmpeg failed (exit 1) reading the frame of {short} at 3.000 s; its output follows\n")
+    assert sorted(os.listdir(folder)) == ["stills.txt", "t0000.00.png", "t0001.00.png"]
+    assert listing(folder) == "0.00 t0000.00.png\n1.00 t0001.00.png\n"
+
+
+def test_sheet_alone_draws_the_folders_listing_in_its_order_reading_nothing_from_the_video(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    assert run("stills", short, "--changes", "--out", folder, env=ffstub)[0] == 0
+    calls_before = len(ff_calls(ffstub))
+    code, out, err = run("stills", short, "--sheet", folder / "sheet.png", "--out", folder, "--grid", "3x1", env=ffstub)
+    assert (code, err) == (0, "") and out == f"Drew 3 stills from {folder / 'stills.txt'} on the sheet {folder / 'sheet.png'}\n"
+    assert len(ff_calls(ffstub)) == calls_before                      # nothing read from the video
+    im = Image.open(folder / "sheet.png")
+    assert im.size == (3 * 360, -(-360 * 854 // 480) + sheet.STRIP)    # three cells across, one row
+    assert im.getpixel((10, 10))[:3] == (10, 20, 30) and im.getpixel((370, 10))[:3] == (40, 50, 60) and im.getpixel((730, 10))[:3] == (70, 80, 90)
+
+
+@pytest.mark.parametrize("prepare, message", [
+    (lambda folder: None, "{folder}/stills.txt is missing; --sheet alone draws the stills a folder's listing names"),
+    (lambda folder: (folder.mkdir(), (folder / "stills.txt").write_text("0.00 t0000.00.png\n")),
+     "{folder}/stills.txt names t0000.00.png, which is not in {folder}"),
+    (lambda folder: (folder.mkdir(), (folder / "stills.txt").write_text("0.00 t0000.00.png\nnot a line\n")),
+     "{folder}/stills.txt: line 2 is not 'TIME NAME': not a line"),
+])
+def test_sheet_alone_refuses_a_missing_listing_or_still_or_a_bad_line_in_words(short, ffstub, tmp_path, prepare, message):
+    folder = tmp_path / "stills"
+    prepare(folder)
+    code, out, err = run("stills", short, "--sheet", tmp_path / "sheet.png", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {message.format(folder=folder)}\n")
+    assert not (tmp_path / "sheet.png").exists()
+
+
+@pytest.mark.parametrize("flags, message", [
+    (["--at", "1", "--from", "0"], "--from and --until go with --every or --changes, not --at"),
+    (["--at", "1", "--until", "3"], "--from and --until go with --every or --changes, not --at"),
+    (["--sheet", "s.png", "--from", "1"], "--from and --until need --every or --changes (--sheet alone draws a folder's listing)"),
+    (["--every", "2", "--from", "x"], "--from: 'x' is not a time in seconds"),
+])
+def test_a_bad_window_on_the_command_is_refused_before_ffmpeg_runs(short, ffstub, tmp_path, flags, message):
+    code, out, err = run("stills", short, *flags, "--out", tmp_path / "stills", env=ffstub)
+    assert (code, out, err) == (2, "", f"stills: {message}\n")
+    assert ff_calls(ffstub) == [] and not (tmp_path / "stills").exists()
+
+
+def test_a_window_past_the_end_is_refused_naming_the_length_after_the_probe_only(short, ffstub, tmp_path):
+    code, out, err = run("stills", short, "--every", "2", "--from", "9", "--out", tmp_path / "stills", env=ffstub)
+    assert (code, out, err) == (2, "", "stills: --from 9 s is at or past the end of the video (8.342 s)\n")
+    assert [list(c)[0] for c in ff_calls(ffstub)] == ["ffprobe"] and not (tmp_path / "stills").exists()
+
+
+def test_the_script_form_refuses_the_window_flags(example, tmp_path):
+    for flags in (["--from", "1"], ["--until", "2"]):
+        code, out, err = run("stills", example, "A:1", "--out", tmp_path / "s.png", *flags)
+        assert (code, out, err) == (2, "", f"stills: {flags[0]} goes with a video file, not a script\n")
+
+
+def test_sheet_alone_still_needs_the_video_file_to_exist(ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    folder.mkdir()
+    (folder / "stills.txt").write_text("")
+    code, out, err = run("stills", tmp_path / "gone.mp4", "--sheet", tmp_path / "sheet.png", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {tmp_path / 'gone.mp4'} is missing\n")
+    assert ff_calls(ffstub) == [] and not (tmp_path / "sheet.png").exists()
+
+
+def test_sheet_alone_refuses_an_empty_listing_in_words(short, ffstub, tmp_path):
+    folder = tmp_path / "stills"
+    folder.mkdir()
+    (folder / "stills.txt").write_text("")
+    code, out, err = run("stills", short, "--sheet", tmp_path / "sheet.png", "--out", folder, env=ffstub)
+    assert (code, out, err) == (3, "", f"stills: {folder / 'stills.txt'} lists no stills; there is nothing to draw\n")
+    assert not (tmp_path / "sheet.png").exists()

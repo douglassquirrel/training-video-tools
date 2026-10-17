@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 19:10, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 21:40, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -21,9 +21,12 @@ with cells in the video's proportions (24, audio-description-tools' request 1, b
 TABLE.md --out FOLDER`, each line of a description table to its own clip at speed 1.5 in af_heart, with
 `timing.json` and an overrun warning (26, their request 3); **`setup-linux --venv DIR --model DIR
 --conf FILE [--dry-run]`, the device shell's venv, packages, model check, config and three `export`
-lines in one standard-library command (27, their request 4)**. A new
+lines in one standard-library command (27, their request 4); `stills VIDEO --changes` scoring at
+10 fps with the audio skipped (`--detect-fps`), `--from`/`--until` windows on `--every` and
+`--changes` with slices into one folder, `stills.txt` a line at a time, `--sheet` alone drawing a
+folder's listing (28, their request 5)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
-PLAN.md (items 15 to 27 in full) and this section, then `inbox/`.
+PLAN.md (items 15 to 28 in full) and this section, then `inbox/`.
 
 **Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one open**, request 5 (see
 "Waiting on Squirrel"). Requests
@@ -32,22 +35,23 @@ non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; request 4 (item 27) likewise, its reply
-sent at 19:33; **request 5 (`stills --changes` too slow for the device shell's
-three-minute call: decode fewer frames for the detection and/or a `--from`/`--until` window) is in
-`open/`, reported, not planned**. The speed samples
+sent at 19:33; **request 5 (item 28) is in `open/`, built, its reply not yet written**. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
 holds the duty.
 
-Green: 665 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 694 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** a decision on audio-description-tools' request 5 (the plan was
-described to him in chat on 17 October, 19:40: the detection at a reduced rate through ffmpeg's
-`fps=` before `select='gt(scene,…)'`, and a `--from`/`--until` window with slices appending to
-`stills.txt`; not in PLAN.md until he says so).
+**Waiting on Squirrel:** the OK to reply to audio-description-tools' request 5 (item 28 is built;
+the reply must say plainly that the 10 fps scoring saves about a quarter on h264 and nothing on
+VP9, since the decode is the cost, and that the window is what fits a long video into a
+three-minute call; it would name the commit and the slice invocation, and ask them for the
+before-and-after `time` on their 33-minute video). Also open: PLAN.md "Open questions", whether to
+add `-skip_frame noref` to the scan (another third off on h264, the same cuts found; it changes
+which frames are scored).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
 real model folder is in the README). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
@@ -4093,4 +4097,130 @@ it is that check).
 
 **State.** Items 1 to 27 built and replied to; request 5 open in the mailbox, its plan described
 in chat and waiting on Squirrel.
+
+### 17 October 2026 — Request 5 OK'd as item 28; real ffmpeg checked first
+
+**Decision.** Squirrel (19:45): "Go ahead with request 5 as described: write it into PLAN.md as item
+28, check real ffmpeg first, then build part 1 (the detection at 10 fps) and part 2 (the
+--from/--until window) test-first." Item 28, "Settled" 52 and a "Things checked" entry written.
+
+**Decision / surprise.** The checks, on scratch lavfi files in the session's scratchpad (ffmpeg
+9.0.2): with `fps=10,` in front of the `select` a cut at 4.04 s is reported at `pts_time:4.1`,
+the first sampled frame after it; a seek before `-i` restarts the times at 0 unless `-copyts` is
+given; `-to` before `-i` is a position in the file, not a length; a slice's first frame is not
+reported as a change. **But the rate buys little:** on a 60 s 480p60 h264 file the plain scan took
+0.63 s and `fps=10` 0.48 s, a bare decode 0.45 s, so the decode is the cost and `fps=` drops frames
+after it; on VP9, 0.70 s either way; `-an` took 0.48 to 0.46. Two dead ends: `-skip_frame nonref`
+is not a value in ffmpeg 9 (its 0.05 s "run" was an error exit, found by counting frames out),
+and `-skip_frame bidir` was no faster. The valid `-skip_frame noref` took the h264 scan from 0.49
+to 0.35 s and found the same cuts on a file whose cuts fall on P and B frames; it changes which
+frames are scored, so it is an "Open question", not built. Part 2 is what makes a long video
+possible; the reply will say so with the numbers. Also: a red-to-green cut between lavfi `color`
+sources scored 0 at every threshold (frames are red and green; not understood, not needed);
+white, black and red score 1.0 and 0.65.
+
+### 17 October 2026 — Item 28, part 1: the scan at 10 fps with the audio skipped
+
+**Test.** `test_the_scan_samples_at_10_fps_and_skips_the_audio_and_the_frame_reads_do_not`: the
+scan's `-vf` is `fps=10,select='gt(scene,0.3)',metadata=print`, `-an` after `-i`, no seek flags;
+the frame reads have none of it.
+
+**Red.**
+```
+E       assert "select='gt(s...etadata=print" == 'fps=10,selec...etadata=print'
+E         - fps=10,select='gt(scene,0.3)',metadata=print
+E         + select='gt(scene,0.3)',metadata=print
+```
+**Green.** `33 passed in 13.11s`. **The item-24 test
+`test_changes_takes_the_first_frame_and_each_cut_ffmpeg_reports_with_the_threshold_as_data`
+pinned the old filter exactly; its two assertions now say `fps=10,select=…`**, since item 28
+changes what the scan is given (a test changed to match a specified change, not an unpredicted
+output).
+
+### 17 October 2026 — Item 28, part 1: --detect-fps
+
+**Test.** `test_detect_fps_sets_the_scans_rate_as_data_and_is_refused_when_not_a_rate_or_without_changes`:
+`--detect-fps 5` gives `fps=5,select=…`; `0`, `-2`, `x` and `--every 2 --detect-fps 5` are refused
+in words, exit 2, running nothing.
+
+**Red.** `AssertionError: assert (2, 'usage: s...detect-fps\n') == (0, '')` (argparse: an unknown
+flag). **Green.** `42 passed in 14.97s`, after two test corrections of my own: the help test pins the
+usage line, which now has `[--detect-fps N]` (updated to the new surface); and my test counted the
+stub's calls as 2 where the first run makes 5 (the probe, the scan, three frames) and the refusals
+add none: `assert (5 == 2)`, the test's arithmetic, not the code.
+
+### 17 October 2026 — Item 28, part 2: the window's arithmetic (Tier 1)
+
+**Tests.** `test_every_times_step_from_a_start_while_less_than_the_end` (3, 5, 7 from 3 on 8.342;
+multiples from the start, no drift), `test_a_window_is_from_and_until_in_seconds_with_until_held_to_the_length`
+(absent flags are 0 and the length; `--until 100` on 8.342 is 8.342),
+`test_a_bad_window_is_refused_in_words` (not a number, negative, `--from` at or past the end naming
+the length, `--until` not after `--from`; exit 2 each).
+
+**Red.** `TypeError: every_times() takes 2 positional arguments but 3 were given`;
+`AttributeError: module 'videotools.video_stills' has no attribute 'parse_window'`.
+**Green.** `18 passed in 0.04s` (`every_times(step, length, start=0.0)`, `parse_time`, `parse_window`).
+
+### 17 October 2026 — Item 28, part 2: --from and --until on the command
+
+**Tests.** `test_every_with_a_window_steps_from_the_start_while_less_than_until` (`--every 2 --from 3
+--until 7`: 3 and 5, read at 3.000 and 5.000), `test_changes_with_a_window_seeks_the_scan_on_the_files_clock_and_lists_no_first_frame`
+(the scan has `-ss 3.000 -to 8.342 -copyts` before `-i`, `-an`, the filter; the cut at 2 is outside;
+no first frame; `--from 0 --until 3` has it). The stub's scan now reads a seek before `-i` and
+serves only the fake's cuts in the window, on the file's clock only with `-copyts`.
+
+**Red.** Both `AssertionError: assert (2, 'usage: s... --until 7\n') == (0, '')` (unknown flags).
+**Green.** `54 passed in 16.91s`; the help test's usage line gains `[--from T] [--until T]`.
+
+### 17 October 2026 — Item 28, part 2: slices, the listing a line at a time, the sheet of a folder, refusals
+
+**Tests.** `test_two_slices_into_one_folder_give_what_one_whole_run_gives_for_changes_and_for_every`,
+`test_a_slice_refuses_a_still_already_there_and_a_whole_run_refuses_an_existing_listing`,
+`test_the_listing_is_written_a_line_at_a_time_so_a_run_that_dies_leaves_what_it_wrote_listed` (the
+stub's new `FFSTUB_FAIL=frame@3.000` fails one chosen frame), `test_sheet_alone_draws_the_folders_listing_in_its_order_reading_nothing_from_the_video`,
+`test_sheet_alone_refuses_a_missing_listing_or_still_or_a_bad_line_in_words` (three cases),
+`test_a_bad_window_on_the_command_is_refused_before_ffmpeg_runs` (four), `test_a_window_past_the_end_is_refused_naming_the_length_after_the_probe_only`,
+`test_the_script_form_refuses_the_window_flags`.
+
+**Red.** Each for its own reason: the second slice `assert (3, 'stills: ...a new name\n') == (0, '')`
+(refused on `stills.txt`); the slice over a still refused on the listing instead of the still; after
+the failed third frame `['t0000.00.pn...t0001.00.png'] == ['stills.txt'...]` (no listing); `--sheet`
+alone and its refusals met `choose how to pick the frames…`; `--at` with a window ran (`0 != 2`); a
+bad `--from` was parsed only after the probe (`[{'ffprobe': …}] == []`).
+
+**Green.** `67 passed in 49.68s`, after two mistakes in my tests: the sheet's strip is 36 px
+(`sheet.STRIP`), not the 28 I wrote (`(1080, 677) == (1080, 669)`), and my `--every 3` slices
+overlapped at 3 s (`[0, 4)` then `[3, …)`), so the second was rightly refused (`assert 3 == 0`);
+the first slice now ends at 3. Both are the tests' errors, not the code's.
+
+**Decision.** The listing is written with one `open(…, "a")` per still (PLAN.md item 28, 6); the
+sheet of a folder reads the PNGs' size from the first still and never probes the video, so it needs
+Pillow but not ffmpeg; `Wrote 1 still` is singular now (was `1 stills`).
+
+### 17 October 2026 — Item 28: an empty listing, the README, the whole suite
+
+**Test.** `test_sheet_alone_still_needs_the_video_file_to_exist` pinned the one line coverage
+showed unreached; proving it by removing the check showed a **traceback, `division by zero`**, for
+an empty `stills.txt` with the video present: `Sheets` with no stills. So
+`test_sheet_alone_refuses_an_empty_listing_in_words`, **red** `assert (1, '', 'Trac...lo by zero\n')
+== (3, '', 'stil...ng to draw\n')`, **green** `6 passed` with the refusal `… lists no stills; there is
+nothing to draw`. The first full run had one failure: `tests/tier2/test_stills.py::test_help_and_usage`
+pins the usage line too (updated to the new surface, as the video form's was).
+
+**Tier 3** on the Mac, real ffmpeg 9.0.2, scratch files in the scratchpad: `nokey.mp4` (160×90,
+60 fps, cuts at 2 and 4.04 s on P and B frames) whole: `t0000.00`, `t0002.00`, `t0004.10`; in
+slices `--until 3` then `--from 3`, then `--sheet` alone: the same three, `stills.txt` identical,
+the PNGs identical by md5, `Drew 3 stills from … on the sheet …`; `--every 4` in slices `--until 6`
+and `--from 6 --until 999`: 0, 4, 6, 10; a slice over an existing still refused. On the 60 s
+480p60 h264 file the scan by hand as before (`select` alone) took 0.619 s and the whole command
+0.653 s (the probe, the scan at 10 fps and one frame read); in two slices 0.415 and 0.353 s.
+
+**Lint**, its own pass: `All checks passed!`. **Green.**
+```
+videotools/video_stills.py       228      0     94      0   100%
+TOTAL                           4675     44   1866     52    99%
+======================= 694 passed in 195.10s (0:03:15) ========================
+```
+**State.** Items 1 to 28 built; the reply to request 5 waits on Squirrel's OK; `-skip_frame noref`
+is an open question. No real device-shell run of either item 27 or 28.
 

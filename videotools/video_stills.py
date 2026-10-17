@@ -27,15 +27,38 @@ def parse_at(text):
     return times
 
 
-def every_times(step, length):
-    """Every `step` seconds from 0 while less than `length`: multiples, so no running sum drifts."""
+def every_times(step, length, start=0.0):
+    """Every `step` seconds from `start` while less than `length`: multiples, so no running sum drifts."""
     if not step > 0:
         raise cli.Failure("--every must be more than 0", cli.USAGE)
     times, i = [], 0
-    while round(i * step, 6) < length:
-        times.append(round(i * step, 6))
+    while round(start + i * step, 6) < length:
+        times.append(round(start + i * step, 6))
         i += 1
     return times
+
+
+def parse_time(text, flag):
+    try:
+        t = float(text)
+    except ValueError:
+        raise cli.Failure(f"{flag}: '{text}' is not a time in seconds", cli.USAGE) from None
+    if t < 0:
+        raise cli.Failure(f"{flag}: a time cannot be negative ({text})", cli.USAGE)
+    return t
+
+
+def parse_window(start_text, end_text, length):
+    """(start, end) of --from and --until in seconds: 0 and the length when absent; --from before the
+    end, --until after --from and held to the length (PLAN.md item 28, 3)."""
+    start = parse_time(start_text, "--from") if start_text is not None else 0.0
+    end = parse_time(end_text, "--until") if end_text is not None else length
+    if start >= length:
+        raise cli.Failure(f"--from {start:g} s is at or past the end of the video ({length:g} s)", cli.USAGE)
+    end = min(end, length)
+    if end <= start:
+        raise cli.Failure(f"--until ({end:g} s) must be after --from ({start:g} s)", cli.USAGE)
+    return start, end
 
 
 def still_name(seconds):
@@ -72,13 +95,15 @@ def cell_size(width, height):
     return CELL_WIDTH, -(-CELL_WIDTH * height // width) + sheet.STRIP
 
 
-def change_times(report):
+def change_times(report, window=None):
     """The first frame, then the `pts_time:` of every frame ffmpeg's `select='gt(scene,T)',metadata=print`
-    chose, from its stderr; a frame at 0 is not listed twice."""
-    times = [0.0]
+    chose, from its stderr; a frame at 0 is not listed twice. With a `window` (start, end), only the
+    times in it, and the first frame only when the window starts at 0 (PLAN.md item 28, 5)."""
+    start, end = window or (0.0, None)
+    times = [0.0] if start == 0 else []
     for m in re.finditer(r"\bpts_time:(\S+)", report):
         t = float(m.group(1))
-        if t not in times:
+        if t not in times and t >= start and (end is None or t < end):
             times.append(t)
     return times
 
@@ -96,6 +121,19 @@ def parse_grid(text):
     return columns, rows
 
 
+DEFAULT_DETECT_FPS = 10   # the scoring's rate, frames a second: a cut lasts longer than a tenth of a second
+
+
+def parse_detect_fps(text):
+    try:
+        value = float(text)
+    except ValueError:
+        value = 0.0
+    if not value > 0:
+        raise cli.Failure(f"--detect-fps should be a number above 0, not '{text}'", cli.USAGE)
+    return value
+
+
 def parse_threshold(text):
     try:
         value = float(text)
@@ -106,6 +144,57 @@ def parse_threshold(text):
     return value
 
 
+def read_listing(path):
+    """The (time, name) of every line of a stills.txt, as written by listing_line; refused in words
+    when it is missing or a line is not `TIME NAME` (PLAN.md item 28, 7)."""
+    import os
+    if not os.path.isfile(path):
+        raise cli.Failure(f"{path} is missing; --sheet alone draws the stills a folder's listing names")
+    entries = []
+    with open(path, encoding="utf-8") as f:
+        for n, raw in enumerate(f, 1):
+            parts = raw.split()
+            try:
+                if len(parts) != 2:
+                    raise ValueError
+                entries.append((float(parts[0]), parts[1]))
+            except ValueError:
+                raise cli.Failure(f"{path}: line {n} is not 'TIME NAME': {raw.rstrip()}") from None
+    return entries
+
+
+def stills_said(count):
+    return f"{count} still" if count == 1 else f"{count} stills"
+
+
+def sheet_of_folder(args):
+    """`stills VIDEO --sheet SHEET.png --out FOLDER`: the sheet of every still FOLDER/stills.txt lists,
+    in that order, read from the PNGs; nothing is read from the video (PLAN.md item 28, 7)."""
+    import os
+    video, folder = args.SCRIPT, args.out
+    grid = parse_grid(args.grid)
+    cli.refuse_existing(args.sheet)
+    if not os.path.isfile(video):
+        raise cli.Failure(f"{video} is missing")
+    listing = os.path.join(folder, "stills.txt")
+    entries = read_listing(listing)
+    if not entries:
+        raise cli.Failure(f"{listing} lists no stills; there is nothing to draw")
+    for _, name in entries:
+        if not os.path.isfile(os.path.join(folder, name)):
+            raise cli.Failure(f"{listing} names {name}, which is not in {folder}")
+    cli.need("PIL")
+    from PIL import Image
+    images = [Image.open(os.path.join(folder, name)).convert("RGB") for _, name in entries]
+    width, height = images[0].size
+    sheets = Sheets(args.sheet, grid, len(entries), width, height)
+    for i, ((t, _), img) in enumerate(zip(entries, images)):
+        sheets.add(i, img, label(t))
+    sheets.save()
+    print(f"Drew {stills_said(len(entries))} from {listing} on" + sheets.said()[len(" and"):])
+    return 0
+
+
 def run(args):
     """`stills VIDEO …`: the frames chosen, written singly into --out and listed in stills.txt."""
     import os
@@ -114,13 +203,27 @@ def run(args):
     video, folder = args.SCRIPT, args.out
     modes = [f for f, on in (("--at", args.at is not None), ("--every", args.every is not None),
                              ("--changes", args.changes)) if on]
+    windowed = args.start is not None or args.until is not None
+    if not modes and windowed:
+        raise cli.Failure("--from and --until need --every or --changes (--sheet alone draws a folder's listing)",
+                          cli.USAGE)
+    if not modes and args.sheet:
+        return sheet_of_folder(args)
     if not modes:
         raise cli.Failure("choose how to pick the frames of a video file: --at, --every or --changes", cli.USAGE)
     if len(modes) > 1:
         raise cli.Failure(f"give one of --at, --every and --changes, not {' and '.join(modes)}", cli.USAGE)
+    if windowed and args.at is not None:
+        raise cli.Failure("--from and --until go with --every or --changes, not --at", cli.USAGE)
+    for text, flag in ((args.start, "--from"), (args.until, "--until")):
+        if text is not None:
+            parse_time(text, flag)              # a bad time is refused before anything runs
     if args.threshold is not None and not args.changes:
         raise cli.Failure("--threshold goes with --changes", cli.USAGE)
     threshold = parse_threshold(args.threshold) if args.threshold is not None else DEFAULT_THRESHOLD
+    if args.detect_fps is not None and not args.changes:
+        raise cli.Failure("--detect-fps goes with --changes", cli.USAGE)
+    detect_fps = parse_detect_fps(args.detect_fps) if args.detect_fps is not None else DEFAULT_DETECT_FPS
     if args.every is not None and not args.every > 0:
         raise cli.Failure("--every must be more than 0", cli.USAGE)
     at = parse_at(args.at) if args.at is not None else None
@@ -133,12 +236,14 @@ def run(args):
     from PIL import Image
     info = ffmpeg.probe(video)
     length, width, height = info["duration"], info["width"], info["height"]
+    window = parse_window(args.start, args.until, length) if windowed else None
     listing = os.path.join(folder, "stills.txt")
-    cli.refuse_existing(listing)        # before the scan: nothing is read for a run that will be refused
+    if not window:
+        cli.refuse_existing(listing)    # before the scan: nothing is read for a run that will be refused
     if args.changes:
-        times = change_times(ffmpeg.scene_report(video, threshold))
+        times = change_times(ffmpeg.scene_report(video, threshold, detect_fps, window), window)
     elif args.every is not None:
-        times = every_times(args.every, length)
+        times = every_times(args.every, window[1] if window else length, window[0] if window else 0.0)
     else:
         times = at
     for t in times:
@@ -153,14 +258,14 @@ def run(args):
         data = ffmpeg.frame_at(video, t, width, height)
         img = Image.frombytes("RGB", (width, height), data)
         img.save(path)
+        with open(listing, "a", encoding="utf-8") as f:     # a line at a time: a run that dies leaves its listing
+            f.write(listing_line(t) + "\n")
         if sheets:
             sheets.add(i, img, label(t))
         print(f"{os.path.basename(path)} at {t:.3f} s")
-    with open(listing, "w", encoding="utf-8") as f:
-        f.write("".join(listing_line(t) + "\n" for t in times))
     if sheets:
         sheets.save()
-    print(f"Wrote {len(stills)} stills to {folder}" + (sheets.said() if sheets else ""))
+    print(f"Wrote {stills_said(len(stills))} to {folder}" + (sheets.said() if sheets else ""))
     return 0
 
 
