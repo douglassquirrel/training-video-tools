@@ -1449,6 +1449,67 @@ failure on a line (exit 4, what stays). README: the form under `narrate`, the er
 for users"; Tier 3 on a scratch copy of one of their real tables (read-only; counts only in the
 diary); the reply for Squirrel's OK.
 
+## 27. `setup-linux`: the device shell's preparation in one command (audio-description-tools' request 4 of 17 October 2026, 17:15, by mail, id `2026-10-17-1715-audio-description-tools-request-4-a-setup-linux-command-for-the`; Squirrel, 17 October 2026, 18:30: "go ahead", after the proposal)
+
+For the Linux device shell, where every session starts by hand with the venv, the packages, a
+config naming the model and three environment lines (README, "Running from the Linux device
+shell"). audio-description-tools' `setup-device` will run it and put its three lines into the
+`env.sh` it writes.
+
+```
+setup-linux --venv DIR --model DIR --conf FILE [--dry-run]
+```
+
+1. **Standard library only**, on whatever `python3` runs it: the wrapper cannot restart itself
+   under the venv it is about to make, so it does not try (no `VIDEO_TOOLS_PYTHON` bootstrap).
+   All three flags are required (exit 2 without them, from argparse).
+2. **The checkout rule first.** A `--venv` inside this repository (the folder holding the
+   command, or anything under it) is refused in words before anything runs, exit 2: the README
+   says never to build the Linux venv inside the repository, since it would shadow the Mac's.
+3. **The venv.** When `DIR/bin/python` is missing, `python3 -m venv --system-site-packages DIR`
+   (the `python3` on PATH, run as an argument list, never a shell line; its folder is made as
+   `venv` makes it). Then `DIR/bin/python -c "import cairo, numpy, soundfile, kokoro_onnx, PIL,
+   fontTools"` says whether the packages are there; when that fails, `DIR/bin/python -m pip
+   install pycairo numpy soundfile kokoro-onnx==0.6.1 Pillow fonttools`, the one step that uses
+   the network (a set-up step, like the model download; never run by a video command). A second
+   run finds the venv and the packages and runs neither. A `venv` or `pip` run that exits
+   non-zero is reported in words with the program's last lines, exit 3; `python3` not on PATH is
+   reported in words, exit 3.
+4. **The model.** `--model DIR` must hold `model.onnx` and `voices.npz`. Each missing file is
+   named on stderr with a pointer to the README's "One-time set-up of the speech model", exit 3
+   at the end; the venv step runs first, so one run reports everything it can.
+5. **The config.** `--conf FILE` is written with the one line `SPEECH_MODEL_DIR=<the model
+   folder, as given>` when the file is missing, or its `SPEECH_MODEL_DIR` is absent or says
+   something else; a file whose `SPEECH_MODEL_DIR` already matches is left untouched. On a
+   rewrite, every other line is kept as it was and only the `SPEECH_MODEL_DIR` line is replaced
+   (or added at the end). Nothing else is written anywhere; the home folder and this checkout are
+   touched only when the flags name them (the checkout is refused for `--venv`; `--conf` and
+   `--model` are the caller's choice).
+6. **Printed** on stdout, on success, exactly three lines and nothing else:
+   `export VIDEO_TOOLS_PYTHON=DIR/bin/python`, `export VIDEO_TOOLS_CONF=FILE`,
+   `export PYTHONDONTWRITEBYTECODE=1`, with `DIR` and `FILE` as given (made absolute). Progress
+   (the venv made, the packages installed, the config written) goes to stderr, so stdout is the
+   lines alone and `setup-device` can take them as they are.
+7. **`--dry-run`.** The same checks, then on stdout a `Would make the venv at DIR`, `Would install
+   pycairo numpy … into DIR`, `Would write FILE with SPEECH_MODEL_DIR=…` line for each thing a real
+   run would do (none when nothing is needed) and the three lines; nothing made, written or run
+   but the import check (when the venv exists).
+8. **Exit codes.** 0 when the venv, the packages, the model files and the config are all in place
+   at the end; 2 for a bad argument or the checkout refusal; 3 when something is missing or a
+   step failed.
+
+Tests, test-first, Tier 2 (`tests/tier2/test_setup_linux.py`) against a stub `python3` on PATH
+that records every argument list it gets and makes what a real one would (`-m venv` makes
+`DIR/bin/python` as a copy of itself; `-c "import …"` succeeds once `DIR/installed` exists, which
+`-m pip install` creates; either fails on demand): the venv made once and reused; the packages
+installed once, nothing run on a second pass; a model folder with both files, one, none; the config
+written, left alone when it matches, rewritten when it differs with its other lines kept;
+`--dry-run` leaving the folder and the config untouched and saying what it would do; `--venv`
+inside the checkout refused; `venv` failing, `pip` failing, no `python3` on PATH; `--help`; the
+three lines exact; non-ASCII and spaces in the paths. README: a section under "Running from the
+Linux device shell", the errors table, "Notes for users". Tier 3: a real run in the device shell
+(counts only), later. The reply to audio-description-tools goes on Squirrel's OK ("Settled" 47).
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1872,3 +1933,6 @@ None.
     2026, 14:05, after the samples in `_to_delete/speed-samples/`: "2x speed is too fast, 1.5 is
     probably good. Make that the default … af_heart is fine, also make it default"); both are
     said in the reply to audio-description-tools.
+51. audio-description-tools' request 4 is item 27, built as proposed: a `setup-linux` command on
+    the system `python3`, writing only `SPEECH_MODEL_DIR` into the config and printing the three
+    environment lines alone on stdout (Squirrel, 17 October 2026, 18:30: "go ahead").

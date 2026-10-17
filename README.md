@@ -43,20 +43,27 @@ The commands (`./check-script`, `./narrate`, …) find that `.venv` themselves, 
 ### Running from the Linux device shell
 
 Where the checkout is shared with a Linux machine (Claude's device shell sees this folder over a
-mount), the repository's `.venv` is the Mac's and cannot run there. Make a venv *outside* the
-repository, once, and name its Python in `VIDEO_TOOLS_PYTHON`; every command restarts itself
-under it:
+mount), the repository's `.venv` is the Mac's and cannot run there. A venv *outside* the
+repository, with the packages, a config naming the model and three environment lines are what
+every session there needs; `setup-linux` does all of it in one command and prints the lines:
 
 ```bash
-python3 -m venv --system-site-packages /tmp/work-$(id -u)/venv
-/tmp/work-$(id -u)/venv/bin/pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools
-export VIDEO_TOOLS_PYTHON=/tmp/work-$(id -u)/venv/bin/python
+eval "$(./setup-linux --venv /tmp/work-$(id -u)/venv --model $HOME/mnt/kokoro --conf /tmp/work-$(id -u)/video-tools.conf)"
 ./check-script videos/make-bed/script.md
 ```
 
-Never build that venv inside the repository from Linux (it would shadow the Mac's). With
-`VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a path that does not exist is
-refused with exit 3.
+It runs on the system `python3` (nothing installed), makes the venv when it is missing
+(`python3 -m venv --system-site-packages DIR`), installs the packages when the venv cannot import
+them (`pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools`, the one step that
+uses the network), checks that the model folder holds `model.onnx` and `voices.npz`, writes
+`SPEECH_MODEL_DIR` into the config and prints `export VIDEO_TOOLS_PYTHON=…`, `export
+VIDEO_TOOLS_CONF=…` and `export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in
+place and prints the lines alone. By hand, it is the same four steps. Every command restarts
+itself under the Python `VIDEO_TOOLS_PYTHON` names.
+
+Never build that venv inside the repository from Linux (it would shadow the Mac's);
+`setup-linux` refuses to. With `VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a
+path that does not exist is refused with exit 3.
 
 ### One-time set-up of the speech model
 
@@ -898,6 +905,48 @@ Wrote preview.png
 A ratio under 4.5 is marked `large text only (3-4.5)` (fine for text of about 24 px and up) and
 one under 3 `fails (under 3)`.
 
+### `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]`
+
+The Linux device shell's preparation in one command ("Running from the Linux device shell"
+above): the venv made or reused, the packages installed when missing, the model folder checked,
+the config written, the three environment lines printed on stdout and nothing else there, so
+`eval "$(./setup-linux …)"` or a script that pastes the lines into an `env.sh` can take them as
+they are. Progress (the venv made, the packages installed, the config written) goes to stderr,
+and nothing at all is said when everything was already in place. Standard library only, on the
+`python3` that runs it (3.9 or later): this is the command that makes the venv the others run
+under, so it cannot use it.
+
+- `--venv DIR`: the venv, outside this checkout (inside it is refused, exit 2). Missing, it is
+  made with the `python3` on PATH; present, it is reused. Then `DIR/bin/python` is asked to
+  import the six packages, and only when that fails are they installed.
+- `--model DIR`: must hold `model.onnx` and `voices.npz` ("One-time set-up of the speech model").
+  Each missing file is named, exit 3; the venv and the config are still done first, so one run
+  reports everything it can.
+- `--conf FILE`: written with `SPEECH_MODEL_DIR=<the model folder>` when the file is missing or
+  its `SPEECH_MODEL_DIR` is absent or different; every other line is kept, and a file that already
+  says it is not touched. The folder is made if needed. A file that cannot be read as a config
+  (a line that is not `KEY=value`, an unknown setting) is refused in words, exit 3, and left alone.
+- `--dry-run`: the same checks, then a `Would make the venv at …`, `Would install … into …`, `Would
+  write … with SPEECH_MODEL_DIR=…` line for each thing a real run would do, and the three lines;
+  nothing is run, made or written but the import check (when the venv exists).
+- Paths with spaces or other characters a shell would split are quoted in the lines.
+
+```
+$ ./setup-linux --venv /tmp/work/venv --model ~/models/kokoro --conf /tmp/work/video-tools.conf --dry-run
+Would make the venv at /tmp/work/venv
+Would install pycairo numpy soundfile kokoro-onnx==0.6.1 Pillow fonttools into /tmp/work/venv
+Would write /tmp/work/video-tools.conf with SPEECH_MODEL_DIR=/Users/me/models/kokoro
+export VIDEO_TOOLS_PYTHON=/tmp/work/venv/bin/python
+export VIDEO_TOOLS_CONF=/tmp/work/video-tools.conf
+export PYTHONDONTWRITEBYTECODE=1
+```
+
+(The paths above are shortened; a real run prints them as given, made absolute.) With the model
+folder missing the same run prints, on stderr, `setup-linux: the model folder … does not exist;
+download the model into it as the README's "One-time set-up of the speech model" says` and exits
+3. A `venv` or `pip` run that fails is reported with its last lines and exit 3; the venv is kept
+after a failed install, so the next run installs again.
+
 ### Configuration: `~/.video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
@@ -925,8 +974,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write). Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write); for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -1018,6 +1067,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **17 October 2026, evening.** `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]` does the Linux device shell's preparation in one command: the venv, the packages, the model check, the config, and the three `export` lines on stdout for `eval` or an `env.sh`. The by-hand steps still work. For the audio-description project's `setup-device`.
 - **17 October 2026, later still.** `narrate --lines TABLE.md --out FOLDER [--speed S]` (default 1.5, af_heart) speaks each line of a description table to its own clip, with `timing.json` and a warning where a line runs into the next. `narrate`'s script form is unchanged; its positional is now optional only because of `--lines`. For the audio-description project.
 - **17 October 2026, later.** `stills --grid 0x3` (or any grid with no column or row) is refused in words, exit 2, in both forms; it was a traceback on a video file.
 - **17 October 2026.** `stills` takes a video file as well as a script: `stills VIDEO (--at T,T… | --every N | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]` writes one PNG a frame at the video's own size and `stills.txt`, and with `--sheet` a labelled contact sheet whose cells keep the video's proportions. The script form is unchanged, but its `--help` now shows both (`SCRIPT|VIDEO`, `--out SHEET.png|FOLDER`). For the audio-description project.

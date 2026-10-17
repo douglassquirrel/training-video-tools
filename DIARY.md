@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 17:05, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 19:10, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -19,26 +19,39 @@ columns, lines, tabs left to the element (23, video-elements' reply); **`stills`
 with cells in the video's proportions (24, audio-description-tools' request 1, by mail); a grid of
 0 or fewer columns or rows refused in words in both forms (25, their request 2); `narrate --lines
 TABLE.md --out FOLDER`, each line of a description table to its own clip at speed 1.5 in af_heart, with
-`timing.json` and an overrun warning (26, their request 3)**. A new
+`timing.json` and an overrun warning (26, their request 3); **`setup-linux --venv DIR --model DIR
+--conf FILE [--dry-run]`, the device shell's venv, packages, model check, config and three `export`
+lines in one standard-library command (27, their request 4)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
-PLAN.md (items 15 to 26 in full) and this section, then `inbox/`.
+PLAN.md (items 15 to 27 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: two open** (see
+"Waiting on Squirrel"). Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
-the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40. The speed samples
+the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; **request 4 (item 27) is in `open/`, built,
+its reply not yet written; request 5 (`stills --changes` too slow for the device shell's
+three-minute call: decode fewer frames for the detection and/or a `--from`/`--until` window) is in
+`open/`, reported, not planned**. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
 holds the duty.
 
-Green: 645 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 665 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** nothing. One thing he was told and has not answered either
+**Waiting on Squirrel:** (1) the OK to reply to audio-description-tools' request 4 (item 27 is
+built; the reply would name the commit, `setup-linux --venv /tmp/work-$(id -u)/venv --model
+$HOME/mnt/kokoro --conf /tmp/work-$(id -u)/video-tools.conf`, the two departures from their ask:
+only `SPEECH_MODEL_DIR` in the config, progress on stderr so stdout is the lines alone); (2) a
+decision on request 5 (a proposal is owed: the detection at a reduced rate through ffmpeg's
+`fps=` before `select='gt(scene,…)'`, and a time window with slices appending to `stills.txt`).
+The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
+real model folder is in the README). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -57,7 +70,9 @@ that turns a move into scene seconds, used by the check and by `perform`; with n
 panel's times are within the mistake cue and a cue-less scene's within the scene. A parsed
 move carries `end_cue` and `linear` only when it has them.
 
-The stub speech model serves `narrate --lines` as it serves the script form (its clip length is 0.5 + 0.25 a
+The stub `python3` for `setup-linux` is `tests/stubs/pystub.py` (records every call; makes a fake
+venv on `-m venv`; the import check passes once `-m pip install` has written `VENV/installed`;
+`PYSTUB_FAIL=venv|pip`). The stub speech model serves `narrate --lines` as it serves the script form (its clip length is 0.5 + 0.25 a
 word, plus the trim). The stub ffmpeg also serves the scene scan of item 24 (`scenes=` in a fake media file) and ffprobe
 the fake's `width=`/`height=`. The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
@@ -3907,3 +3922,164 @@ for a `.DS_Store`. No behaviour changed, so no test.
 **State.** Items 1 to 26 built, 645 tests, 98%, lint clean. The README's `narrate --lines` example
 still shows the estimate running long for short lines (the other tidy the handover named), not
 raised with Squirrel yet.
+
+### 17 October 2026 — Request 4 arrived by mail; proposed, OK'd, item 27
+
+**Decision.** `lobster-mail wait` returned at 18:15 with audio-description-tools' request 4 (id
+`2026-10-17-1715-audio-description-tools-request-4-a-setup-linux-command-for-the`, sent 17:15):
+a `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]` command for the device shell, the
+venv, the packages, the model check, the config and the three environment lines, to be called by
+their `setup-device`. Claimed with `ack`, reported with a proposal (two departures from the ask:
+only `SPEECH_MODEL_DIR` written into the config; the wrapper on the system `python3` with no venv
+bootstrap, since it makes that venv). Squirrel (18:30): "go ahead". Written as PLAN.md item 27 and
+"Settled" 51. While it was being built the watch returned again with **request 5** (id
+`2026-10-17-1726-audio-description-tools-request-5-stills-changes-fast-enough-for`, sent 17:26):
+`stills --changes` on a 35-minute 60 fps video takes longer than the device shell's three-minute
+call (4 s of wall time per 30 s of video); they ask for the scene detection to decode fewer frames
+and/or a `--from T --until T` window so a long video goes in slices into one `--out` folder.
+Claimed with `ack` (in `open/`), reported, nothing done on it: it waits for Squirrel.
+
+### 17 October 2026 — setup-linux: help and usage
+
+**Test.** `test_help_and_usage`: `--help` exits 0 with `usage: setup-linux [-h] --venv DIR --model
+DIR --conf FILE [--dry-run]`; no arguments exits 2 naming the three required flags.
+
+**Red.** No command yet, so Python cannot open it:
+```
+>       assert code == 0 and " ".join(out.split()).startswith(
+E       assert (2 == 0)
+```
+**Green.** `1 passed in 0.22s`, with the wrapper `setup-linux` (standard library, no bootstrap) and
+`videotools/setup_linux.py` holding only the parser.
+
+### 17 October 2026 — setup-linux: a venv inside the checkout refused
+
+**Test.** `test_a_venv_inside_the_checkout_is_refused_in_words_before_anything_runs`: the checkout
+itself, a folder in it and a deeper one, each exit 2 with the one-line message, nothing made.
+
+**Red.** `AssertionError: assert (0, '') == (2, '')` (no refusal). **Green.** `2 passed in 0.60s`.
+
+### 17 October 2026 — setup-linux: the venv made, the packages installed, the three lines
+
+**Test.** `test_makes_the_venv_installs_the_packages_and_prints_the_three_lines`, against the new
+stub `tests/stubs/pystub.py` (a `python3` on PATH that records every call, makes a fake venv on
+`-m venv`, answers `-c "import …"` from a marker that `-m pip install` writes): the three calls
+exactly, stdout the three `export` lines alone, the three progress lines on stderr, exit 0.
+
+**Red.** `AssertionError: assert [] == [['/private/v...'numpy', ...]]` (nothing run).
+**Green.** `3 passed in 1.58s`.
+
+### 17 October 2026 — setup-linux: a second run runs only the import check
+
+**Test.** `test_a_second_run_finds_the_venv_the_packages_and_the_config_and_runs_only_the_import_check`:
+after one run, a second adds one call (the import check), prints the lines, says nothing on
+stderr and leaves the config's content and mtime alone.
+
+**Red.** `At index 2 diff: 'setup-linux: wrote …/video-tools.conf\n' != ''` (the config was rewritten
+every run). **Green.** `4 passed in 3.58s`: the config is read through `config.read` and left alone
+when its `SPEECH_MODEL_DIR` is the model folder; on a rewrite only that line is replaced, or added
+at the end.
+
+### 17 October 2026 — setup-linux: the config's edge cases
+
+**Tests.** `test_a_config_naming_another_model_is_rewritten_with_its_other_lines_kept` (a comment,
+`VOICE`, a quoted old value with a trailing comment, `SPEED`: only the model line changes),
+`test_a_config_without_the_setting_gains_it_at_the_end` (no final newline),
+`test_the_config_folder_is_made_when_it_is_missing`,
+`test_a_config_that_cannot_be_read_is_refused_in_words_and_left_alone` (exit 3, the reader's own
+line-numbered problem under the message).
+
+**Red.** The folder and the unreadable config: `assert (1 == 0)` and `assert (1, '') == (3, '')`, a
+traceback each (`FileNotFoundError`, `ConfigError`). **The other two passed at once**: the rewrite
+came in with the previous cycle. Proven by breaking the rewrite into a plain overwrite on purpose:
+```
+E       AssertionError: assert 'SPEECH_MODEL...r_m0/kokoro\n' == '# this machi...\nSPEED=1.0\n'
+E         - # this machine
+E         - VOICE=bm_george
+E           SPEECH_MODEL_DIR=/private/var/…/kokoro
+E         - SPEED=1.0
+E       AssertionError: assert 'SPEECH_MODEL...ett0/kokoro\n' == 'VOICE=bm_geo...ett0/kokoro\n'
+```
+then restored: `2 passed`. **Green.** `8 passed in 6.42s` (the folder made with `os.makedirs`, a
+`ConfigError` reported as a `Failure`).
+
+### 17 October 2026 — setup-linux: the model check
+
+**Tests.** `test_a_model_folder_without_the_files_is_reported_file_by_file_after_the_venv_is_made_exit_3`
+(both files named, the venv, packages and config done first, stdout empty),
+`test_one_missing_model_file_is_the_one_named`, `test_a_model_folder_that_does_not_exist_is_one_message`.
+
+**Red.** All three `AssertionError: assert (0, 'export V...BYTECODE=1\n') == (3, '')` (the lines
+printed with no model). **Green.** `11 passed in 9.10s`.
+
+### 17 October 2026 — setup-linux: --dry-run
+
+**Tests.** `test_dry_run_with_nothing_in_place_says_what_it_would_do_and_runs_makes_and_writes_nothing`,
+`test_dry_run_with_everything_in_place_runs_only_the_import_check_and_prints_the_lines`,
+`test_dry_run_with_the_venv_but_not_the_packages_would_install_and_installs_nothing`,
+`test_dry_run_with_the_model_missing_reports_it_after_what_it_would_do_exit_3`.
+
+**Red.** Three failed, the flag being ignored: `'setup-linux: made the venv at …' != ''`,
+`'setup-linux: installed … into …' != ''`, `assert '' == 'Would make t..._mi0/kokoro\n'`. The
+everything-in-place one passed at once (a dry run there does what a real run does); proven after
+the implementation by making a dry run skip the import check on purpose:
+```
+E       AssertionError: assert (0, 'Would in...CODE=1\n', '') == (0, 'export V...CODE=1\n', '')
+E         At index 1 diff: 'Would install pycairo numpy … into …/work/venv\nexport VIDEO_TOOLS_PYTHON=…
+```
+then restored: `1 passed`.
+
+**Decision / surprise.** The first implementation skipped the import check whenever the venv had
+just been made, in real runs too; the happy-path and model tests caught it at once (`At index 1
+diff: [… '-m', 'pip', 'install', …] != [… '-c', 'import cairo, …']`, `assert (2 == 3)`). With
+`--system-site-packages` a fresh venv may already import everything, so the check stays; it is
+skipped only when a dry run has no venv to ask. **Green.** `15 passed in 11.70s`.
+
+### 17 October 2026 — setup-linux: failures, no python3, quoting
+
+**Tests.** `test_a_failing_venv_is_reported_in_words_with_its_last_lines_exit_3_and_nothing_else_runs`,
+`test_a_failing_pip_is_reported_in_words_with_its_last_lines_exit_3_and_the_venv_kept`,
+`test_no_python3_on_path_is_reported_in_words_exit_3_and_nothing_runs`,
+`test_with_python3_on_path_but_the_venv_in_place_no_python3_is_needed`,
+`test_paths_with_spaces_and_non_ascii_are_quoted_for_the_shell` (`wörk space`, `vidéo tools.conf`:
+the two paths single-quoted in the lines, made and written as given).
+
+**Red.** The failures: `assert (1, '') == (3, '')` (a traceback after the ignored `venv` failure),
+`assert (0, 'export V...') == (3, '')` (the `pip` failure ignored), `assert (1, '') == (3, '')`
+(`None` handed to subprocess). The other two passed at once (`shlex.quote` and the early return
+came in with the first cycle). Proven by breaking each on purpose: without quoting,
+```
+E         - export VIDEO_TOOLS_PYTHON='/private/var/…/wörk space/venv/bin/python'
+```
+and with `python3` looked for before the venv is checked,
+```
+E       AssertionError: assert (3, '', 'setu...it on PATH\n') == (0, 'export V...CODE=1\n', '')
+```
+then restored: `2 passed`. **Green.** `20 passed in 15.18s`: `run_or_fail` reports a non-zero step
+with the program's last five lines and advice; `shutil.which("python3")` is asked only when the
+venv must be made.
+
+### 17 October 2026 — setup-linux: README, lint, the whole suite
+
+**Decision.** README: "Running from the Linux device shell" now leads with `eval "$(./setup-linux
+…)"` and says what it does; a usage section before "Configuration" with a dry run's real output
+(paths shortened); codes 2 and 3 in the errors table; a "Notes for users" line. `tests/stubs/README.md`
+describes `pystub.py`. Real runs on this Mac, read-only: `--help`; `--dry-run` with the scratchpad
+venv and config and the real `~/models/kokoro` printed the three `Would` lines and the three
+`export` lines, exit 0, and made nothing; the same with a missing model folder exit 3; `--venv
+./linux-venv` refused, exit 2.
+
+**Lint**, its own pass: three `UP032` (`.format` calls) in `tests/stubs/pystub.py`, fixed with
+`ruff --fix`; `All checks passed!`; the 20 `setup-linux` tests run again after it: `20 passed`.
+
+**Green.**
+```
+videotools/setup_linux.py        115      0     38      0   100%
+TOTAL                           4588     44   1828     52    99%
+======================= 665 passed in 192.04s (0:03:12) ========================
+```
+
+**State.** Items 1 to 27 built, 665 tests, 99%, lint clean. The reply to request 4 and a
+proposal for request 5 wait on Squirrel. The Tier 3 run of `setup-linux` in the real device shell
+is not done.
+
