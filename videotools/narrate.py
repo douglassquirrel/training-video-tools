@@ -10,11 +10,13 @@ the config), trims the silence, and writes `work/narration/<scene>_<NN>.wav` and
 import argparse
 import json
 import os
+import sys
 
 from videotools import cli, config, phonemes, script
 
 PROG = "narrate"
 WORDS_PER_SECOND = 2.6
+LINES_SPEED = 1.5       # --lines' default: chosen by ear from the samples (Squirrel, 17 October 2026; Settled 50)
 THRESHOLD = 0.01        # a sample above this is sound
 BEFORE, AFTER = 0.03, 0.08  # seconds kept before the first and after the last sound
 
@@ -34,10 +36,16 @@ def parser():
                                 "local speech model, one clip per cue, and write the clip lengths "
                                 "to timing.json. Flags win over the script; the script over "
                                 "~/.video-tools.conf.")
-    p.add_argument("SCRIPT", help="the video's script.md")
+    p.add_argument("SCRIPT", nargs="?", help="the video's script.md (not with --lines)")
+    p.add_argument("--lines", metavar="TABLE.md",
+                   help="instead of a script: a Markdown table of description lines ('#', 'Start (s)', 'Line'), "
+                        "each spoken to its own clip in --out (PLAN.md item 26)")
+    p.add_argument("--out", metavar="FOLDER", help="with --lines: the folder for the clips and timing.json")
     p.add_argument("--scenes", metavar="KEY,...", help="only these scenes (keys as in the script)")
-    p.add_argument("--voice", help="the voice, e.g. af_heart (default: the script's)")
-    p.add_argument("--speed", type=float, help="the speed, e.g. 0.98 (default: the script's)")
+    p.add_argument("--voice", help="the voice, e.g. af_heart (default: the script's; with --lines, VOICE in the "
+                                   "config, else af_heart)")
+    p.add_argument("--speed", type=float, help="the speed, e.g. 0.98 (default: the script's; with --lines 1.5, "
+                                               "within the model's 0.5 to 2.0)")
     p.add_argument("--replace", action="store_true",
                    help="write over existing clips and timing.json, listing them first")
     p.add_argument("--phonemes", action="store_true",
@@ -91,6 +99,17 @@ def spoken_phonemes(cue, phonemize):
 
 
 def _run(args):
+    if args.lines:
+        for given, flag in ((args.SCRIPT, "SCRIPT goes with a script's narration"),
+                            (args.scenes, "--scenes goes with a script"),
+                            (args.phonemes, "--phonemes goes with a script")):
+            if given:
+                raise cli.Failure(f"{flag}, not --lines", cli.USAGE)
+        return _run_lines(args)
+    if args.out is not None:
+        raise cli.Failure("--out goes with --lines", cli.USAGE)
+    if args.SCRIPT is None:
+        raise cli.Failure("give the video's script.md, or --lines TABLE.md --out FOLDER", cli.USAGE)
     if args.phonemes and not args.dry_run:
         raise cli.Failure("--phonemes goes with --dry-run (it only shows what the voice would be given)", cli.USAGE)
     data = script.read(args.SCRIPT)
@@ -163,4 +182,68 @@ def _run(args):
         with open(timing_path, "w", encoding="utf-8") as f:
             json.dump(timing, f, indent=1)
     print(f"Wrote {written} clips and {timing_path}")
+    return cli.OK
+
+
+
+def _run_lines(args):
+    """`narrate --lines TABLE.md --out FOLDER --speed S`: each line of the table to its own clip."""
+    from videotools import lines as lines_
+    if args.out is None:
+        raise cli.Failure("--lines needs --out FOLDER for the clips", cli.USAGE)
+    speed = lines_.check_speed(args.speed if args.speed is not None else LINES_SPEED)
+    conf = config.read()
+    voice = args.voice or conf.get("VOICE", "") or "af_heart"
+    model, voices = _model_dir(conf)
+    rows = lines_.read(args.lines)
+    folder, timing_path = args.out, os.path.join(args.out, "timing.json")
+    largest = max(line["n"] for line in rows)
+    names = [lines_.clip_name(line["n"], largest) for line in rows]
+    if args.dry_run:
+        print(f"narrate (dry run): {args.lines}")
+        print(f"voice {voice}, speed {speed}, model kokoro-82m from {os.path.dirname(model)}")
+        total = 0.0
+        for line, name in zip(rows, names):
+            seconds = lines_.estimate(line["text"], speed)
+            total += seconds
+            print(f"{name}  at {line['start']:.2f} s  ~{seconds:.1f} s  {line['text']}")
+        print(f"{len(rows)} lines, about {round(total)} s of speech; nothing written (dry run).")
+        return cli.OK
+    outputs = [os.path.join(folder, name) for name in names] + [timing_path]
+    existing = [p for p in outputs if os.path.lexists(p)]
+    if existing and not args.replace:
+        raise cli.Failure("these would be written over; delete them, or run with --replace:\n"
+                          + "\n".join("  " + p for p in existing))
+    cli.need("numpy")
+    cli.need("soundfile")
+    speech = _load_model(model, voices)
+    available = sorted(speech.get_voices())
+    if voice not in available:
+        raise cli.Failure("the model has no voice '{}' (it has {})".format(voice, ", ".join(available)))
+    if existing:
+        print("Replacing:\n" + "\n".join("  " + p for p in existing))
+    import numpy as np
+    import soundfile
+    timing = {"voice": voice, "speed": speed, "model": "kokoro-82m", "sample_rate": None, "lines": []}
+    os.makedirs(folder, exist_ok=True)
+    spoken = []
+    for i, (line, name) in enumerate(zip(rows, names)):
+        try:
+            samples, rate = speech.create(line["text"], voice=voice, speed=speed, lang="en-us")
+        except Exception as e:  # the model's own errors are not ours to classify
+            raise cli.Failure(f"the speech model failed on line {line['n']} ({e}); nothing written for it",
+                              cli.EXTERNAL) from e
+        samples = trim(np.asarray(samples, dtype=np.float32), rate)
+        soundfile.write(os.path.join(folder, name), samples, rate)
+        length = round(len(samples) / rate, 3)
+        timing["sample_rate"] = rate
+        timing["lines"].append({"n": line["n"], "start": line["start"], "text": line["text"], "length": length})
+        with open(timing_path, "w", encoding="utf-8") as f:
+            json.dump(timing, f, indent=1, ensure_ascii=False)
+        print(f"{name}  {length:.3f} s", flush=True)
+        spoken.append((line, length))
+        warning = lines_.overrun(spoken + [(rows[i + 1], 0.0)] if i + 1 < len(rows) else spoken, i)
+        if warning:
+            print(f"{PROG}: {warning}", file=sys.stderr, flush=True)
+    print(f"Wrote {len(rows)} clips and {timing_path}")
     return cli.OK

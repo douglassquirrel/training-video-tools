@@ -1386,6 +1386,69 @@ Tests: Tier 1, the six cases on `parse_grid`; Tier 2, a video case in the "refus
 runs" table and the script form's `--cue-changes --grid 0x3`. Then the README's errors row, a reply
 for Squirrel's OK ("Settled" 47).
 
+## 26. Speak each line of a description table to its own clip (audio-description-tools' request 3 of 17 October 2026, 11:04, by mail; Squirrel, 17 October 2026, 13:30: "Go ahead with request 3 as proposed")
+
+For `audio-description`, which writes for each short video a Markdown table of timed description
+lines to be spoken very fast and mixed into the video's sound (their job). `narrate` gains a second
+input form; the script form is untouched.
+
+```
+narrate --lines SCRIPT.md --out FOLDER [--speed S] [--voice V] [--replace] [--dry-run]
+```
+
+1. **The table.** `SCRIPT.md` holds one Markdown table (the first whose header row has the three
+   columns; a file with none is refused). Columns are found by header, in any order, trimmed:
+   `#` (a whole number, 1 or more, each once), `Start (s)` (seconds, a number, 0 or more) and
+   `Line` (the text to speak, as written: quotes, apostrophes, colons, semicolons, non-ASCII, all
+   data). Other columns and everything outside the table are ignored. Refused in words (exit 3):
+   no table with those three headers (naming the missing ones), a `#` that is not a whole number,
+   a repeated `#`, a start that is not a number or is negative, an empty `Line`, a row with fewer
+   cells than headers. Lines are spoken in table order; the starts need not be sorted (the
+   overrun warning compares each line with the next by start).
+2. **The voice and speed.** `--speed` defaults to 1.5 and `--voice` to `VOICE` in the config, else
+   `af_heart` (Squirrel, 17 October 2026, 14:05, after listening to the samples: "2x speed is too
+   fast, 1.5 is probably good … af_heart is fine"; "Settled" 50; before that `--speed` was required); a speed outside 0.5 to
+   2.0 is refused in words (exit 2) before the model is loaded ("Things checked"). The same model
+   folder (`SPEECH_MODEL_DIR`), the same checks (no model, unknown voice), language `en-us`.
+3. **What is written**, into `--out FOLDER` (made if missing): one clip per line, `01.wav`,
+   `02.wav`, … (two digits, more when the numbers need them), trimmed as `narrate` trims (30 ms
+   before the first sound, 80 ms after the last), at the model's rate; and `timing.json`:
+   `{"voice", "speed", "model": "kokoro-82m", "sample_rate", "lines": [{"n", "start", "text",
+   "length"}, …]}`, rewritten after each clip so an interrupted run keeps what it did. Nothing is
+   written over an existing clip or `timing.json` without `--replace`, which lists them first
+   (the refusal lists them, exit 3), as the script form does.
+4. **What is printed.** One line per clip, `01.wav  2.345 s`; after each, where that line's start
+   plus its real length passes the next line's start (next by table order), a warning on stderr:
+   `narrate: line 3 (at 12.40 s, 3.21 s long) runs 0.61 s into line 4 (at 15.00 s)`; last,
+   `Wrote N clips and FOLDER/timing.json`. Exit 0 whether or not there were warnings (they are
+   for the writer to act on).
+5. **`--dry-run`.** Prints the voice, speed and model, then each line, `01.wav  ~1.2 s  <text>`,
+   the estimate at `WORDS_PER_SECOND × speed` words a second (2.6 at speed 1), and the total;
+   writes nothing, needs no model file (as the script form's dry run).
+6. **Both forms kept apart.** `--lines` with a `SCRIPT` positional, `--scenes` or `--phonemes` is
+   refused (exit 2); `--out` without `--lines` likewise. Without `--lines` the positional is
+   required as before.
+7. **Both machines**, as `narrate`: the Mac's `.venv`, the device shell through `VIDEO_TOOLS_PYTHON`.
+
+**To settle with Squirrel, through the reply** (what the request asks us to find out): the speed
+range (kokoro-onnx 0.6.1 accepts 0.5 to 2.0, "Things checked"; the samples say what is clear), which voice
+(the model's list, in the reply), and that the model is installed on the Mac (it is). Samples of
+one invented line at speeds 1.0, 1.5 and 2.0 (the maximum) in `af_heart`, and each voice at 2.0,
+are in `_to_delete/speed-samples/` in this checkout (ignored by git; Squirrel, 13:30), with a
+`README.txt` naming the line and each clip's length and words a second. Heard, and settled: 1.5 and
+`af_heart` ("Settled" 50).
+
+Tests, test-first: Tier 1 for the table reader (`videotools/lines.py`: headers in any order, other
+columns ignored, each refusal, Unicode, quotes and a `|` escaped as `\|` in a cell), the clip
+name, the overrun arithmetic and the estimate; Tier 2 for the command against the stub speech
+model: a three-line invented table gives `01.wav` to `03.wav` and `timing.json` with the starts as
+given; the text handed to the model exactly as written; an existing clip refused and `--replace`
+writing over it, listed first; `--dry-run` writing nothing; the overrun warning; the forms kept
+apart; a missing `Line` column, a bad start, a repeated number refused in words; the model's
+failure on a line (exit 4, what stays). README: the form under `narrate`, the errors table, "Notes
+for users"; Tier 3 on a scratch copy of one of their real tables (read-only; counts only in the
+diary); the reply for Squirrel's OK.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1474,6 +1537,18 @@ package imported from there, never installed here) and, through it, `rsvg-conver
   `metadata=print` gives the same times in a longer line (`n: 0 pts: 25600 pts_time:2 …`) plus a
   `color_range:` line per frame; `metadata=print` is used. A cut between two flat colours scores
   0.4, so the default threshold of 0.3 catches it.
+- **Their description tables (17 October 2026, read-only).** The two real scripts in
+  `~/projects/non-code/audio-description/videos/*/script.md` each hold one table whose header row
+  is `| # | Start (s) | Words | Est. end (s) | <a fifth column that differs> | Checked against | Line |`,
+  a `|---|` separator row, then 12 and 14 data rows; `#` from 1, `Start (s)` to two decimals,
+  `Line` last, prose above the table. Nothing of their content is in a fixture.
+- **kokoro-onnx 0.6.1's speed (17 October 2026).** `Kokoro.create(text, voice, speed, lang)` accepts
+  `speed` from 0.5 to 2.0 and refuses more: `ValueError: Speed should be between 0.5 and 2.0, got
+  2.5` (its `_prepare`; a first reading of the source saw only `_speed_value`'s rounding and wrongly
+  said there was no limit; the sample run at 2.5 found it). So 2.0 is the fastest, and `narrate
+  --lines` refuses a `--speed` outside 0.5 to 2.0 in words before the model is loaded. The
+  invented 15-word line at `af_heart`: 1.0 is 4.69 s (3.4 words/s), 1.5 is 2.98 s (5.4), 2.0 is
+  2.62 s (6.1); the model has four voices, af_heart, am_michael, bf_emma, bm_george.
 
 ## Build order
 
@@ -1565,6 +1640,9 @@ remote ("Settled" 7).
 24. **audio-description-tools' request 2** (17 October 2026, 10:45, by mail; OK'd 12:55): item 25,
    test-first, both forms. **Done 17 October 2026, 13:10**; the reply sent with Squirrel's OK (13:15;
    message `2026-10-17-1100-video-tools-re-request-2-stills-on-a-video-file-cras`), the request in `done/`.
+25. **audio-description-tools' request 3** (17 October 2026, 11:04, by mail; OK'd 13:30): item 26, in
+   its order; the speed samples. **Done 17 October 2026, 13:30–14:30**, the defaults settled by ear
+   ("Settled" 50); the reply waits for his OK.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1785,3 +1863,11 @@ None.
     "Mail" section and the `SessionStart` hook in `.claude/settings.json` (Squirrel, 17 October
     2026: "yes"). The template already mandated it, since 10 October 2026; this folder was made
     from it on 9 October and had not been brought up to date.
+49. audio-description-tools' request 3 is item 26, built as proposed: a `--lines` form of `narrate`;
+    the speed samples go in `_to_delete/speed-samples/` in this checkout, ignored by git (Squirrel,
+    17 October 2026, 13:30: "Go ahead with request 3 as proposed … put the speed samples in
+    _to_delete/ in this checkout"). The default speed and voice wait on his listening.
+50. `narrate --lines` speaks at speed 1.5 in `af_heart` unless told otherwise (Squirrel, 17 October
+    2026, 14:05, after the samples in `_to_delete/speed-samples/`: "2x speed is too fast, 1.5 is
+    probably good. Make that the default … af_heart is fine, also make it default"); both are
+    said in the reply to audio-description-tools.

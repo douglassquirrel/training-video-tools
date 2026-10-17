@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 13:20. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 14:30. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -17,24 +17,29 @@ chosen (22, request 20); every index counted as the element's description says: 
 columns, lines, tabs left to the element (23, video-elements' reply); **`stills` on any video file:
 `--at`, `--every`, `--changes`, one PNG a frame at the video's own size, `stills.txt`, `--sheet`
 with cells in the video's proportions (24, audio-description-tools' request 1, by mail); a grid of
-0 or fewer columns or rows refused in words in both forms (25, their request 2)**. A new
+0 or fewer columns or rows refused in words in both forms (25, their request 2); `narrate --lines
+TABLE.md --out FOLDER`, each line of a description table to its own clip at speed 1.5 in af_heart, with
+`timing.json` and an overrun warning (26, their request 3)**. A new
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
-PLAN.md (items 15 to 25 in full) and this section, then `inbox/`.
+PLAN.md (items 15 to 26 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 3 open, built, its
+reply drafted in the session's scratchpad (`reply-request-3.md`) and waiting for Squirrel's OK; on it,
+`lobster-mail reply` then `done`.** Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
-the grid crash) likewise, its reply sent at 13:15. A reply or a new
+the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) is in `open/`. The speed samples
+Squirrel listened to are in `_to_delete/speed-samples/` (ignored by git). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The mail README asks for a handover message to
 this mailbox before a session ends (`lobster-mail handover`); none has been left yet.
 
-Green: 615 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 645 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
 README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
 
-**Waiting on Squirrel:** nothing. One thing he was told and has not answered either
+**Waiting on Squirrel:** his OK for the reply to audio-description-tools' request 3 (17 October 2026, 14:30). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -53,7 +58,8 @@ that turns a move into scene seconds, used by the check and by `perform`; with n
 panel's times are within the mistake cue and a cue-less scene's within the scene. A parsed
 move carries `end_cue` and `linear` only when it has them.
 
-The stub ffmpeg also serves the scene scan of item 24 (`scenes=` in a fake media file) and ffprobe
+The stub speech model serves `narrate --lines` as it serves the script form (its clip length is 0.5 + 0.25 a
+word, plus the trim). The stub ffmpeg also serves the scene scan of item 24 (`scenes=` in a fake media file) and ffprobe
 the fake's `width=`/`height=`. The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
 model are stubs in `tests/stubs/` (the stub ffmpeg refuses an existing output without `-y` and
@@ -3788,3 +3794,76 @@ to audio-description-tools`; `lobster-mail done`: `open/ -> done/`.
 
 **State.** Items 1 to 25 built and pushed; nothing open in the mailbox; `lobster-mail wait` watching
 in the background; nothing waits on Squirrel. No handover left: the session is open.
+
+### 17 October 2026 — Mail: request 3 (speak a description table's lines); item 26 begun
+
+**Decision / surprise.** audio-description-tools' request 3 (11:04, claimed 13:20): speak each line
+of their timed Markdown table to its own clip, very fast, through `narrate`; and settle with
+Squirrel the speed, the voice and whether the model is here. Proposed as a `--lines` form of
+`narrate`; Squirrel (13:30): "Go ahead with request 3 as proposed: plan it, build it test-first,
+and put the speed samples in _to_delete/ in this checkout." PLAN.md item 26, "Settled" 49.
+
+Checked first, read-only: their two real tables (headers `| # | Start (s) | Words | Est. end (s) |
+<one column that differs> | Checked against | Line |`, 12 and 14 rows; nothing copied). And the
+model's speed: a first reading of kokoro-onnx's source saw only the rounding in `_speed_value` and
+PLAN.md said "no limit"; the sample run at 2.5 then raised `ValueError: Speed should be between 0.5
+and 2.0, got 2.5` from `_prepare`. PLAN.md corrected ("Things checked"): 2.0 is the fastest, and
+`--lines` refuses a speed outside 0.5 to 2.0 before loading the model. **Samples** in
+`_to_delete/speed-samples/` (ignored by git), an invented 15-word line: `af_heart` at 1.0 (4.69 s,
+3.4 words/s), 1.5 (2.98 s, 5.4), 2.0 (2.62 s, 6.1); `am_michael`, `bf_emma`, `bm_george` at 2.0
+(6.0, 6.4, 5.8 words/s); the model's voices are those four. Their scripts assume 5 words a second,
+which is about speed 1.5.
+
+**Tier 1, `videotools/lines.py`, `tests/tier1/test_lines.py`.**
+- `the_columns_are_found_by_header_in_any_order_and_the_rest_ignored`: red `AttributeError: module
+  'videotools.lines' has no attribute 'parse'`; a first implementation still failed its own
+  "no table" fallback because the separator-row regex did not match `|---|---|` (a trailing `|`
+  doubled); replaced by `is_separator` (pipes, dashes, colons, spaces, at least one dash); green `1
+  passed`. An escaped `\|` in a cell is a pipe.
+- `a_table_that_cannot_be_spoken_is_refused_in_words` (eleven cases): ten red (no refusal yet;
+  the "no table at all" case passed at once, being increment 1's fallback); green `12 passed` with
+  the missing columns named, each row checked in order (cell count, `#`, twice, start, negative,
+  empty line) and an empty table refused.
+- `clips_are_named_by_number_with_as_many_digits_as_the_largest_needs`,
+  `a_line_that_runs_past_the_next_lines_start_is_warned_about_naming_both`,
+  `the_estimate_scales_the_words_a_second_by_the_speed`,
+  `the_speed_must_be_within_what_the_model_accepts`: four red (`AttributeError` each); green `16
+  passed` once the message wrote "2.0" rather than `:g`'s "2" (the test's wording kept: it matches
+  the model's own).
+
+**Tier 2, `tests/tier2/test_narrate_lines.py`**, against the stub speech model and an invented
+three-line table (`TABLE` in the file: a kite, a harbour, gulls; nothing from theirs).
+- `each_line_becomes_a_clip_named_by_its_number_with_timing_json`: red `(2, 'usage: n...')` (no
+  `--lines`); green `24 passed` with `test_narrate.py`, by `narrate._run_lines` reusing
+  `_model_dir`, `_load_model`, `trim` and the refusal/replace shape of the script form, and
+  `lines.read`.
+- Nine more tests at once: six red (`--dry-run` ignored, no overrun warning, the two forms'
+  flags accepted across, `--out` without `--lines`); green `38 passed`. The other three
+  (`existing_clips_are_refused…`, the table/missing-file refusal, the voice flag and default, the
+  model failure, and four rows of the kept-apart table) passed at once: the base run had carried
+  those branches over from the script form untested. Each was broken in turn in the `--lines` copy
+  only (the script form has the same text) and its test failed: replace refusal, `--out` missing,
+  `--speed` missing, no arguments, a missing table file, the af_heart default, exit 4 on a model
+  failure; `15 passed` restored.
+
+**Decision / surprise.** Squirrel, 14:05, after listening to `_to_delete/speed-samples/`: "2x speed
+is too fast, 1.5 is probably good. Make that the default and include it in your reply. af_heart is
+fine, also make it default and include in reply." So `--speed` is no longer required with `--lines`:
+the missing-speed row left the kept-apart table and `the_voice_flag_wins…` asserts a run without
+`--speed` records 1.5 (red `assert 2 == 0`, the command still demanding it); `LINES_SPEED = 1.5` in
+`narrate.py`; PLAN.md item 26, 2 and "Settled" 50; the README. af_heart was already the default.
+
+### 17 October 2026 — Item 26, Tier 3: the real model
+
+**Done.** Lint as its own pass (four long lines wrapped; `All checks passed!`). Then the command for
+real with Kokoro on an invented three-line table in the scratchpad: `--dry-run` lists the three
+lines at 1.5 with estimates 1.8, 1.3 and 1.0 s; the run writes clips of 1.244, 1.283 and 0.748 s and
+warns `line 2 (at 4.00 s, 1.28 s long) runs 0.28 s into line 3 (at 5.00 s)`; `timing.json` as
+specified (pasted into the README). The estimate runs long for short lines: the model is quicker
+than 2.6 × 1.5 words a second on them; said in the README, not changed (the real length is what
+counts). Then a scratch copy of their first real table (read-only on the original; counts only):
+14 clips, 31.4 s of speech, the longest clip 3.409 s, no overrun warning; nothing of it kept.
+
+**Green, the suite.** `645 passed in 175.79s (0:02:55)`, `TOTAL … 98%`; `ruff check .` clean.
+
+**State.** Items 1 to 26 built, pushed; the reply to request 3 drafted, waiting for Squirrel's OK.

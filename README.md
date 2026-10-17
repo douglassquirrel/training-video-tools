@@ -268,6 +268,48 @@ length, plus punctuation and the space; 114 in all, listed in `videotools/phonem
 kokoro-onnx 0.6.1's vocabulary). Anything else the model would drop silently, so
 `check-script` reports it, along with an unclosed `[[`, an empty span, and a span in a caption.
 
+### `narrate --lines TABLE.md --out FOLDER [--speed S] [--voice V] [--replace] [--dry-run]`
+
+The same voice on a **description table** instead of a script, for the audio-description
+project, whose timed lines are spoken fast and mixed into a video's sound. `TABLE.md` is any
+Markdown file holding a table with the columns `#` (a whole number from 1, each once), `Start (s)`
+(seconds) and `Line` (the text, spoken as written: quotes, colons, non-ASCII and all; `\|` for
+a pipe), found by header in any order; other columns and everything outside the table are
+ignored. Each line goes to its own trimmed clip in `FOLDER` (made if missing), `01.wav`, `02.wav`,
+… (more digits when the numbers need them), and `timing.json` there holds the voice, speed,
+model and sample rate and, per line, its number, start, text and real length in seconds,
+rewritten after each clip. `--speed` defaults to 1.5 (the model accepts 0.5 to 2.0; see below) and
+`--voice` to `VOICE` in `~/.video-tools.conf`, else `af_heart`: both chosen by ear on 17 October 2026. Each clip's real length
+is printed, and where a line's start plus its length passes the next line's start, a warning on
+stderr names both (exit 0 still: the writer decides). Nothing is written over an existing clip or
+`timing.json` without `--replace`, which lists them first. `--dry-run` lists each line with its
+start and an estimate at 2.6 words a second times the speed, and writes nothing.
+
+```
+$ ./narrate --lines table.md --out clips --dry-run
+narrate (dry run): table.md
+voice af_heart, speed 1.5, model kokoro-82m from /Users/you/models/kokoro
+01.wav  at 0.10 s  ~1.8 s  A kite climbs over the harbour wall.
+02.wav  at 4.00 s  ~1.3 s  On screen: “Harbour”; it's dusk.
+03.wav  at 5.00 s  ~1.0 s  Gulls wheel and dip.
+3 lines, about 4 s of speech; nothing written (dry run).
+$ ./narrate --lines table.md --out clips
+01.wav  1.244 s
+02.wav  1.283 s
+narrate: line 2 (at 4.00 s, 1.28 s long) runs 0.28 s into line 3 (at 5.00 s)
+03.wav  0.748 s
+Wrote 3 clips and clips/timing.json
+```
+
+(That run, 17 October 2026, the real model on an invented three-line table; `timing.json` then
+holds the three lines with those lengths. The estimate runs long here: the model speaks these short
+lines faster than 2.6 words a second times 1.5.)
+
+**How fast.** kokoro-onnx 0.6.1 accepts `speed` from 0.5 to 2.0 and refuses more, so 2.0 is the
+fastest. On an invented 15-word line in `af_heart`, 1.0 took 4.69 s (3.4 words a second), 1.5
+took 2.98 s (5.4) and 2.0 took 2.62 s (6.1); the four voices at 2.0 lie between 5.8 and 6.4
+words a second. A script that assumes five words a second is close to speed 1.5.
+
 ### `crop-insets SCRIPT.md [--dry-run]`
 
 Cuts each box in the script's `## Insets` table out of its `source-image`, scaled to fit the
@@ -883,8 +925,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`). | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write). Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write). Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -908,7 +950,7 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 98% on 17 October 2026
-(615 tests, lint clean).
+(645 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -976,6 +1018,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **17 October 2026, later still.** `narrate --lines TABLE.md --out FOLDER [--speed S]` (default 1.5, af_heart) speaks each line of a description table to its own clip, with `timing.json` and a warning where a line runs into the next. `narrate`'s script form is unchanged; its positional is now optional only because of `--lines`. For the audio-description project.
 - **17 October 2026, later.** `stills --grid 0x3` (or any grid with no column or row) is refused in words, exit 2, in both forms; it was a traceback on a video file.
 - **17 October 2026.** `stills` takes a video file as well as a script: `stills VIDEO (--at T,T… | --every N | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]` writes one PNG a frame at the video's own size and `stills.txt`, and with `--sheet` a labelled contact sheet whose cells keep the video's proportions. The script form is unchanged, but its `--help` now shows both (`SCRIPT|VIDEO`, `--out SHEET.png|FOLDER`). For the audio-description project.
 - 9 October 2026: repository created. `check-script` (replaces the training-video project's
