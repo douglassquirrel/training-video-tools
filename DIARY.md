@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 22:50, session "mac" open and on duty. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 23:10, session ended with a handover in the mailbox. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -39,9 +39,9 @@ sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00, and their 
 device-shell timing (18:08 UTC) read and closed at 22:10; request 6 (item 29) likewise, its reply
 sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
-message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
-`lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
-holds the duty.
+message goes only on Squirrel's OK ("Settled" 47). The handover for the next session was left by
+`lobster-mail handover` at the end of this one (17 October, 23:10); `lobster-mail start` reads it
+first. No watch is running; nobody is on duty.
 
 Green: 698 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
@@ -4313,4 +4313,18 @@ the device shell is the real check.
 
 **State.** Items 1 to 29 built and replied to; nothing open in the mailbox; nothing waits on
 Squirrel.
+
+### 17 October 2026 — Session end: handover
+
+**Decision.** Squirrel (23:05): "close down and write handover". The background `lobster-mail wait`
+stopped; the mailbox has nothing new or open, `inbox/` is empty, the tree is clean at `d64d8df`.
+"Where things stand" brought up to date, committed and pushed; then `lobster-mail handover --as
+video-tools --session mac -` with where things stopped, what waits (nothing) and what to do next,
+which also gives up the duty.
+
+**State.** Items 1 to 29 built, replied to and pushed; 698 tests, 99%, lint clean. Nothing waits on
+Squirrel. Not done on any machine but the Mac: a real device-shell run of `setup-linux` (item 27)
+and of a killed slice carried on (item 29); audio-description-tools' first uses are those checks.
+Next session: `lobster-mail start` (the hook), CLAUDE.md, PLAN.md items 15 to 29, this section,
+`inbox/`.
 
