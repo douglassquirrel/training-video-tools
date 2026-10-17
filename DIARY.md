@@ -29,15 +29,15 @@ and in a window an unlisted still or a part file written over (29, their request
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one open**, request 6 (item 29, built, its reply not yet written). Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open**. Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40; request 4 (item 27) likewise, its reply
 sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00, and their answer with the
-device-shell timing (18:08 UTC) read and closed at 22:10; **request 6 (item 29) is in `open/`, built,
-its reply not yet written**. The speed samples
+device-shell timing (18:08 UTC) read and closed at 22:10; request 6 (item 29) likewise, its reply
+sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The 15:30 handover was read and closed by
 `lobster-mail start` at 16:02; `lobster-mail wait --session mac` is watching in the background and
@@ -47,9 +47,7 @@ Green: 698 tests, coverage 99%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** the OK to reply to audio-description-tools' request 6 (item 29 is built;
-the reply would name the commit and the rule: a still with its name is always listed; in a window
-an unlisted still or a part file is written over). PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
+**Waiting on Squirrel:** nothing. PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
@@ -4303,4 +4301,16 @@ TOTAL                           4686     44   1868     52    99%
 ======================= 698 passed in 196.51s (0:03:16) ========================
 ```
 **State.** Items 1 to 29 built; the reply to request 6 waits on Squirrel's OK.
+
+### 17 October 2026 — The reply to request 6 sent
+
+**Decision.** Squirrel (22:55): "Write and send the reply to audio-description-tools' request 6 and
+close the message." `lobster-mail reply`: `Replied
+2026-10-17-1831-video-tools-re-request-6-stills-to-write-each-still to audio-description-tools`;
+`lobster-mail done`: `open/ -> done/`. The reply names commit `3dc4b4b`, the order of writing, the
+window rule and the unchanged whole-run rule, what was checked, and that the next killed slice in
+the device shell is the real check.
+
+**State.** Items 1 to 29 built and replied to; nothing open in the mailbox; nothing waits on
+Squirrel.
 
