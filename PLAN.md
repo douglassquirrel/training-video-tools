@@ -1290,7 +1290,7 @@ header=NAME` as the real one does; the rule in the check (parameters in the cast
 anchors), the old rule and the stopgap removed; the draw-time words; README, "Notes for users",
 lint as its own pass; a Tier 3 against the real library; a note to training-video.
 
-## 24. Stills from any video file, singly and on a labelled sheet (audio-description-tools' request 1 of 17 October 2026, 10:06, by mail; Squirrel, 17 October 2026: "write the plan but don't start it yet"; **planned, not started**)
+## 24. Stills from any video file, singly and on a labelled sheet (audio-description-tools' request 1 of 17 October 2026, 10:06, by mail; Squirrel, 17 October 2026: "write the plan but don't start it yet", then "go ahead and build this request")
 
 The first request from outside the training-video pair, and the first to arrive by mail
 (`~/projects/mail/video-tools/`, message
@@ -1342,9 +1342,11 @@ rather than make their own, and they left the form to us.
    exit 0.
 5. **Scene detection.** `--changes` runs ffmpeg once over the whole file with a `select` filter
    on the scene score and reads the chosen frames' times from its report. The exact filter
-   (`select='gt(scene,T)',showinfo` and `pts_time:` lines, or `metadata=print` and
-   `lavfi.scene_score`) is decided by running real ffmpeg on a scratch file first and recording
-   its output under "Things checked"; the stub then imitates that format and no other. Frames
+   is `select='gt(scene,T)',metadata=print` with `-f null -`: ffmpeg prints, on stderr, for
+   each chosen frame a line `[Parsed_metadata_1 @ 0x…] frame:0    pts:25600   pts_time:2` and a
+   line `… lavfi.scene_score=0.400000` (checked on real ffmpeg 9.0.2, "Things checked"); the
+   times are the `pts_time:` values, and the stub imitates that format and no other. The first
+   frame of the file never scores, so it is always added. Frames
    are then read one by one with `ffmpeg.frame_at` at the video's own size, as the other modes.
 6. **Both machines.** The Mac (`.venv`, Pillow present) and the Linux device shell through
    `VIDEO_TOOLS_PYTHON` as the README's section says; nothing new to install.
@@ -1447,6 +1449,16 @@ package imported from there, never installed here) and, through it, `rsvg-conver
    samples, the file's length exactly; `-ss T -i V -frames:v 1 -f rawvideo -pix_fmt rgb24 -s
    1920x1080 -` writes 6,220,800 bytes, one frame; both exit 0 with `-nostdin`.
 
+- **ffmpeg's scene detection (17 October 2026, ffmpeg 9.0.2, on the Mac).** On a scratch file of
+  three plain colours cut at 2 s and 4 s (160×90, 25 fps, 5.52 s), `ffmpeg -nostdin -i cuts.mp4
+  -vf "select='gt(scene,0.3)',metadata=print" -f null -` prints on stderr, per chosen frame,
+  `[Parsed_metadata_1 @ 0x7a0c62280] frame:0    pts:25600   pts_time:2` then
+  `[Parsed_metadata_1 @ 0x7a0c62280] lavfi.scene_score=0.400000`; `pts_time` is in seconds of the
+  input (2 and 4 here), and the first frame of the file is not among them. `showinfo` in place of
+  `metadata=print` gives the same times in a longer line (`n: 0 pts: 25600 pts_time:2 …`) plus a
+  `color_range:` line per frame; `metadata=print` is used. A cut between two flat colours scores
+  0.4, so the default threshold of 0.3 catches it.
+
 ## Build order
 
 Each step test-first (CLAUDE.md), ending green and committed on `main`; pushed when there is a
@@ -1530,8 +1542,8 @@ remote ("Settled" 7).
 21. **Request 20** (11 October 2026, 06:40; OK'd 07:05): item 22, in its order of work.
 22. **video-elements' reply** (11 October 2026, 07:29; OK'd 07:33): item 23, in its order of work.
 23. **audio-description-tools' request 1** (17 October 2026, 10:06, by mail; Squirrel, 17 October 2026:
-   "write the plan but don't start it yet"): item 24, planned and not started; waits for his go-ahead
-   and open questions 1 to 3.
+   "write the plan but don't start it yet", then "go ahead and build this request"): item 24, in
+   its order of work; "Settled" 46 to 48.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
@@ -1565,19 +1577,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. (Item 24) The manual Tier 3 check the request names uses a real YouTube video fetched by
-   `audio-description-tools`' `fetch-video` into a scratch folder: the fetch is network use by
-   another project's tool, not by video-tools, and the file would stay out of git. Is that check
-   OK on the Mac, or should Tier 3 run only on the example's own assembled video (no download)?
-2. (Item 24) When it is done, the requester asks for a reply by mail with the exact command to
-   run and from where. Writing into another project's inbox has so far been OK'd case by case
-   ("Settled" 38, 42). May video-tools reply by `lobster-mail` to `audio-description-tools` for
-   this request, and is that a standing permission for replies to mail it receives?
-3. The mailbox (`~/projects/mail/video-tools/`, `lobster-mail start --as video-tools`) is not
-   in CLAUDE.md, whose "Inbox" section names only `inbox/`; this session found it only by looking
-   for the message. Shall CLAUDE.md's session start include reading the mail, and shall the
-   inbox rules apply to it as written (read and report; act only on an OK; mail never in a
-   fixture)?
+None.
 
 ## Settled
 
@@ -1755,3 +1755,11 @@ README): each command for real on the example video.
 45. audio-description-tools' request 1 (stills from any video file, by mail, 17 October 2026) is
     planned as item 24 and not started (Squirrel, 17 October 2026: "Just tell me about it, write the
     plan but don't start it yet"); building it waits for his go-ahead.
+46. (Item 24) The Tier 3 check may use a real Short fetched by `audio-description-tools`'
+    `fetch-video` into a scratch folder, out of git (Squirrel, 17 October 2026: "yes that's fine").
+47. Replies by mail need Squirrel's OK each time: the reply to audio-description-tools' request 1
+    is drafted and shown to him first (Squirrel, 17 October 2026: "get my OK for a reply").
+48. The mailbox is part of every session: CLAUDE.md gained the template's non-negotiable 17, its
+    "Mail" section and the `SessionStart` hook in `.claude/settings.json` (Squirrel, 17 October
+    2026: "yes"). The template already mandated it, since 10 October 2026; this folder was made
+    from it on 9 October and had not been brought up to date.
