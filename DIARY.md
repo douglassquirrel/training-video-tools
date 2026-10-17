@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 14:45. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 15:30, session ended with a handover in the mailbox. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -30,8 +30,9 @@ non-negotiable 17 and "Mail", since 17 October 2026; the command is
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
 the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40. The speed samples
 Squirrel listened to are in `_to_delete/speed-samples/` (ignored by git). A reply or a new
-message goes only on Squirrel's OK ("Settled" 47). The mail README asks for a handover message to
-this mailbox before a session ends (`lobster-mail handover`); none has been left yet.
+message goes only on Squirrel's OK ("Settled" 47). The handover for the next session was left by
+`lobster-mail handover` at the end of this one (17 October, 15:30); `lobster-mail start` reads it first. No
+watch is running; nobody is on duty.
 
 Green: 645 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
@@ -3876,3 +3877,17 @@ machines, the defaults he chose (1.5, af_heart) and why, where the samples are, 
 **State.** Items 1 to 26 built and pushed; nothing open in the mailbox; `lobster-mail wait` watching
 in the background; nothing waits on Squirrel. No handover left: the session is open. `_to_delete/`
 is now in `.git/info/exclude` here (it had not been, since the move).
+
+### 17 October 2026 — Session end: handover
+
+**Decision.** Squirrel (15:25): "Stop and write up handover". The background `lobster-mail wait`
+stopped (the mailbox had been quiet since 11:04; three waits of 25 minutes returned empty).
+"Where things stand" brought up to date, committed and pushed; then `lobster-mail handover --as
+video-tools --session mac -` with where things stopped, what waits (nothing) and what to do next,
+which also gives up the duty.
+
+**State.** Items 1 to 26 built, 645 tests, 98%, lint clean, pushed. Nothing waits on Squirrel. Next
+session: `lobster-mail start` (the hook), CLAUDE.md, PLAN.md items 15 to 26, this section, `inbox/`.
+Two small things a session might tidy with his OK: CLAUDE.md and the README still name the old
+path `~/projects/code/video-tools` (the folder is now under `videos/`), and the README's example for
+`narrate --lines` shows the estimate running long for short lines.
