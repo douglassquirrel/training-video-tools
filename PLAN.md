@@ -1563,7 +1563,8 @@ remote ("Settled" 7).
    Tier 3 on the real Short; the reply sent with Squirrel's OK (12:40; message
    `2026-10-17-1040-video-tools-re-request-1-stills-from-any-video-file`), the request in `done/`.
 24. **audio-description-tools' request 2** (17 October 2026, 10:45, by mail; OK'd 12:55): item 25,
-   test-first, both forms; the reply for his OK.
+   test-first, both forms. **Done 17 October 2026, 13:10**; the reply sent with Squirrel's OK (13:15;
+   message `2026-10-17-1100-video-tools-re-request-2-stills-on-a-video-file-cras`), the request in `done/`.
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the
