@@ -48,9 +48,12 @@ def test_the_default_grid_is_the_smallest_square_that_holds_the_frames_at_most_f
 
 
 def test_a_cell_is_360_wide_and_as_tall_as_the_video_needs_plus_the_label_strip():
-    assert video_stills.cell_size(480, 854) == (360, 640 + 36)       # a vertical Short keeps its proportions
-    assert video_stills.cell_size(854, 480) == (360, 202 + 36)       # landscape
-    assert video_stills.cell_size(1920, 1080) == (360, 202 + 36)
+    assert video_stills.cell_size(480, 854) == (360, 641 + 36)       # a vertical Short keeps its proportions
+    assert video_stills.cell_size(854, 480) == (360, 203 + 36)       # landscape; 640.5 and 202.3 rounded up,
+    assert video_stills.cell_size(1920, 1080) == (360, 203 + 36)     # so the frame fits at the full 360 wide
+    from videotools import sheet
+    assert sheet.frame_size(video_stills.cell_size(480, 854), (480, 854)) == (360, 640)
+    assert sheet.frame_size(video_stills.cell_size(854, 480), (854, 480)) == (360, 202)
 
 
 REPORT = """[Parsed_metadata_1 @ 0x7a0c62280] frame:0    pts:25600   pts_time:2

@@ -22,10 +22,11 @@ def require(name):
     return path
 
 
-def run(name, args, doing, partial=None, stdin=None, binary=False):
-    """Run ffmpeg or ffprobe with `args`; returns its stdout (text, or bytes with `binary`). A
-    non-zero exit is a Failure (exit 4) saying what it was doing, with the program's own output
-    and the file that may be partial. Nothing is deleted."""
+def run(name, args, doing, partial=None, stdin=None, binary=False, want_stderr=False):
+    """Run ffmpeg or ffprobe with `args`; returns its stdout (text, or bytes with `binary`), or its
+    stderr with `want_stderr` (where ffmpeg's filters report). A non-zero exit is a Failure (exit 4)
+    saying what it was doing, with the program's own output and the file that may be partial.
+    Nothing is deleted."""
     program = require(name)
     p = subprocess.run([program] + args, capture_output=True, text=not binary, stdin=stdin)
     if p.returncode != 0:
@@ -33,7 +34,7 @@ def run(name, args, doing, partial=None, stdin=None, binary=False):
         stderr = p.stderr.decode(errors="replace") if binary else p.stderr
         raise cli.Failure(f"{name} failed (exit {p.returncode}) {doing}; its output follows{tail}\n"
                           + stderr.strip(), cli.EXTERNAL)
-    return p.stdout
+    return p.stderr if want_stderr else p.stdout
 
 
 def audio_samples(path, rate=48000):
@@ -51,6 +52,14 @@ def frame_at(path, seconds, width, height):
         raise cli.Failure(f"ffmpeg gave {len(data)} bytes for the frame of {path} at {seconds:.3f} s, not the "
                           f"{width * height * 3} of a {width}x{height} frame; is the file that long?", cli.EXTERNAL)
     return data
+
+
+def scene_report(path, threshold):
+    """ffmpeg's report of the frames whose scene-change score is above `threshold` (0 to 1): the
+    stderr of `select='gt(scene,T)',metadata=print` over the whole file (PLAN.md item 24, 5)."""
+    select = f"select='gt(scene,{threshold:g})',metadata=print"
+    return run("ffmpeg", ["-nostdin", "-hide_banner", "-i", path, "-vf", select, "-f", "null", "-"],
+               f"looking for the cuts in {path}", want_stderr=True)
 
 
 def count_frames(path):

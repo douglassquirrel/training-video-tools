@@ -13,10 +13,10 @@ Pillow.
 """
 
 import argparse
-import os
 import sys
 
 from videotools import brand, cli, elements, script
+from videotools import sheet as sheet_
 from videotools.sheet import SHEET
 
 PROG = "stills"
@@ -31,15 +31,27 @@ def parser():
     p = argparse.ArgumentParser(prog=PROG, description="Draw frames of a video's scenes at the given times "
                                 "onto one sheet, each labelled, so the layout can be checked before rendering; "
                                 "or, with --cue-changes, the frames around every cue start.")
-    p.add_argument("SCRIPT", help="the video's script.md")
+    p.add_argument("SCRIPT", metavar="SCRIPT|VIDEO",
+                   help="the video's script.md, or a video file (any name not ending .md): then --at, --every or "
+                        "--changes choose the frames, --out is the folder for the stills and --sheet the sheet")
     p.add_argument("FRAMES", nargs="?", help="SCENE:SECONDS, comma-separated; a negative time counts back from the "
                    "scene's end (not with --cue-changes)")
     p.add_argument("--cue-changes", action="store_true",
                    help="the frames at -0.3, 0 and +0.3 s around every cue start (+0.6 s after a mistake), "
                         "on numbered sheets, with a warning for a picture that vanishes as the mistake panels lift")
     p.add_argument("--scenes", metavar="KEY,...", help="with --cue-changes: only these scenes (default: all)")
-    p.add_argument("--out", metavar="SHEET.png", required=True, help="the sheet to write (never over a file)")
-    p.add_argument("--grid", metavar="CxR", default="2x2", help="columns x rows of a sheet (default 2x2)")
+    p.add_argument("--out", metavar="SHEET.png|FOLDER", required=True,
+                   help="the sheet to write, or for a video file the folder for the stills (never over a file)")
+    p.add_argument("--grid", metavar="CxR", default=None,
+                   help="columns x rows of a sheet (default 2x2; for a video file, chosen to fit)")
+    p.add_argument("--at", metavar="T,T,...", help="video file: frames at these times, in seconds")
+    p.add_argument("--every", metavar="SECONDS", type=float, help="video file: a frame every so many seconds from 0")
+    p.add_argument("--changes", action="store_true",
+                   help="video file: the first frame and every frame where the picture changes (ffmpeg's scene "
+                        "detection)")
+    p.add_argument("--threshold", metavar="N",
+                   help="with --changes: how big a change counts, 0 to 1 (default 0.3)")
+    p.add_argument("--sheet", metavar="SHEET.png", help="video file: also a contact sheet of the stills, labelled")
     elements.add_arguments(p)
     return p
 
@@ -70,14 +82,6 @@ def to_image(surface):
     from PIL import Image
     return Image.frombuffer("RGBA", (surface.get_width(), surface.get_height()), bytes(surface.get_data()),
                             "raw", "BGRA", surface.get_stride(), 1).convert("RGB")
-
-
-def sheet_names(out, count):
-    """The one sheet as named, or `name-1.png`, `name-2.png`, … when there are several."""
-    if count <= 1:
-        return [out]
-    base, ext = os.path.splitext(out)
-    return [f"{base}-{i}{ext}" for i in range(1, count + 1)]
 
 
 def cue_change_times(tl):
@@ -115,15 +119,25 @@ def vanished_as_the_curtain_lifts(video, scene, tl):
 
 
 def _run(args):
+    if not args.SCRIPT.lower().endswith(".md"):
+        for given, flag in ((args.FRAMES, "SCENE:SECONDS"), (args.cue_changes, "--cue-changes"),
+                            (args.scenes, "--scenes"), (args.elements, "--elements"), (args.renderer, "--renderer")):
+            if given:
+                raise cli.Failure(f"{flag} goes with a script, not a video file", cli.USAGE)
+        from videotools import video_stills
+        return video_stills.run(args)
+    for given, flag in ((args.at, "--at"), (args.every, "--every"), (args.changes, "--changes"),
+                        (args.threshold, "--threshold"), (args.sheet, "--sheet")):
+        if given is not None and given is not False:
+            raise cli.Failure(f"{flag} goes with a video file, not a script", cli.USAGE)
+    args.grid = args.grid or "2x2"
     if args.cue_changes and args.FRAMES:
         raise cli.Failure("--cue-changes takes no SCENE:SECONDS (it chooses the times itself)", cli.USAGE)
     if not args.cue_changes and not args.FRAMES:
         raise cli.Failure("give SCENE:SECONDS, or --cue-changes", cli.USAGE)
     wanted = parse_frames(args.FRAMES) if args.FRAMES else []
-    try:
-        columns, rows = (int(v) for v in args.grid.lower().split("x"))
-    except ValueError:
-        raise cli.Failure(f"--grid should be COLUMNSxROWS, not '{args.grid}'", cli.USAGE) from None
+    from videotools import video_stills
+    columns, rows = video_stills.parse_grid(args.grid)
     if wanted and len(wanted) > columns * rows:
         raise cli.Failure(f"{len(wanted)} frames do not fit a {columns}x{rows} grid; give a bigger --grid", cli.USAGE)
     cli.refuse_existing(args.out)
@@ -160,7 +174,7 @@ def _run(args):
             jobs.append((scene, tl, t))
     per_sheet = columns * rows
     chunks = [jobs[i:i + per_sheet] for i in range(0, len(jobs), per_sheet)] or [[]]
-    names = sheet_names(args.out, len(chunks))
+    names = sheet_.names(args.out, len(chunks))
     for name in names:
         cli.refuse_existing(name)
     for name, chunk in zip(names, chunks):

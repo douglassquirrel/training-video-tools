@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 11:30. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 12:05. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -14,20 +14,26 @@ percentages and spans across cues and to the scene's end, a CSV's rows and colum
 `rows.where`, `rows.first`, `rows.columns` (20, request 18); `flash` (21, request 19); a text
 parameter read from a file, `text.skip` and `text.first`, indices counted against the lines
 chosen (22, request 20); every index counted as the element's description says: data rows,
-columns, lines, tabs left to the element (23, video-elements' reply)**. A new session starts by
-reading CLAUDE.md, PLAN.md (items 15 to 23 in full) and this section, then `inbox/`.
+columns, lines, tabs left to the element (23, video-elements' reply); **`stills` on any video file:
+`--at`, `--every`, `--changes`, one PNG a frame at the video's own size, `stills.txt`, `--sheet`
+with cells in the video's proportions (24, audio-description-tools' request 1, by mail)**. A new
+session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
+PLAN.md (items 15 to 24 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one message open, planned,
-not started.** Requests also arrive by `lobster-mail` in `~/projects/mail/video-tools/` (not in
-CLAUDE.md yet: PLAN.md open question 3); read it at session start with
-`~/projects/code/lobster-tools-code/lobster-tools/lobster-mail start --as video-tools`, and treat
-mail as the inbox rules treat an item. In `open/`: audio-description-tools' request 1 (stills from
-any video file), written up as **PLAN.md item 24, waiting for Squirrel's go-ahead and his answers
-to open questions 1 to 3** before any test or code.
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: one message open, built,
+its reply waiting for Squirrel's OK.** Requests from other projects arrive by `lobster-mail` in
+`~/projects/mail/video-tools/` (CLAUDE.md non-negotiable 17 and "Mail", since 17 October 2026; the
+command is `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). In
+`open/`: audio-description-tools' request 1 (item 24, done); the reply is drafted (what was built,
+the exact commands, what was checked) and goes by `lobster-mail reply --as video-tools` only on his
+OK, then `done`. The mail README also asks for a handover message to this mailbox before a session
+ends; none has been left yet.
 
-Green: 573 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`.
+Green: 611 tests, coverage 98%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
+README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
 
-**Waiting on Squirrel:** the go-ahead for item 24 and open questions 1 to 3 (17 October 2026). One thing he was told and has not answered either
+**Waiting on Squirrel:** his OK for the reply to audio-description-tools' request 1 (17 October 2026). One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -46,7 +52,8 @@ that turns a move into scene seconds, used by the check and by `perform`; with n
 panel's times are within the mistake cue and a cue-less scene's within the scene. A parsed
 move carries `end_cue` and `linear` only when it has them.
 
-The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
+The stub ffmpeg also serves the scene scan of item 24 (`scenes=` in a fake media file) and ffprobe
+the fake's `width=`/`height=`. The suite needs pycairo, numpy, soundfile, Pillow and fontTools from the venv (libraries, not
 programs) and no external program, model, library or network: ffmpeg, ffprobe and the speech
 model are stubs in `tests/stubs/` (the stub ffmpeg refuses an existing output without `-y` and
 serves raw audio and raw frames from fake media), and **the video-elements library is the
@@ -59,7 +66,7 @@ noted `nominal`, `fit` `natural` with a `natural_size` of 120 a column by 30 a r
 `lib.draws`, and passes every label parameter it is given through `frame.label`, as the real
 elements do; its README says what it checks and what it does not). The warning's tests use a
 copy of it with the table's `fit` row removed (`without_fit`). One test is skipped off macOS
-(CoreText). **The whole suite takes about 2 min 25 s**, longer than a foreground command's
+(CoreText). **The whole suite takes about 2 min 50 s**, longer than a foreground command's
 default two minutes: run it with a longer timeout or in the background.
 
 How the tests work: `tests/tier1/` pure functions (`test_choreography_parse.py`, `_check.py`,
@@ -3619,3 +3626,113 @@ green:
 
 **State.** Tier 1 of item 24 green; next the stub's fake media (width, height, scene changes,
 the `metadata=print` report) and Tier 2.
+
+### 17 October 2026 — Item 24, Tier 2: the video form, --at, --every, --changes, the refusals
+
+**Goal.** `stills VIDEO …` end to end against the stubs, in `tests/tier2/test_video_stills.py`;
+the command in `video_stills.run`, dispatched from `stills._run` when the first argument does not
+end in `.md`.
+
+**Tests, red, green.**
+- `help_names_both_forms` and `at_writes_one_png_a_time_at_the_videos_own_size_and_lists_them`:
+  red `assert (2, 'usage: s...ents: --at\n') == (0, '')` (argparse did not know `--at`: the flags
+  missing, the right failure) and the usage line without the new flags. Green with the parser's
+  video flags, the dispatch and the `--at` path: `18 passed` with `test_stills.py`, whose
+  `help_and_usage` now expects the new usage line (`--out SHEET.png|FOLDER`, `SCRIPT|VIDEO`): a
+  change of the help surface by design, item 24, 1, not a test bent to output. The stub's ffprobe
+  now reports `width=`/`height=` from the fake media (default 1920×1080 as before).
+- `every_takes_a_frame_every_n_seconds_from_zero_while_less_than_the_length` (8.342 s every 2:
+  0, 2, 4, 6, 8) and `every_of_zero_or_less_is_refused_before_ffmpeg_runs`: red `(2, 'stills:
+  ...as 0,1.5,3\n') == (0, '')` (the command insisted on `--at`); green `4 passed`.
+- `changes_takes_the_first_frame_and_each_cut_ffmpeg_reports_with_the_threshold_as_data`: the
+  stub gained the scene scan (`-vf …metadata=print`, printing the lines real ffmpeg printed for
+  `scenes=2,4.04`; `FFSTUB_FAIL=scenes`); red the same `(2, …) == (0, '')`; green `12 passed` with
+  `ffmpeg.scene_report` (`ffmpeg.run` gained `want_stderr`, since filters report on stderr) and
+  the `-vf` value asserted as one argument, `select='gt(scene,0.3)',metadata=print`.
+- `a_bad_choice_of_frames_is_refused_before_ffmpeg_runs` (eight cases: none, each pair,
+  `--threshold` without `--changes` or out of range, a bad `--grid`, a bad `--at`) and
+  `a_time_past_the_end_is_refused_naming_the_length_and_nothing_is_written`: seven red (`(0,
+  't0000.00...', '') == (2, '', …)`: two modes ran as one; the wrong message for none); green
+  `37 passed` with the mode check, `--threshold` defaulting to None so "given" can be told,
+  `parse_grid` shared with the script form (its inline parse moved out, default `2x2` kept).
+
+**Decision / surprise.** The past-the-end check was written with the `--at` path, before its
+test: a slip against "no untested branches". Made good the way CLAUDE.md allows for code that
+already exists: the check replaced by `if False:`, the test failed (`(0, 't0001.00...stills\n',
+'') == (2, '', 'stil... (8.342 s)\n')`), restored, `1 passed`.
+
+**State.** 37 stills tests green (tier 1 and 2); next the refusal to write over, the sheet, the
+two forms' flags kept apart, no ffmpeg, a failing frame, odd names, missing Pillow.
+
+### 17 October 2026 — Item 24, Tier 2: never written over, the sheet, the forms kept apart, odd names
+
+**Tests, red, green.**
+- `an_existing_still_or_listing_is_never_written_over_and_the_folder_is_left_as_it_was`: red
+  `['ffprobe', '...be', 'ffmpeg'] == ['ffprobe', 'ffprobe']` (with `--changes`, `stills.txt` was
+  checked only after the scan had run); green with the listing refused before the scan, `1
+  passed`. Its first half (an existing still) had passed at once, since `refuse_existing` on the
+  stills went in with `--at` (the same slip as the past-the-end check); the refusal removed, the
+  test failed (`(0, 't0000.00...stills\n', '') == (3, '', 'stil...a new name\n')`), restored, `15
+  passed`.
+- `the_sheet_keeps_a_vertical_videos_proportions_in_360_wide_cells_with_the_label_under_each`,
+  `a_landscape_video_gets_short_cells_and_a_given_grid_spreads_over_numbered_sheets`,
+  `an_existing_sheet_is_refused_before_anything_is_read_or_written`, the five cases of
+  `the_script_forms_flags_are_refused_with_a_video_file`, the five of
+  `the_video_forms_flags_are_refused_with_a_script`, and
+  `names_with_spaces_and_non_ascii_pass_through_as_data`: 14 red (`--sheet` ignored, the flags of
+  one form accepted by the other). Green: `84 passed` across the stills, missing-package and
+  check-video tests, with `Sheets` in `video_stills` (every sheet's name refused before a frame is
+  read; each frame pasted as it is read, so no frame is held twice), `sheet.names` (moved from
+  `stills.sheet_names`, now shared), the form checks in `stills._run`, and a `("stills",
+  ["VIDEO", "--at", …], "PIL", "Pillow")` case in `test_missing_packages`.
+- `without_ffmpeg_the_video_form_says_so_and_a_failing_frame_is_reported_with_what_stays` passed
+  at once: both paths are `ffmpeg.require` and `ffmpeg.run`'s, which existed. Broken twice to
+  prove it: the two `require` calls removed, the test failed on the message (`ffprobe is not on
+  PATH` where `ffmpeg` is expected: probe's own check spoke first); a failing frame swallowed, it
+  failed `(0 == 4)`; restored, `1 passed`.
+
+**Decision / surprise.** The first sheet run failed on two pixels: the cell's height took the
+floor of the frame's height at 360 wide (640 for 480×854), and `sheet.frame_size` then fitted
+the frame to that height, 359 wide, leaving a white sliver. The width assertion caught it; the
+fix is to round the cell's height up (641, 203), and the Tier 1 expectations of 676 and 238
+were wrong by that one pixel and now say 677 and 239, with `sheet.frame_size` asserted to give
+the full 360. A test changed because its expectation was wrong, not to match output.
+
+Lint, as its own pass: three lines over 120 and an `os` import `stills.py` no longer uses; fixed,
+`All checks passed!`. Then the command for real, with ffmpeg 9.0.2 on the invented three-colour
+file of the morning's check: `--changes` found 2 s and 4 s, the stills are 160×90 in the file's
+own colours, the sheet 720×478 with the times under the frames; `--every 2` and a time past the
+end as the README now shows.
+
+### 17 October 2026 — Item 24, Tier 3: the real Short
+
+**Goal.** The video form against real ffmpeg on the file the request names ("Settled" 46).
+
+**Done.** `fetch-video` from audio-description-tools fetched the Short into the session's
+scratchpad (network use by their tool, out of git; nothing of it in a fixture). ffprobe: 480×854,
+51 s. `./stills short/video.mp4 --every 5 --out every5 --sheet every5.png`: eleven lines
+`t0000.00.png at 0.000 s` … `t0050.00.png at 50.000 s`, `Wrote 11 stills to every5 and the sheet
+every5.png`; the stills 480×854, the sheet 1440×2031 (4×3 cells of 360×677), looked at: each frame
+at its own proportions with its time in the strip under it, the twelfth cell white. `--changes
+--out changes --sheet changes.png`: 14 stills (the first frame and 13 cuts, the last at 49.000 s),
+`stills.txt` 14 lines, the sheet 1440×2708. Counts only here; the pictures stay in the scratchpad.
+
+**State.** Item 24 built, in the README; the full suite's run is recorded in the next entry.
+
+### 17 October 2026 — Item 24 done: the suite, lint, committed
+
+**Green.** The full suite after the last change to code:
+
+```
+videotools/video_stills.py       143      0     54      0   100%
+TOTAL                           4322     44   1726     50    98%
+611 passed in 173.28s (0:02:53)
+```
+
+`ruff check .`: `All checks passed!` (its own pass, above). README: the `stills VIDEO …` section
+with the real run, the errors table, "Notes for users", Tier 3, the count. PLAN.md build order 23
+says done.
+
+**State.** Items 1 to 24 built. Waiting on Squirrel: the reply to audio-description-tools, drafted
+in the session's scratchpad and shown to him ("Settled" 47); on his OK it goes by `lobster-mail
+reply` and the message moves to `done/`.

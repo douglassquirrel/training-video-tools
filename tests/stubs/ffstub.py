@@ -3,9 +3,10 @@
 Media files are fake: text files of `key=value` lines (`frames=90`, `duration=3.0`,
 `max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`, `tone=0-1.0,2.0-3.0` the spans
 where the decoded audio is loud, `colours=0:200.40.40,10:0.0.255` the colour of every frame
-from each time). Every call is appended as a
+from each time, `width=480`, `height=854` the frame size, default 1920x1080, `scenes=2,4.04`
+the times the scene scan reports). Every call is appended as a
 JSON line to FFSTUB_LOG. FFSTUB_FAIL names a job (`concat`, `mux`, `render`, `probe`, `volume`,
-`silence`, `frame`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
+`silence`, `frame`, `scenes`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
 render stop reading stdin part-way. An existing output is refused unless `-y` is given, as
 ffmpeg does. Nothing here is real ffmpeg output beyond its format.
 """
@@ -75,7 +76,8 @@ def ffprobe(args):
                           "streams": [{"nb_read_frames": fake.get("frames", "0")}]}, indent=4))
     else:
         print(json.dumps({"programs": [], "stream_groups": [],
-                          "streams": [{"index": 0, "codec_type": "video", "width": 1920, "height": 1080,
+                          "streams": [{"index": 0, "codec_type": "video", "width": int(fake.get("width", 1920)),
+                                       "height": int(fake.get("height", 1080)),
                                        "r_frame_rate": "30/1", "nb_frames": fake.get("frames", "0")},
                                       {"index": 1, "codec_type": "audio", "sample_rate": "48000", "channels": 1,
                                        "r_frame_rate": "0/0", "nb_frames": "1"}],
@@ -137,6 +139,13 @@ def ffmpeg(args):
             a, b = span.split("-")
             sys.stderr.write(f"[Parsed_silencedetect_0 @ 0x1] silence_start: {a}\n")
             sys.stderr.write(f"[Parsed_silencedetect_0 @ 0x1] silence_end: {b} | silence_duration: {float(b) - float(a):.6f}\n")
+        return 0
+    if "metadata=print" in arg_after(args, "-vf", ""):   # the scene scan: the shape ffmpeg 9.0.2 printed
+        fail_if("scenes")
+        fake = read_fake(arg_after(args, "-i"))
+        for i, t in enumerate(v for v in fake.get("scenes", "").split(",") if v):
+            sys.stderr.write(f"[Parsed_metadata_1 @ 0x7a0c62280] frame:{i}    pts:{int(float(t) * 12800)}   pts_time:{t}\n"
+                             f"[Parsed_metadata_1 @ 0x7a0c62280] lavfi.scene_score=0.400000\n")
         return 0
     if "-frames:v" in args:
         fail_if("frame", output if output != "-" else None)

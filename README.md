@@ -334,6 +334,44 @@ start.) The fix is the curtain helper under "Writing a video's scene code". The 
 one moment: a change that happens later than the lift, or a picture that fades under the
 panels and comes back, is not reported. The sheets are written either way (exit 0).
 
+### `stills VIDEO (--at T[,T…] | --every SECONDS | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]`
+
+The same command on **any video file** (a first argument whose name does not end in `.md`; the
+script form above is unchanged), for seeing what is on screen when: one PNG per frame at the
+video's own size, written into `--out FOLDER` (made if missing) and named by its time so the
+names sort in order (`t0012.40.png`), plus `stills.txt` listing each time and file name, one to
+a line. Choose the frames one way: `--at 0,1.5,3` for the times given, in seconds; `--every 2`
+for every two seconds from 0 while less than the video's length; `--changes` for the first frame
+and every frame where the picture changes, by ffmpeg's scene detection (`--threshold`, 0 to 1,
+default 0.3, is the score a change must beat; lower finds more). With `--sheet`, also a contact
+sheet: each frame in a cell 360 px wide and as tall as the video's proportions need, so a
+vertical Short and a landscape video each keep their shape, with its time in a grey strip under
+the frame, never over it; `--grid CxR` sets the cells per sheet (default: the smallest square
+that holds them, at most five across), and more frames than a grid holds go on numbered sheets,
+`SHEET-1.png`, `SHEET-2.png`, …. Refuses, before anything is read, an existing still, listing
+or sheet, no choice or two, a bad `--grid`, `--threshold` without `--changes`, `--every` of 0
+or less, and a time at or past the end (saying the length). Needs ffmpeg, ffprobe and Pillow.
+
+```
+$ ./stills cuts.mp4 --changes --out cuts-stills --sheet cuts.png
+t0000.00.png at 0.000 s
+t0002.00.png at 2.000 s
+t0004.00.png at 4.000 s
+Wrote 3 stills to cuts-stills and the sheet cuts.png
+$ cat cuts-stills/stills.txt
+0.00 t0000.00.png
+2.00 t0002.00.png
+4.00 t0004.00.png
+$ ./stills cuts.mp4 --at 1,9 --out late
+stills: 9 s is past the end of cuts.mp4 (5.520 s)
+```
+
+(That run, 17 October 2026, real ffmpeg 9.0.2: `cuts.mp4` is an invented 160×90 file of three
+flat colours cut at 2 s and 4 s; the sheet is 720×478, two cells across.) `--changes` runs
+ffmpeg once over the whole file (`select='gt(scene,N)',metadata=print`) and then reads each
+chosen frame; a frame ffmpeg cannot read is an error (exit 4) and the stills written before it
+stay. Built for the audio-description project, whose Claude sees a video only as stills.
+
 ### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH]`
 
 Draws every frame of each scene (all, or `--scenes`) and pipes them to ffmpeg as raw BGRA
@@ -845,8 +883,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write). Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -869,8 +907,8 @@ primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` ru
 as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, and `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 98% on 10 October 2026
-(573 tests on 11 October, lint clean).
+192×108 with a tolerance). Coverage is reported by the test command; 98% on 17 October 2026
+(611 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -906,6 +944,14 @@ real spreadsheet (a header and three rows of two columns): `highlight.4`, `redac
 anchor `header.3` refused, each saying what the file has; `redact.2`, `box.3.2`, `tab-box.2` and
 the anchor `cell.3.2` accepted.
 
+**Tier 3 for `stills` on a video file** (17 October 2026, on the Mac, ffmpeg 9.0.2): the invented
+three-colour file of the Usage section (cuts at 2 s and 4 s found, 160×90 stills, a 720×478 sheet),
+and a real 51 s vertical Short (480×854) fetched by the audio-description project's own tool into a
+scratch folder, out of git: `--every 5 --sheet` gave 11 stills of 480×854 and a 1440×2031 sheet
+(4×3 cells of 360×677) with every frame at its own proportions and its time under it, checked by
+eye; `--changes --sheet` at the default threshold found 13 cuts in it (14 stills, a 1440×2708
+sheet). Nothing from that video is in the repository.
+
 ## Known limitations and non-goals
 
 - Only one frame size, 1920×1080 (every region is named in one place, `chrome.Layout`, so a
@@ -930,6 +976,7 @@ the anchor `cell.3.2` accepted.
 
 ## Notes for users
 
+- **17 October 2026.** `stills` takes a video file as well as a script: `stills VIDEO (--at T,T… | --every N | --changes [--threshold N]) --out FOLDER [--sheet SHEET.png] [--grid CxR]` writes one PNG a frame at the video's own size and `stills.txt`, and with `--sheet` a labelled contact sheet whose cells keep the video's proportions. The script form is unchanged, but its `--help` now shows both (`SCRIPT|VIDEO`, `--out SHEET.png|FOLDER`). For the audio-description project.
 - 9 October 2026: repository created. `check-script` (replaces the training-video project's
   `tools/script-check.py`, same output) and `narrate` are the first commands. Clips are numbered
   from `01` as the script numbers cues (the prototype's were from `00`), and `timing.json` lives

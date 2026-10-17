@@ -1543,7 +1543,8 @@ remote ("Settled" 7).
 22. **video-elements' reply** (11 October 2026, 07:29; OK'd 07:33): item 23, in its order of work.
 23. **audio-description-tools' request 1** (17 October 2026, 10:06, by mail; Squirrel, 17 October 2026:
    "write the plan but don't start it yet", then "go ahead and build this request"): item 24, in
-   its order of work; "Settled" 46 to 48.
+   its order of work; "Settled" 46 to 48. **Done 17 October 2026, 11:10–12:05**: built, in the README,
+   Tier 3 on the real Short; the reply waits for Squirrel's OK ("Settled" 47).
 9. **Request 2** (9 October 2026, from trying the tools on the bed script and kit): in its
    order, each test-first: items 1, 2 and 3 (the brand reader's tables, `BrandError` in words
    with exit 3, `check-script` reading the kit); 4 (`stills` labels in a strip); 5 and 6 (the

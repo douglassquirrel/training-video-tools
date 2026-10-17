@@ -23,3 +23,12 @@ def paste(sheet, draw, img, x, y, cell, label, font):
     draw.rectangle([x, y + size[1], x + size[0] - 1, y + size[1] + STRIP - 1], fill=STRIP_FILL)
     draw.text((x + 8, y + size[1] + 4), label, font=font, fill=(255, 255, 255))
     return size
+
+
+def names(out, count):
+    """The one sheet as named, or `name-1.png`, `name-2.png`, … when there are several."""
+    import os
+    if count <= 1:
+        return [out]
+    base, ext = os.path.splitext(out)
+    return [f"{base}-{i}{ext}" for i in range(1, count + 1)]
