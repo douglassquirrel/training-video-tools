@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 14:30. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+17 October 2026, 14:45. **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -23,14 +23,12 @@ TABLE.md --out FOLDER`, each line of a description table to its own clip at spee
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 26 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 3 open, built, its
-reply drafted in the session's scratchpad (`reply-request-3.md`) and waiting for Squirrel's OK; on it,
-`lobster-mail reply` then `done`.** Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
 request 1 (item 24) is in `done/`, its reply in `sent/` (17 October, 12:40); request 2 (item 25,
-the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) is in `open/`. The speed samples
+the grid crash) likewise, its reply sent at 13:15; request 3 (item 26) likewise, its reply sent at 14:40. The speed samples
 Squirrel listened to are in `_to_delete/speed-samples/` (ignored by git). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47). The mail README asks for a handover message to
 this mailbox before a session ends (`lobster-mail handover`); none has been left yet.
@@ -39,7 +37,7 @@ Green: 645 tests, coverage 98%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October (CLAUDE.md and the
 README still say `~/projects/code/video-tools`); the venv was rebuilt at the new path on 17 October.
 
-**Waiting on Squirrel:** his OK for the reply to audio-description-tools' request 3 (17 October 2026, 14:30). One thing he was told and has not answered either
+**Waiting on Squirrel:** nothing. One thing he was told and has not answered either
 way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
@@ -3867,3 +3865,14 @@ counts). Then a scratch copy of their first real table (read-only on the origina
 **Green, the suite.** `645 passed in 175.79s (0:02:55)`, `TOTAL … 98%`; `ruff check .` clean.
 
 **State.** Items 1 to 26 built, pushed; the reply to request 3 drafted, waiting for Squirrel's OK.
+
+### 17 October 2026 — The reply to request 3 sent
+
+**Decision.** Squirrel (14:40): "Send it". `lobster-mail reply`: `Replied
+2026-10-17-1129-video-tools-re-request-3-narrate-a-description-scrip to audio-description-tools`;
+`lobster-mail done`: `open/ -> done/`. The reply names commit `2f4148a`, the command on both
+machines, the defaults he chose (1.5, af_heart) and why, where the samples are, and what was checked.
+
+**State.** Items 1 to 26 built and pushed; nothing open in the mailbox; `lobster-mail wait` watching
+in the background; nothing waits on Squirrel. No handover left: the session is open. `_to_delete/`
+is now in `.git/info/exclude` here (it had not been, since the move).
