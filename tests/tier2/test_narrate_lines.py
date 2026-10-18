@@ -37,14 +37,14 @@ def test_each_line_becomes_a_clip_named_by_its_number_with_timing_json(table, sp
     assert timing["lines"] == [
         {"n": 1, "start": 0.1, "text": "A kite climbs over the harbour wall.", "length": stub_length(7)},
         {"n": 2, "start": 4.0, "text": "On screen: “Harbour”; it's dusk.", "length": stub_length(5)},
-        {"n": 3, "start": 9.5, "text": "Gulls wheel | dip.", "length": stub_length(4)},
+        {"n": 3, "start": 9.5, "text": "Gulls wheel | dip.", "length": stub_length(3)},   # '|' is no word to the stub
     ]
     assert stdout.splitlines() == [f"01.wav  {stub_length(7):.3f} s", f"02.wav  {stub_length(5):.3f} s",
-                                   f"03.wav  {stub_length(4):.3f} s", f"Wrote 3 clips and {out / 'timing.json'}"]
+                                   f"03.wav  {stub_length(3):.3f} s", f"Wrote 3 clips and {out / 'timing.json'}"]
     creates = [c["create"] for c in stub_calls(speech) if "create" in c]
-    assert [c["text"] for c in creates] == ["A kite climbs over the harbour wall.", "On screen: “Harbour”; it's dusk.",
-                                            "Gulls wheel | dip."]
-    assert {(c["voice"], c["speed"], c["lang"], c["is_phonemes"]) for c in creates} == {("bm_george", 1.5, "en-us", False)}
+    assert [c["text"] for c in creates] == [", A KITE CLIMBS OVER THE HARBOUR WALL.", ", ON SCREEN: “HARBOUR”; IT'S DUSK.",
+                                            ", GULLS WHEEL | DIP."]              # as phonemes with the lead-in (item 30)
+    assert {(c["voice"], c["speed"], c["lang"], c["is_phonemes"]) for c in creates} == {("bm_george", 1.5, "en-us", True)}
 
 
 def test_dry_run_lists_the_lines_with_estimates_at_the_speed_and_writes_nothing(table, speech, tmp_path):
@@ -158,9 +158,9 @@ def test_a_row_with_say_is_spoken_from_it_spans_as_phonemes_and_timing_keeps_the
     assert (code, err) == (0, "")
     creates = [c["create"] for c in stub_calls(speech) if "create" in c]
     assert [(c["text"], c["is_phonemes"], c["lang"]) for c in creates] == [
-        ("sˈɪləs SMILES.", True, "en-us"),          # the stub's phonemizer upper-cases the text part
-        ("Thea nods.", False, "en-us"),             # an empty Say: the Line, as text
-        ("Hugo sits, slowly.", False, "en-us"),     # a Say with no span: as text
+        (", ssˈɪləs SMILES.", True, "en-us"),       # the stub's phonemizer upper-cases the text part; the lead-in
+        (", THEA NODS.", True, "en-us"),            # an empty Say: the Line
+        (", HUGO SITS, SLOWLY.", True, "en-us"),    # a Say with no span
     ]
     timing = json.loads((out / "timing.json").read_text())
     assert [(x["n"], x["text"], x["length"]) for x in timing["lines"]] == [
@@ -188,12 +188,12 @@ def test_dry_run_with_phonemes_prints_each_lines_phonemes_spans_spliced_and_writ
     assert stdout.splitlines()[2:-1] == [
         "01.wav  at 0.10 s  ~0.8 s  Silas smiles.",
         "    say: [[sˈɪləs]] smiles.",
-        "    phonemes: sˈɪləs SMILES.",
+        "    phonemes: , ssˈɪləs SMILES.",
         "02.wav  at 2.00 s  ~0.8 s  Thea nods.",
-        "    phonemes: THEA NODS.",
+        "    phonemes: , THEA NODS.",
         "03.wav  at 4.00 s  ~1.2 s  Hugo sits.",
         "    say: Hugo sits, slowly.",
-        "    phonemes: HUGO SITS, SLOWLY.",
+        "    phonemes: , HUGO SITS, SLOWLY.",
     ]
     assert not (tmp_path / "c").exists()
     assert [c for c in stub_calls(speech) if "create" in c or "init" in c] == []   # the tokenizer only, no model

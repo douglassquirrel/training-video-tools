@@ -51,9 +51,10 @@ def test_one_clip_per_cue_and_timing_json_from_the_stub_model(example, speech):
     calls = stub_calls(speech)
     assert calls[0] == {"init": [os.path.join(speech["SPEECH_MODEL_DIR_FOR_TESTS"], "model.onnx"),
                                  os.path.join(speech["SPEECH_MODEL_DIR_FOR_TESTS"], "voices.npz")]}
-    assert calls[2] == {"create": {"text": "This film follows Figure seven, one fold at a time.",
-                                   "voice": "af_heart", "speed": 0.98, "lang": "en-us", "is_phonemes": False}}
-    assert len(calls) == 12
+    creates = [c["create"] for c in calls if "create" in c]
+    assert creates[1] == {"text": ", THIS FILM FOLLOWS FIGURE SEVEN, ONE FOLD AT A TIME.",   # as phonemes, with the
+                          "voice": "af_heart", "speed": 0.98, "lang": "en-us", "is_phonemes": True}   # lead-in (item 30)
+    assert len(creates) == 11 and len(calls) == 1 + 11 + 11                   # init, then phonemize and create a cue
     assert f"title_02.wav  {stub_length(10):.3f} s" in out
     assert out.splitlines()[-1] == "Wrote 11 clips and {}".format(os.path.join(work(example), "timing.json"))
 
@@ -72,14 +73,16 @@ def test_cue_text_with_hostile_characters_reaches_the_model_unchanged(example, s
     open(example, "w", encoding="utf-8").write(text)
     code, out, err = run("narrate", example, "--scenes", "R", env=speech)
     assert (code, err) == (0, "")
-    assert stub_calls(speech)[1]["create"]["text"] == hostile
+    calls = stub_calls(speech)
+    assert calls[1] == {"phonemize": {"text": hostile, "lang": "en-us"}}       # handed over as it stands
+    assert calls[2]["create"]["text"] == ", " + hostile.upper()
 
 
 def test_voice_and_speed_flags_win_over_the_script(example, speech):
     code, out, err = run("narrate", example, "--scenes", "A", "--voice", "zz_test", "--speed", "1.1", env=speech)
     assert (code, err) == (0, "")
-    assert stub_calls(speech)[1]["create"]["voice"] == "zz_test"
-    assert stub_calls(speech)[1]["create"]["speed"] == 1.1
+    assert stub_calls(speech)[2]["create"]["voice"] == "zz_test"
+    assert stub_calls(speech)[2]["create"]["speed"] == 1.1
     timing = json.load(open(os.path.join(work(example), "timing.json")))
     assert (timing["voice"], timing["speed"]) == ("zz_test", 1.1)
     assert sorted(os.listdir(work(example))) == ["A_01.wav", "A_02.wav", "timing.json"]
@@ -103,12 +106,13 @@ def test_an_unknown_scene_key_is_refused(example, speech):
 def test_existing_clips_or_timing_are_refused_and_nothing_is_changed(example, speech):
     run("narrate", example, "--scenes", "A", env=speech)
     before = {f: open(os.path.join(work(example), f), "rb").read() for f in os.listdir(work(example))}
+    first_run = len(stub_calls(speech))
     code, out, err = run("narrate", example, "--scenes", "A,B", env=speech)
     assert (code, out) == (3, "")
     assert err == ("narrate: these would be written over; delete them, or run with --replace:\n"
                    "  {}\n  {}\n  {}\n".format(*tuple(os.path.join(work(example), f) for f in ("A_01.wav", "A_02.wav", "timing.json"))))
     assert {f: open(os.path.join(work(example), f), "rb").read() for f in os.listdir(work(example))} == before
-    assert len(stub_calls(speech)) == 3
+    assert len(stub_calls(speech)) == first_run                           # the refused run made no call at all
 
 
 def test_replace_lists_what_it_replaces_and_keeps_other_scenes_timings(example, speech):
@@ -186,7 +190,7 @@ def test_a_flag_without_a_value_is_usage(flag):
 
 SAY = "   - say: This film follows Figure seven, one fold at a time."
 SAY_WITH_SPAN = "   - say: This film follows [[fˈɪɡjɚ]] seven, one fold at a time."
-SPLICED = "THIS FILM FOLLOWS fˈɪɡjɚ SEVEN, ONE FOLD AT A TIME."     # the stub phonemizer upper-cases the text parts
+SPLICED = ", THIS FILM FOLLOWS fˈɪɡjɚ SEVEN, ONE FOLD AT A TIME."   # the stub phonemizer upper-cases the text parts
 
 
 def with_span(example):
@@ -200,13 +204,14 @@ def test_a_say_with_a_span_is_sent_as_phonemes_spliced_from_the_models_own_phone
     code, out, err = run("narrate", with_span(example), "--scenes", "title", env=speech)
     assert (code, err) == (0, "")
     calls = stub_calls(speech)
-    assert calls[1] == {"create": {"text": "Folding a paper boat, the Paperboat way.", "voice": "af_heart", "speed": 0.98,
-                                   "lang": "en-us", "is_phonemes": False}}      # no span: sent as text, as before
-    assert calls[2] == {"phonemize": {"text": "This film follows", "lang": "en-us"}}
-    assert calls[3] == {"phonemize": {"text": "seven, one fold at a time.", "lang": "en-us"}}
-    assert calls[4] == {"create": {"text": SPLICED, "voice": "af_heart", "speed": 0.98, "lang": "en-us",
+    assert calls[1] == {"phonemize": {"text": "Folding a paper boat, the Paperboat way.", "lang": "en-us"}}
+    assert calls[2] == {"create": {"text": ", FOLDING A PAPER BOAT, THE PAPERBOAT WAY.", "voice": "af_heart",
+                                   "speed": 0.98, "lang": "en-us", "is_phonemes": True}}   # no span: as phonemes too
+    assert calls[3] == {"phonemize": {"text": "This film follows", "lang": "en-us"}}
+    assert calls[4] == {"phonemize": {"text": "seven, one fold at a time.", "lang": "en-us"}}
+    assert calls[5] == {"create": {"text": SPLICED, "voice": "af_heart", "speed": 0.98, "lang": "en-us",
                                    "is_phonemes": True}}
-    assert len(calls) == 5
+    assert len(calls) == 6
     assert os.path.exists(os.path.join(work(example), "title_02.wav"))
 
 
@@ -215,7 +220,7 @@ def test_dry_run_with_phonemes_prints_what_the_voice_would_be_given_and_writes_n
     assert (code, err) == (0, "")
     lines = out.splitlines()
     assert lines[2] == "title_01.wav  ~2.7 s  Folding a paper boat, the Paperboat way."
-    assert lines[3] == "    phonemes: FOLDING A PAPER BOAT, THE PAPERBOAT WAY."
+    assert lines[3] == "    phonemes: , FOLDING A PAPER BOAT, THE PAPERBOAT WAY."
     assert lines[4] == "title_02.wav  ~3.8 s  This film follows [[fˈɪɡjɚ]] seven, one fold at a time."
     assert lines[5] == "    phonemes: " + SPLICED
     assert lines[-1] == "2 cues, about 7 s of speech; nothing written (dry run)."

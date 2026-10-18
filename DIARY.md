@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-18 October 2026, afternoon, session open ("mac" on duty, the watch running). **Item 30 (audio-description-tools' request 7) is built in part: the `Say` column and `--phonemes` with `--lines --dry-run`; its part 1, the quiet first consonant, waits on Squirrel (PLAN.md "Open questions" 1).** **Requests 1 to 20 are built in full**, each in the README: the eight commands
+18 October 2026, afternoon, session open ("mac" on duty, the watch running). **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -29,7 +29,7 @@ and in a window an unlisted still or a part file written over (29, their request
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 7 open** (claimed 18 October, 13:31 UTC; its reply drafted in the session's scratchpad, not sent, waiting on part 1 and Squirrel's OK). Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 7 open** (claimed 18 October, 13:31 UTC; its reply drafted in the session's scratchpad, not sent, waiting on Squirrel's OK). Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
@@ -43,14 +43,12 @@ message goes only on Squirrel's OK ("Settled" 47). The handover for the next ses
 `lobster-mail handover` at the end of this one (17 October, 23:10); `lobster-mail start` reads it
 first. No watch is running; nobody is on duty.
 
-Green: 708 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 718 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** how to keep a line's quiet first consonant (PLAN.md "Open questions" 1):
-the measurement of 18 October showed the trim does not cut it; the voice at speed 1.5 squeezes it.
-Four listening samples (as now, a comma before, a comma and the consonant doubled, speed 1) are in
-that session's scratchpad. Then the reply to request 7 on his OK. Earlier: `-skip_frame noref` stays out
+**Waiting on Squirrel:** the OK to send the reply to request 7; and PLAN.md "Open questions" 1,
+the assumption that only s, f, θ, ʃ and h are doubled (the samples doubled s, f and h). Earlier: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
@@ -4434,3 +4432,61 @@ TOTAL                           4708     44   1880     52    99%
 ```
 **State.** Item 30 parts 2 and 3 built and committed; part 1 waits on Squirrel's choice; the
 reply to request 7 is drafted, not sent.
+
+### 18 October 2026 — Item 30, 1: Squirrel chooses the lead-in
+
+**Decision.** Squirrel listened to the four samples and chose the third: "3 is the best" (a comma
+before the phonemes and the first consonant doubled). PLAN.md item 30, 1 rewritten: every cue and
+line goes to the voice as phonemes with `, ` in front and a quiet first consonant doubled; the trim
+unchanged; "Settled" 56. Assumed and put in "Open questions" 1: only `s`, `f`, `θ`, `ʃ`, `h` are
+doubled (the samples doubled only s, f, h). The stub voice counts a lone `,` as a word; it will
+count only tokens with a letter or digit, since the real voice does not speak a comma as one.
+
+### 18 October 2026 — Item 30, 1: the lead-in (Tier 1, then Tier 2)
+
+**Goal.** Every cue and line given to the voice as phonemes with `, ` in front and a quiet first
+consonant doubled.
+
+**Test.** Tier 1, `test_the_lead_in_puts_a_comma_first_and_doubles_a_quiet_first_consonant`
+(s, f, θ, ʃ, h doubled; b, a vowel and voiced ð only the comma; leading spaces dropped; empty
+stays empty), against a skeleton `lead_in` that returned its input. The first run failed for the
+wrong reason, `NameError: name 'pytest' is not defined` (the file never imported it); fixed in the
+test, then the right red:
+```
+E       AssertionError: assert 'sˈaɪləs smˈaɪlz.' == ', ssˈaɪləs smˈaɪlz.'
+```
+**Green.** `15 passed in 0.02s`.
+
+**Tier 2.** The expectations of seven narrate tests changed, because PLAN.md item 30, 1 changes
+what the voice is given: a cue with no span was sent as text (`is_phonemes: False`) and is now
+phonemes with the lead-in; the phonemizer's calls now sit between the creates, so tests that
+indexed calls by position index the creates. The hostile-characters test (non-negotiable 7) now
+pins the text handed to the phonemizer unchanged, then the lead-in on its output. Red:
+```
+E         At index 0 diff: ('sˈɪləs SMILES.', True, 'en-us') != (', ssˈɪləs SMILES.', True, 'en-us')
+E         At index 2 diff: '    phonemes: sˈɪləs SMILES.' != '    phonemes: , ssˈɪləs SMILES.'
+7 failed, 35 passed in 7.74s
+```
+**Decision / surprise.** Three. The stub voice counted the lead-in's lone `,` as a word; it now
+counts only tokens with a letter or digit, and `Gulls wheel | dip.` went from four stub words to
+three, so that one expected length changed (the `|` was never a word). The first green attempt
+failed with exit 4, `cannot access local variable 'given'`: `_run` has a loop variable `given`
+that hid the new function of that name; renamed `for_voice`. And
+`test_existing_clips_or_timing_are_refused_and_nothing_is_changed` counted the first run's calls
+(3) to show the refused run made none; it now compares with the first run's own count. **Green.**
+`57 passed in 8.00s`; lint, its own pass, found one line over 120 (wrapped): `All checks passed!`.
+
+### 18 October 2026 — Item 30, 1: Tier 3, the growth on the real model; README; the whole suite
+
+**Decision.** On thirteen invented lines (scratchpad), old route against the lead-in, both trimmed:
+at speed 1.5 the first vowel came at most 40 ms later and a clip at most 0.063 s longer ("Gulls
+wheel and dip." +0.063, "Sam sits." +0.061, the first vowel +40 ms); at 0.98 at most 80 ms and
+0.140 s. These are in the README as measured, not as a bound. The README's two `--phonemes` blocks
+re-run for real (the example copy and the invented table) and pasted; the item 13 sentence "existing
+clips are unchanged" is no longer true and was replaced; "Notes for users".
+```
+TOTAL                           4709     44   1878     52    99%
+======================= 718 passed in 188.56s (0:03:08) ========================
+```
+**State.** Item 30 built in full; the reply to request 7 drafted, not sent; "Open questions" 1
+(which consonants are doubled) waits on Squirrel.

@@ -253,9 +253,8 @@ scene, so an interrupted run keeps what it did.
 and sometimes stresses a word wrongly ("KARpathy", "CONstruct"), and no respelling moves the
 stress. A `say:` line may then hold spans written `[[…]]` whose contents are phonemes for the
 model as they stand: the text around a span is turned into phonemes as usual, the spans are
-spliced in with the spaces as written, and the whole cue is sent as phonemes. A `say:` with no
-span is sent exactly as before, so existing clips are unchanged (checked on the example: every
-clip byte-identical). Spans go in `say:` only; a caption never shows them. To write one, see
+spliced in with the spaces as written, and the whole cue is sent as phonemes (since 18 October
+2026 every cue is, with the lead-in below). Spans go in `say:` only; a caption never shows them. To write one, see
 what the voice is given: `narrate SCRIPT.md --dry-run --phonemes` prints each cue's phoneme
 string, spans spliced in (it needs the speech package but not the model file):
 
@@ -264,11 +263,27 @@ $ ./narrate COPY/script.md --dry-run --phonemes --scenes title
 narrate (dry run): Folding a Paper Boat
 voice af_heart, speed 0.98, language en-us, model kokoro-82m from …/models/kokoro
 title_01.wav  ~2.7 s  Folding a paper boat, the Paperboat way.
-    phonemes: fˈoʊldɪŋ ɐ pˈeɪpɚ bˈoʊt, ðə pˈeɪpɚbˌoʊt wˈeɪ.
+    phonemes: , ffˈoʊldɪŋ ɐ pˈeɪpɚ bˈoʊt, ðə pˈeɪpɚbˌoʊt wˈeɪ.
 title_02.wav  ~3.8 s  This film follows [[fˈɪɡjɚ]] seven, one fold at a time.
-    phonemes: ðɪs fˈɪlm fˈɑːloʊz fˈɪɡjɚ sˈɛvən, wˈʌn fˈoʊld æɾə tˈaɪm.
+    phonemes: , ðɪs fˈɪlm fˈɑːloʊz fˈɪɡjɚ sˈɛvən, wˈʌn fˈoʊld æɾə tˈaɪm.
 2 cues, about 7 s of speech; nothing written (dry run).
 ```
+
+**The lead-in: a quiet first consonant kept.** Spoken fast, the voice says the first sound of a
+cue too faintly: a line-opening "s" lasts about 30 ms at speed 1.5, an eighth of the same "s"
+mid-line. So every cue, and every line of `--lines`, is given to the voice with `, ` in front,
+and when its first sound is one of the quiet consonants `s`, `f`, `θ` ("th" in "thin"), `ʃ`
+("sh") or `h`, that sound doubled: "Silas smiles." is given as `, ssˈaɪləs smˈaɪlz.` (chosen by
+ear, 18 October 2026). The phoneme listing above shows it, since it is what the voice is given.
+The trim is as before. The lead-in moves the first word later in its clip and lengthens the clip
+a little. Measured on the real model with thirteen invented lines:
+
+| Speed | The first vowel later by at most | The clip longer by at most |
+|---|---|---|
+| 1.5 | 40 ms | 0.06 s |
+| 0.98 | 80 ms | 0.14 s |
+
+A `--lines` clip still begins at its `Start (s)`, so its first word may come up to that much later.
 
 The symbols a span may use are the model's own (IPA with `ˈ` and `ˌ` for stress and `ː` for
 length, plus punctuation and the space; 114 in all, listed in `videotools/phonemes.py` from
@@ -316,7 +331,7 @@ lines faster than 2.6 words a second times 1.5.)
 column, anywhere among the others. A row whose `Say` is filled in is spoken from it instead of
 from `Line`, and `Say` may hold `[[…]]` phoneme spans exactly as a script's `say:` line does
 (above). A row whose `Say` is empty, and every row of a table without the column, is spoken from
-`Line` as before. `timing.json` keeps the `Line` as each line's `text`, and the dry run's
+`Line` as before, with the lead-in above. `timing.json` keeps the `Line` as each line's `text`, and the dry run's
 estimate counts the words of what is spoken. A `Say` whose spans are wrong (an unclosed `[[`, a
 stray `]]`, an empty span, a symbol the voice does not know) is refused before the model is
 loaded, naming the row. To write a span, see what the voice is given: `--dry-run --phonemes`
@@ -329,9 +344,9 @@ narrate (dry run): table.md
 voice af_heart, speed 1.5, model kokoro-82m from /Users/claude-test/models/kokoro
 01.wav  at 0.10 s  ~0.5 s  Silas smiles.
     say: [[sˈaɪləs]] smiles.
-    phonemes: sˈaɪləs smˈaɪlz.
+    phonemes: , ssˈaɪləs smˈaɪlz.
 02.wav  at 2.00 s  ~0.5 s  Thea nods.
-    phonemes: θˈiə nˈɑːdz.
+    phonemes: , θθˈiə nˈɑːdz.
 2 lines, about 1 s of speech; nothing written (dry run).
 ```
 
@@ -1071,8 +1086,8 @@ primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` ru
 as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, and `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 98% on 17 October 2026
-(645 tests, lint clean).
+192×108 with a tolerance). Coverage is reported by the test command; 99% on 18 October 2026
+(718 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -1140,6 +1155,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **18 October 2026, later.** `narrate` gives every cue and every `--lines` line to the voice with a lead-in: a comma in front, and a quiet first consonant (s, f, th, sh, h) doubled, so a line opening "Silas" keeps its "s" at speed 1.5. Every clip changes a little when it is made again: the first word comes up to 40 ms later at speed 1.5 (80 ms at 0.98) and a clip is up to 0.06 s longer (0.14 s). `--dry-run --phonemes` shows the lead-in. A finished video is unchanged until its narration is made again.
 - **18 October 2026.** `narrate --lines` reads an optional `Say` column: a row's `Say`, when filled in, is what is spoken, with `[[…]]` phoneme spans as in a script's `say:`; `Line` stays the text in `timing.json`. `--dry-run --phonemes` now works with `--lines` and prints each line's phoneme string. Tables without the column are spoken as before. For the audio-description project.
 - **17 October 2026, later that night.** `stills` on a video file writes each still to a part name, lists it, then renames it, so a still with its name is always in `stills.txt`. In a window, a still that is there but unlisted (a killed run's leftover) is written over and said; a `.part` file silently. For the audio-description project's slices.
 - **17 October 2026, night.** `stills VIDEO --changes` scores the picture 10 times a second (`--detect-fps N` to change it) and skips the audio, so a cut is reported within a tenth of a second after it (4.10 for a cut at 4.04, where it was 4.05); about a quarter faster on h264, no faster on VP9. `--from T` and `--until T` take a window with `--every` or `--changes`, and slices go into one folder, `stills.txt` added to; `--sheet` alone draws a folder's listing. `stills.txt` is now written a line at a time. For the audio-description project's device shell.

@@ -1623,8 +1623,16 @@ Squirrel heard two faults on a real description track spoken by `narrate --lines
    (18 October 2026, "Things checked"): on this Mac the trim does not cut the "s"; the voice
    itself, at speed 1.5, says a line-opening "s" for about 30 ms at an eighth of a mid-line
    "s"'s energy, and at speed 1 says it in full.** A trim change alone would not fix what was
-   heard, so how to fix it is back with Squirrel ("Open questions"), with listening samples;
-   nothing of part 1 is built until he chooses.
+   heard, so it went back to Squirrel with four listening samples, and he chose the third
+   (18 October 2026: "3 is the best"): **a lead-in given to the voice.** Every cue of a script
+   and every line of a table is now given to the voice as phonemes (the text phonemized by the
+   model's own tokenizer, spans spliced in as item 13), with `, ` in front, and when the first
+   symbol is a quiet consonant, `s`, `f`, `θ`, `ʃ` or `h`, that symbol doubled: "Silas smiles."
+   is given as `, ssˈaɪləs smˈaɪlz.`. The trim is unchanged (the samples were trimmed as now;
+   the soft ending is already inside its 80 ms, "Things checked"). `--dry-run --phonemes` shows
+   the string with its lead-in, since that is what the voice is given. A clip grows at its
+   start by what the measurement on the real model gives (README); every clip changes a little,
+   so a video's narration is the same only until it is made again ("Notes for users").
 2. **A `Say` column.** A description table may have a `Say` column, found by header like the
    others, anywhere among them; without it nothing changes. A row whose `Say` is not empty is
    spoken from its `Say`, with `[[…]]` phoneme spans as in a script's `say:` line (item 13): the
@@ -1909,12 +1917,10 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **How to keep a line's quiet first consonant (item 30, 1).** Measured 18 October 2026: the
-   voice at speed 1.5 squeezes a line-opening "s", "f" or "h"; the trim does not cut it. Choices,
-   with listening samples of five invented lines (as now; a comma given before each line's
-   phonemes; a comma and the first consonant doubled; speed 1 for reference): a lead-in given to
-   the voice for every line, a fix line by line through the `Say` column (item 30, 2), or a
-   slower speed. Waiting on Squirrel's ear.
+1. **Which first consonants are doubled (item 30, 1).** The samples doubled only "s", "f" and
+   "h", the ones heard faint. Assumed: the voiceless fricatives `s`, `f`, `θ`, `ʃ` and `h` are
+   doubled, and nothing else, since a doubled `b`, `t` or `k` was never heard and may sound
+   like a stammer; every cue still gets the comma. A change is one line.
 
 ## Settled
 
@@ -2134,3 +2140,6 @@ README): each command for real on the example video.
     request 7 as proposed, with the new trim for scripts as well as --lines"). The measurement
     that came first showed the trim is not what cuts the "s"; part 1 went back to him as an open
     question, and parts 2 and 3 were built as proposed.
+56. A line's quiet first consonant (item 30, 1; "Open questions" 1 of 18 October 2026) is kept by a
+    lead-in given to the voice, a comma and the consonant doubled, for scripts and `--lines` alike
+    (Squirrel, 18 October 2026, after the four samples: "3 is the best").

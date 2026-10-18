@@ -96,10 +96,10 @@ def _phonemizer(lang):
     return lambda text: tokenizer.phonemize(text, lang)
 
 
-def spoken_phonemes(cue, phonemize):
-    """The phoneme string for a cue whose say: holds a [[…]] span: text parts phonemized, spans
-    as they stand, spaces as written."""
-    return phonemes.splice(script.spoken(cue), phonemize)
+def for_voice(said, phonemize):
+    """The phoneme string the voice is given for what a cue or line says: text parts phonemized,
+    [[…]] spans as they stand, spaces as written, then the lead-in (item 30, 1)."""
+    return phonemes.lead_in(phonemes.splice(said, phonemize))
 
 
 def _run(args):
@@ -136,7 +136,7 @@ def _run(args):
             words += n
             print(f"{clip_name(sc, cue)}  ~{n / WORDS_PER_SECOND:.1f} s  {script.spoken(cue)}")
             if phonemize:
-                print(f"    phonemes: {spoken_phonemes(cue, phonemize)}")
+                print(f"    phonemes: {for_voice(script.spoken(cue), phonemize)}")
         print(f"{len(cues)} cues, about {round(words / WORDS_PER_SECOND)} s of speech; nothing written (dry run).")
         return cli.OK
     outputs = [os.path.join(folder, clip_name(sc, cue)) for sc, cue in cues] + [timing_path]
@@ -164,13 +164,10 @@ def _run(args):
         lengths = []
         for cue in sc["cues"]:
             try:
-                if phonemes.has_span(script.spoken(cue)):
-                    given = spoken_phonemes(cue, lambda text: speech.tokenizer.phonemize(text, settings["language"]))
-                    samples, rate = speech.create(given, voice=voice, speed=speed, lang=settings["language"],
-                                                  is_phonemes=True)
-                else:
-                    samples, rate = speech.create(script.spoken(cue), voice=voice, speed=speed,
-                                                  lang=settings["language"])
+                to_say = for_voice(script.spoken(cue),
+                                   lambda text: speech.tokenizer.phonemize(text, settings["language"]))
+                samples, rate = speech.create(to_say, voice=voice, speed=speed, lang=settings["language"],
+                                              is_phonemes=True)
             except Exception as e:  # the model's own errors are not ours to classify
                 raise cli.Failure(f"the speech model failed on scene {sc['key']} cue {cue['n']} ({e}); "
                                   "nothing written for it", cli.EXTERNAL) from e
@@ -217,7 +214,7 @@ def _run_lines(args):
             if "say" in line:
                 print(f"    say: {said}")
             if phonemize:
-                print(f"    phonemes: {phonemes.splice(said, phonemize)}")
+                print(f"    phonemes: {for_voice(said, phonemize)}")
         print(f"{len(rows)} lines, about {round(total)} s of speech; nothing written (dry run).")
         return cli.OK
     outputs = [os.path.join(folder, name) for name in names] + [timing_path]
@@ -240,12 +237,8 @@ def _run_lines(args):
     spoken = []
     for i, (line, name) in enumerate(zip(rows, names)):
         try:
-            said = line.get("say", line["text"])
-            if phonemes.has_span(said):
-                given = phonemes.splice(said, lambda text: speech.tokenizer.phonemize(text, LINES_LANG))
-                samples, rate = speech.create(given, voice=voice, speed=speed, lang=LINES_LANG, is_phonemes=True)
-            else:
-                samples, rate = speech.create(said, voice=voice, speed=speed, lang=LINES_LANG)
+            to_say = for_voice(line.get("say", line["text"]), lambda text: speech.tokenizer.phonemize(text, LINES_LANG))
+            samples, rate = speech.create(to_say, voice=voice, speed=speed, lang=LINES_LANG, is_phonemes=True)
         except Exception as e:  # the model's own errors are not ours to classify
             raise cli.Failure(f"the speech model failed on line {line['n']} ({e}); nothing written for it",
                               cli.EXTERNAL) from e

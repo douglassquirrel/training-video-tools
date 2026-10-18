@@ -81,3 +81,15 @@ def splice(text, phonemize):
             trail = piece[len(piece.rstrip()):]
             out.append(lead + (phonemize(core) if core else "") + trail)
     return "".join(out).strip()
+
+
+QUIET = "sfθʃh"   # item 30, 1: the voiceless fricatives, said too faintly at the start of a cue
+
+
+def lead_in(given):
+    """The phoneme string as the voice is given it (item 30, 1): `, ` in front, and a quiet first
+    consonant doubled, so the voice says it in full at speed 1.5 (Squirrel's choice, by ear)."""
+    given = given.lstrip()
+    if not given:
+        return given
+    return ", " + (given[0] if given[0] in QUIET else "") + given

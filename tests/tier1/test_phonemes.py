@@ -1,5 +1,7 @@
 """videotools.phonemes: [[…]] spans in a say: line, and what is wrong with them."""
 
+import pytest
+
 from videotools import phonemes
 
 
@@ -36,3 +38,19 @@ def test_splicing_keeps_the_spaces_beside_a_span_even_though_the_phonemizer_stri
     assert phonemes.splice("Say [[kɑːɹpˈæθi]] here", strip_and_upper) == "SAY kɑːɹpˈæθi HERE"
     assert phonemes.splice("[[a]][[b]] c", strip_and_upper) == "ab C"
     assert phonemes.splice("plain words ", strip_and_upper) == "PLAIN WORDS"
+
+
+@pytest.mark.parametrize("given, expected", [
+    ("sˈaɪləs smˈaɪlz.", ", ssˈaɪləs smˈaɪlz."),          # a quiet first consonant doubled
+    ("fɪˈoʊnə wˈeɪts.", ", ffɪˈoʊnə wˈeɪts."),
+    ("θˈiə nˈɑːdz.", ", θθˈiə nˈɑːdz."),
+    ("ʃˈoʊnə wˈeɪvz.", ", ʃʃˈoʊnə wˈeɪvz."),
+    ("hjˈuːɡoʊ sˈɪts.", ", hhjˈuːɡoʊ sˈɪts."),
+    ("bɹˈæm wˈeɪvz.", ", bɹˈæm wˈeɪvz."),                # a loud one only the comma
+    ("ɐ kˈaɪt klˈaɪmz.", ", ɐ kˈaɪt klˈaɪmz."),          # a vowel only the comma
+    ("ðˈɛn sˈaɪləs.", ", ðˈɛn sˈaɪləs."),                 # voiced: not doubled
+    ("  sˈæm.", ", ssˈæm."),                              # leading spaces dropped
+    ("", ""),                                             # nothing to say stays nothing
+])
+def test_the_lead_in_puts_a_comma_first_and_doubles_a_quiet_first_consonant(given, expected):
+    assert phonemes.lead_in(given) == expected
