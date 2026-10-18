@@ -19,6 +19,8 @@ WORDS_PER_SECOND = 2.6
 LINES_SPEED = 1.5       # --lines' default: chosen by ear from the samples (Squirrel, 17 October 2026; Settled 50)
 THRESHOLD = 0.01        # a sample above this is sound
 BEFORE, AFTER = 0.03, 0.08  # seconds kept before the first and after the last sound
+LINES_LANG = "en-us"
+PHONEMES_DRY_RUN = "--phonemes goes with --dry-run (it only shows what the voice would be given)"
 
 
 def trim(samples, rate):
@@ -38,8 +40,9 @@ def parser():
                                 "~/.video-tools.conf.")
     p.add_argument("SCRIPT", nargs="?", help="the video's script.md (not with --lines)")
     p.add_argument("--lines", metavar="TABLE.md",
-                   help="instead of a script: a Markdown table of description lines ('#', 'Start (s)', 'Line'), "
-                        "each spoken to its own clip in --out (PLAN.md item 26)")
+                   help="instead of a script: a Markdown table of description lines ('#', 'Start (s)', 'Line', and "
+                        "optionally 'Say', spoken instead of 'Line', [[…]] spans allowed), each spoken to its own "
+                        "clip in --out (PLAN.md items 26 and 30)")
     p.add_argument("--out", metavar="FOLDER", help="with --lines: the folder for the clips and timing.json")
     p.add_argument("--scenes", metavar="KEY,...", help="only these scenes (keys as in the script)")
     p.add_argument("--voice", help="the voice, e.g. af_heart (default: the script's; with --lines, VOICE in the "
@@ -49,7 +52,8 @@ def parser():
     p.add_argument("--replace", action="store_true",
                    help="write over existing clips and timing.json, listing them first")
     p.add_argument("--phonemes", action="store_true",
-                   help="with --dry-run: also print the phoneme string each cue would be given, [[…]] spans spliced in")
+                   help="with --dry-run: also print the phoneme string each cue or line would be given, [[…]] spans "
+                        "spliced in")
     p.add_argument("--dry-run", action="store_true",
                    help="list the cues, the voice and an estimate of each clip; write nothing")
     return p
@@ -101,8 +105,7 @@ def spoken_phonemes(cue, phonemize):
 def _run(args):
     if args.lines:
         for given, flag in ((args.SCRIPT, "SCRIPT goes with a script's narration"),
-                            (args.scenes, "--scenes goes with a script"),
-                            (args.phonemes, "--phonemes goes with a script")):
+                            (args.scenes, "--scenes goes with a script")):
             if given:
                 raise cli.Failure(f"{flag}, not --lines", cli.USAGE)
         return _run_lines(args)
@@ -111,7 +114,7 @@ def _run(args):
     if args.SCRIPT is None:
         raise cli.Failure("give the video's script.md, or --lines TABLE.md --out FOLDER", cli.USAGE)
     if args.phonemes and not args.dry_run:
-        raise cli.Failure("--phonemes goes with --dry-run (it only shows what the voice would be given)", cli.USAGE)
+        raise cli.Failure(PHONEMES_DRY_RUN, cli.USAGE)
     data = script.read(args.SCRIPT)
     settings = script.settings(data)
     conf = config.read()
@@ -191,6 +194,8 @@ def _run_lines(args):
     from videotools import lines as lines_
     if args.out is None:
         raise cli.Failure("--lines needs --out FOLDER for the clips", cli.USAGE)
+    if args.phonemes and not args.dry_run:
+        raise cli.Failure(PHONEMES_DRY_RUN, cli.USAGE)
     speed = lines_.check_speed(args.speed if args.speed is not None else LINES_SPEED)
     conf = config.read()
     voice = args.voice or conf.get("VOICE", "") or "af_heart"
@@ -200,13 +205,19 @@ def _run_lines(args):
     largest = max(line["n"] for line in rows)
     names = [lines_.clip_name(line["n"], largest) for line in rows]
     if args.dry_run:
+        phonemize = _phonemizer(LINES_LANG) if args.phonemes else None   # before anything is printed
         print(f"narrate (dry run): {args.lines}")
         print(f"voice {voice}, speed {speed}, model kokoro-82m from {os.path.dirname(model)}")
         total = 0.0
         for line, name in zip(rows, names):
-            seconds = lines_.estimate(line["text"], speed)
+            said = line.get("say", line["text"])
+            seconds = lines_.estimate(said, speed)
             total += seconds
             print(f"{name}  at {line['start']:.2f} s  ~{seconds:.1f} s  {line['text']}")
+            if "say" in line:
+                print(f"    say: {said}")
+            if phonemize:
+                print(f"    phonemes: {phonemes.splice(said, phonemize)}")
         print(f"{len(rows)} lines, about {round(total)} s of speech; nothing written (dry run).")
         return cli.OK
     outputs = [os.path.join(folder, name) for name in names] + [timing_path]
@@ -229,7 +240,12 @@ def _run_lines(args):
     spoken = []
     for i, (line, name) in enumerate(zip(rows, names)):
         try:
-            samples, rate = speech.create(line["text"], voice=voice, speed=speed, lang="en-us")
+            said = line.get("say", line["text"])
+            if phonemes.has_span(said):
+                given = phonemes.splice(said, lambda text: speech.tokenizer.phonemize(text, LINES_LANG))
+                samples, rate = speech.create(given, voice=voice, speed=speed, lang=LINES_LANG, is_phonemes=True)
+            else:
+                samples, rate = speech.create(said, voice=voice, speed=speed, lang=LINES_LANG)
         except Exception as e:  # the model's own errors are not ours to classify
             raise cli.Failure(f"the speech model failed on line {line['n']} ({e}); nothing written for it",
                               cli.EXTERNAL) from e

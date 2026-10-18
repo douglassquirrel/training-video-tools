@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-17 October 2026, 23:10, session ended with a handover in the mailbox. **Requests 1 to 20 are built in full**, each in the README: the eight commands
+18 October 2026, afternoon, session open ("mac" on duty, the watch running). **Item 30 (audio-description-tools' request 7) is built in part: the `Say` column and `--phonemes` with `--lines --dry-run`; its part 1, the quiet first consonant, waits on Squirrel (PLAN.md "Open questions" 1).** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -29,7 +29,7 @@ and in a window an unlisted still or a part file written over (29, their request
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open**. Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 7 open** (claimed 18 October, 13:31 UTC; its reply drafted in the session's scratchpad, not sent, waiting on part 1 and Squirrel's OK). Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
@@ -43,11 +43,14 @@ message goes only on Squirrel's OK ("Settled" 47). The handover for the next ses
 `lobster-mail handover` at the end of this one (17 October, 23:10); `lobster-mail start` reads it
 first. No watch is running; nobody is on duty.
 
-Green: 698 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
+Green: 708 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** nothing. PLAN.md "Open questions" is empty: `-skip_frame noref` stays out
+**Waiting on Squirrel:** how to keep a line's quiet first consonant (PLAN.md "Open questions" 1):
+the measurement of 18 October showed the trim does not cut it; the voice at speed 1.5 squeezes it.
+Four listening samples (as now, a comma before, a comma and the consonant doubled, speed 1) are in
+that session's scratchpad. Then the reply to request 7 on his OK. Earlier: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
@@ -4328,3 +4331,106 @@ and of a killed slice carried on (item 29); audio-description-tools' first uses 
 Next session: `lobster-mail start` (the hook), CLAUDE.md, PLAN.md items 15 to 29, this section,
 `inbox/`.
 
+
+### 18 October 2026 — Session start; audio-description-tools' request 7 arrives
+
+**Decision.** `lobster-mail start` read the handover of 17 October; `inbox/` empty; the watch
+(`lobster-mail wait --as video-tools --session mac`) took the duty at 13:30 UTC and returned at
+13:31 with request 7 (id `2026-10-18-1331-audio-description-tools-request-7-narrate-keeps-a-quiet-first-co`),
+claimed with `ack`: a line's quiet first consonant cut, a `Say` column with phoneme spans for a
+table, `--phonemes` with `--lines --dry-run`. Reported with a proposal (measure the real model
+first, then a trim that walks back from the first loud sample, capped near 150 ms). Squirrel:
+"Go ahead with request 7 as proposed, with the new trim for scripts as well as --lines." Recorded
+as PLAN.md item 30 and "Settled" 55.
+
+### 18 October 2026 — Item 30, 1: the measurement says the trim is not the cause
+
+**Goal.** See how quiet the real model's soft onsets are before choosing the trim's method.
+
+**Decision / surprise.** The proposal assumed the trim cuts the "s"; it does not, on this Mac. The
+real model (kokoro-onnx 0.6.1, `af_heart`, speed 1.5, invented lines, scratchpad scripts) starts
+sound 30 to 70 ms into its output, and the trim keeps 30 ms before the first sample above 0.01,
+which reaches back into the onset's first rise or before it. The "s" is missing in the model's own
+output: its energy above 3.5 kHz before the first vowel is 1.1 for "Silas smiles." against 8.9 for
+the same "s" mid-line in "Then Silas smiles.", 0.06 for "Sam sits.", and 8.2 for "Silas" at speed
+1. A comma before the phonemes doubles it, a comma with the first consonant doubled about triples
+it, still short of mid-line; "f" and "h" stay faint. Numbers in PLAN.md "Things checked". So a new
+trim would change nothing heard here; building it would have been a change that fixes nothing.
+Part 1 went back to Squirrel as PLAN.md "Open questions" 1, with four listening samples (as now,
+comma, comma and doubled consonant, speed 1) in the session's scratchpad. Not ruled out: the
+device shell's espeak or onnxruntime giving different output (their track may have been made
+there). Parts 2 and 3 do not depend on it and go ahead.
+
+**State.** Nothing built yet; next the `Say` column, Tier 1.
+
+### 18 October 2026 — Item 30, 2: the `Say` column read (Tier 1)
+
+**Goal.** A table's optional `Say` column read; a wrong span refused naming the row.
+
+**Test.** `test_a_say_column_gives_what_is_spoken_and_an_empty_say_leaves_the_line_alone` (a row
+carries `say` only when its `Say` is filled in) and
+`test_a_say_whose_spans_are_wrong_is_refused_naming_its_row_and_the_problem` (unclosed, stray,
+empty, an unknown symbol; `check-script`'s own wording after `row 2 of the table in x.md: 'Say': `).
+
+**Red.** The column was ignored:
+```
+E         At index 0 diff: {'n': 1, 'start': 0.1, 'text': 'Silas smiles.'} != {'n': 1, 'start': 0.1, 'text': 'Silas smiles.', 'say': '[[sˈɪləs]] smiles.'}
+E       Failed: DID NOT RAISE Failure     (×4)
+5 failed, 16 deselected in 0.38s
+```
+**Green.** `21 passed in 0.36s`. The first problem of a bad `Say` is the message, as every other
+row refusal names one thing.
+
+### 18 October 2026 — Item 30, 2 and 3: speaking from `Say`; `--phonemes` with `--lines` (Tier 2)
+
+**Tests.** `test_a_row_with_say_is_spoken_from_it_spans_as_phonemes_and_timing_keeps_the_line`,
+`test_dry_run_shows_each_say_and_estimates_from_what_is_spoken`,
+`test_dry_run_with_phonemes_prints_each_lines_phonemes_spans_spliced_and_writes_nothing`,
+`test_a_say_with_a_wrong_span_is_refused_before_the_model_is_loaded`, and the flag-separation
+case for `--phonemes` changed (below).
+
+**Red.**
+```
+E         At index 2 diff: 'narrate: --phonemes goes with a script, not --lines\n' != 'narrate: --phonemes goes with --dry-run (it only shows what the voice would be given)\n'
+E         At index 0 diff: ('Silas smiles.', False, 'en-us') != ('sˈɪləs SMILES.', True, 'en-us')
+E         At index 1 diff: '02.wav  at 2.00 s  ~0.8 s  Thea nods.' != '    say: [[sˈɪləs]] smiles.'
+E         At index 0 diff: 2 != 0
+4 failed, 14 passed in 3.70s
+```
+The refusal of a wrong span passed at once (the reader of the Tier 1 cycle already refuses it);
+proven by replacing the span check with `wrong = []`: `assert (0, '01.wav  ...iming.json\n') ==
+(3, '')`, `1 failed`; restored, `1 passed`.
+
+**Green.** `62 passed in 8.05s` (both narrate files and the table reader).
+
+**Decision / surprise.** The flag-separation case `--lines … --dry-run --phonemes` expected
+"--phonemes goes with a script, not --lines"; request 7 asks for exactly that combination, so
+the expectation was item 26's and is no longer PLAN.md's. It now pins the new refusal,
+`--lines --phonemes` without `--dry-run`, in the script form's words. The `--help` of `--lines`
+and `--phonemes` now names `Say` and "each cue or line": its own test
+(`test_help_names_the_optional_say_column_and_phonemes_for_a_line`), red first (`assert "('#',
+'Start (s)', 'Line', and optionally 'Say' …" in 'usage: narrate …'`), then `42 passed in 7.76s`.
+
+### 18 October 2026 — Item 30, 2 and 3: Tier 3 on the Mac
+
+**Decision.** In the session's scratchpad, an invented two-row table (`Silas smiles.` with `Say`
+`[[sˈaɪləs]] smiles.`; `Thea nods.` with no `Say`) against the real model: `--dry-run --phonemes`
+printed the README's block (exit 0); `--phonemes` alone, `narrate: --phonemes goes with --dry-run
+(it only shows what the voice would be given)`, exit 2; the real run wrote `01.wav  0.661 s` and
+`02.wav  0.561 s`, `timing.json` with each `Line` as `text`. The same table without the column:
+row 2 byte-identical; row 1, spoken from the same phonemes as text, 15,860 samples against 15,856
+by the span route (the model's own text route differs by four samples).
+
+### 18 October 2026 — Item 30, parts 2 and 3: README, lint, the whole suite
+
+**Decision.** README: the `Say` column paragraph with the real dry run, `[--dry-run [--phonemes]]`
+in the heading, the errors table (exit 2 and exit 3), "Notes for users". **Lint**, its own pass:
+`All checks passed!`. **Green.**
+```
+videotools/lines.py               86      0     40      2    98%   17->19, 19->21
+videotools/narrate.py            202      0     62      0   100%
+TOTAL                           4708     44   1880     52    99%
+======================= 708 passed in 176.80s (0:02:56) ========================
+```
+**State.** Item 30 parts 2 and 3 built and committed; part 1 waits on Squirrel's choice; the
+reply to request 7 is drafted, not sent.

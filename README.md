@@ -275,7 +275,7 @@ length, plus punctuation and the space; 114 in all, listed in `videotools/phonem
 kokoro-onnx 0.6.1's vocabulary). Anything else the model would drop silently, so
 `check-script` reports it, along with an unclosed `[[`, an empty span, and a span in a caption.
 
-### `narrate --lines TABLE.md --out FOLDER [--speed S] [--voice V] [--replace] [--dry-run]`
+### `narrate --lines TABLE.md --out FOLDER [--speed S] [--voice V] [--replace] [--dry-run [--phonemes]]`
 
 The same voice on a **description table** instead of a script, for the audio-description
 project, whose timed lines are spoken fast and mixed into a video's sound. `TABLE.md` is any
@@ -311,6 +311,31 @@ Wrote 3 clips and clips/timing.json
 (That run, 17 October 2026, the real model on an invented three-line table; `timing.json` then
 holds the three lines with those lengths. The estimate runs long here: the model speaks these short
 lines faster than 2.6 words a second times 1.5.)
+
+**A `Say` column, where the written line is said wrongly.** A table may also have a `Say`
+column, anywhere among the others. A row whose `Say` is filled in is spoken from it instead of
+from `Line`, and `Say` may hold `[[…]]` phoneme spans exactly as a script's `say:` line does
+(above). A row whose `Say` is empty, and every row of a table without the column, is spoken from
+`Line` as before. `timing.json` keeps the `Line` as each line's `text`, and the dry run's
+estimate counts the words of what is spoken. A `Say` whose spans are wrong (an unclosed `[[`, a
+stray `]]`, an empty span, a symbol the voice does not know) is refused before the model is
+loaded, naming the row. To write a span, see what the voice is given: `--dry-run --phonemes`
+prints each line's `Say` and its phoneme string, spans spliced in; without `--dry-run`,
+`--phonemes` is refused.
+
+```
+$ ./narrate --lines table.md --out clips --dry-run --phonemes
+narrate (dry run): table.md
+voice af_heart, speed 1.5, model kokoro-82m from /Users/claude-test/models/kokoro
+01.wav  at 0.10 s  ~0.5 s  Silas smiles.
+    say: [[sˈaɪləs]] smiles.
+    phonemes: sˈaɪləs smˈaɪlz.
+02.wav  at 2.00 s  ~0.5 s  Thea nods.
+    phonemes: θˈiə nˈɑːdz.
+2 lines, about 1 s of speech; nothing written (dry run).
+```
+
+(Run 18 October 2026 on an invented two-row table whose `Say` column follows `Line`.)
 
 **How fast.** kokoro-onnx 0.6.1 accepts `speed` from 0.5 to 2.0 and refuses more, so 2.0 is the
 fastest. On an invented 15-word line in `af_heart`, 1.0 took 4.69 s (3.4 words a second), 1.5
@@ -1022,8 +1047,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
@@ -1115,6 +1140,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **18 October 2026.** `narrate --lines` reads an optional `Say` column: a row's `Say`, when filled in, is what is spoken, with `[[…]]` phoneme spans as in a script's `say:`; `Line` stays the text in `timing.json`. `--dry-run --phonemes` now works with `--lines` and prints each line's phoneme string. Tables without the column are spoken as before. For the audio-description project.
 - **17 October 2026, later that night.** `stills` on a video file writes each still to a part name, lists it, then renames it, so a still with its name is always in `stills.txt`. In a window, a still that is there but unlisted (a killed run's leftover) is written over and said; a `.part` file silently. For the audio-description project's slices.
 - **17 October 2026, night.** `stills VIDEO --changes` scores the picture 10 times a second (`--detect-fps N` to change it) and skips the audio, so a cut is reported within a tenth of a second after it (4.10 for a cut at 4.04, where it was 4.05); about a quarter faster on h264, no faster on VP9. `--from T` and `--until T` take a window with `--every` or `--changes`, and slices go into one folder, `stills.txt` added to; `--sheet` alone draws a folder's listing. `stills.txt` is now written a line at a time. For the audio-description project's device shell.
 - **17 October 2026, evening.** `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]` does the Linux device shell's preparation in one command: the venv, the packages, the model check, the config, and the three `export` lines on stdout for `eval` or an `env.sh`. The by-hand steps still work. For the audio-description project's `setup-device`.

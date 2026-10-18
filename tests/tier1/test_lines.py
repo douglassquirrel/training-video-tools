@@ -82,3 +82,32 @@ def test_the_speed_must_be_within_what_the_model_accepts():
         with pytest.raises(cli.Failure) as e:
             lines.check_speed(bad)
         assert (str(e.value), e.value.code) == (f"--speed should be from 0.5 to 2.0 (the model's range), not {bad:g}", cli.USAGE)
+
+
+SAY = """| # | Start (s) | Say | Line |
+|---|---|---|---|
+| 1 | 0.10 | [[sˈɪləs]] smiles. | Silas smiles. |
+| 2 | 2.00 |  | Thea nods. |
+| 3 | 4.00 | Hugo sits, slowly. | Hugo sits. |
+"""
+
+
+def test_a_say_column_gives_what_is_spoken_and_an_empty_say_leaves_the_line_alone():
+    assert lines.parse(SAY, "x.md") == [
+        {"n": 1, "start": 0.1, "text": "Silas smiles.", "say": "[[sˈɪləs]] smiles."},
+        {"n": 2, "start": 2.0, "text": "Thea nods."},                       # no 'say': spoken from Line
+        {"n": 3, "start": 4.0, "text": "Hugo sits.", "say": "Hugo sits, slowly."},
+    ]
+
+
+@pytest.mark.parametrize("say, problem", [
+    ("[[sˈɪləs smiles.", "'[[' at character 1 is never closed with ']]'"),
+    ("Silas]] smiles.", "']]' at character 6 has no '[[' before it"),
+    ("[[]] smiles.", "'[[]]' at character 1 is empty"),
+    ("[[s#ləs]] smiles.", "'#' (U+0023) in '[[s#ləs]]' is not a symbol the voice knows"),
+])
+def test_a_say_whose_spans_are_wrong_is_refused_naming_its_row_and_the_problem(say, problem):
+    text = f"| # | Start (s) | Line | Say |\n|---|---|---|---|\n| 1 | 0 | Fine. |  |\n| 2 | 1 | Silas smiles. | {say} |\n"
+    with pytest.raises(cli.Failure) as e:
+        lines.parse(text, "x.md")
+    assert (str(e.value), e.value.code) == (f"row 2 of the table in x.md: 'Say': {problem}", cli.REFUSED)

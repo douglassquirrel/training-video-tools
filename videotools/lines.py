@@ -1,12 +1,14 @@
 """A description table (PLAN.md item 26): one Markdown table whose columns `#`, `Start (s)` and
-`Line` are found by header, in any order; the rest ignored. Read for `narrate --lines`.
+`Line` are found by header, in any order; the rest ignored. Read for `narrate --lines`. An
+optional `Say` column (item 30) holds what is spoken instead of `Line`, with `[[…]]` spans.
 """
 
 import re
 
-from videotools import cli
+from videotools import cli, phonemes
 
 COLUMNS = ("#", "Start (s)", "Line")
+SAY = "Say"
 
 
 def cells(row):
@@ -35,8 +37,9 @@ def is_separator(row):
 
 
 def parse(text, name):
-    """The lines of the first table whose header has the three columns: [{"n", "start", "text"}, …].
-    Anything that cannot be spoken is a Failure in words (exit 3)."""
+    """The lines of the first table whose header has the three columns: [{"n", "start", "text"}, …],
+    with "say" when the table has a `Say` column and the row's is not empty. Anything that cannot
+    be spoken is a Failure in words (exit 3)."""
     rows = text.splitlines()
     header, first = None, None
     for i, row in enumerate(rows[:-1]):
@@ -73,7 +76,14 @@ def parse(text, name):
             raise cli.Failure(f"{row}: 'Start (s)' cannot be negative ({start})")
         if not text:
             raise cli.Failure(f"{row}: 'Line' is empty")
-        out.append({"n": int(number), "start": seconds, "text": text})
+        line = {"n": int(number), "start": seconds, "text": text}
+        say = values[header.index(SAY)] if SAY in header else ""
+        if say:
+            wrong = phonemes.problems(say)
+            if wrong:
+                raise cli.Failure(f"{row}: '{SAY}': {wrong[0]}")
+            line["say"] = say
+        out.append(line)
     if not out:
         raise cli.Failure(f"the table in {name} has no rows")
     return out

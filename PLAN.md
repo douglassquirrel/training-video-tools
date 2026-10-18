@@ -1612,6 +1612,41 @@ on stderr; a listed still refused as now; the sheet of a folder ignoring a part 
 for the part name. README: the paragraph on slices, the errors table, "Notes for users". The reply
 on Squirrel's OK.
 
+## 30. A quiet first consonant, a `Say` column, and `--phonemes` with `--lines` (audio-description-tools' request 7 of 18 October 2026, 13:31 UTC, by mail, id `2026-10-18-1331-audio-description-tools-request-7-narrate-keeps-a-quiet-first-co`; Squirrel, 18 October 2026: "Go ahead with request 7 as proposed, with the new trim for scripts as well as --lines")
+
+Squirrel heard two faults on a real description track spoken by `narrate --lines` (speed 1.5,
+`af_heart`): a line opening with "S" and a vowel lost its "s" (kept when another word came first;
+"sh" was right), and a name said wrongly mid-line could not be fixed from a table.
+
+1. **The quiet first consonant.** Asked: a trim that keeps a soft start and ending, for scripts and
+   `--lines`, with the most a clip may grow at its start said in the README. **Measured first
+   (18 October 2026, "Things checked"): on this Mac the trim does not cut the "s"; the voice
+   itself, at speed 1.5, says a line-opening "s" for about 30 ms at an eighth of a mid-line
+   "s"'s energy, and at speed 1 says it in full.** A trim change alone would not fix what was
+   heard, so how to fix it is back with Squirrel ("Open questions"), with listening samples;
+   nothing of part 1 is built until he chooses.
+2. **A `Say` column.** A description table may have a `Say` column, found by header like the
+   others, anywhere among them; without it nothing changes. A row whose `Say` is not empty is
+   spoken from its `Say`, with `[[…]]` phoneme spans as in a script's `say:` line (item 13): the
+   text parts phonemized by the model's tokenizer, the spans as they stand, given to the voice
+   as phonemes; a `Say` with no span is spoken as text. A row whose `Say` is empty is spoken from
+   `Line` as now. `Line` must still not be empty. `timing.json`'s `text` stays the `Line`; the
+   estimate in `--dry-run` counts the words of what is spoken. A `Say` whose spans are wrong (an
+   unclosed `[[`, a stray `]]`, an empty span, a symbol the voice does not know) is refused
+   before the model is loaded, naming the row and the problem, as `check-script` names them for
+   a `say:` line (exit 3). The dry run shows the `Say`, when there is one, on a line of its
+   own under its row's line, `    say: …`.
+3. **`--phonemes` with `--lines --dry-run`**: under each line, `    phonemes: …`, the string the
+   voice would be given (the `Say` spliced as in 2, or the `Line` phonemized), as for a script.
+   Without `--dry-run` refused as for a script: "--phonemes goes with --dry-run (it only shows
+   what the voice would be given)" (exit 2).
+
+Tests, test-first: Tier 1 for the column's reading (present, absent, empty, a bad span refused
+with its row); Tier 2 with the stub voice for the spoken text (spliced phonemes and
+`is_phonemes`, an empty `Say` from `Line`, `timing.json`'s `text`), the dry run's `say:` and
+`phonemes:` lines, and the refusal without `--dry-run`. README: the table's columns, the flag,
+"Notes for users". The reply on Squirrel's OK.
+
 ## What is written where
 
 - Every command writes only under the video's `work/` (intermediates: narration, insets,
@@ -1733,6 +1768,19 @@ package imported from there, never installed here) and, through it, `rsvg-conver
   non-keyframe file, and did nothing on VP9. `-skip_frame nokey` sees only keyframes: a cut away
   from one is lost. A red-to-green cut between lavfi `color` sources scored 0 at every threshold
   (the file's own oddity: the frames are red and green); white, black and red score 1.0 and 0.65.
+
+- **A line's opening consonant in kokoro-onnx 0.6.1 (18 October 2026, on the Mac, `af_heart`,
+  invented lines, in the session's scratchpad).** The model leaves almost no silence before the
+  first sound: the first sample above 0.01 comes 30 to 70 ms in, and before it the 5 ms RMS
+  rises from 0.0001; the trim's 30 ms margin starts at most a few ms before the soft onset, so
+  **the trim cuts no "s" here.** Energy above 3.5 kHz, summed before the first vowel (×1000):
+  "Silas smiles." 1.1 at speed 1.5 and 8.2 at speed 1; the "s" of "Then Silas smiles." mid-line
+  8.9; "Sam sits." 0.06 (no 10 ms window above 0.01); "Sophie reads the sign." 3.8 at 1.5 and
+  18.7 at 1. So at speed 1.5 the voice itself squeezes a line-opening "s". A space before the
+  phonemes changes nothing; a comma (or "…" or ".") before them doubles it ("Silas" 2.0, "Sam"
+  0.9, "Sophie" 7.2) and lengthens the clip by 0 to 0.04 s; a comma with the consonant doubled
+  ("ss…") gives 3.2, 1.9 and 9.8; a length mark (`sː`) less. "f" and "h" are faint in every form.
+  Listening samples of the four variants are in the session's scratchpad, not in the checkout.
 
 ## Build order
 
@@ -1861,7 +1909,12 @@ README): each command for real on the example video.
 
 ## Open questions
 
-None.
+1. **How to keep a line's quiet first consonant (item 30, 1).** Measured 18 October 2026: the
+   voice at speed 1.5 squeezes a line-opening "s", "f" or "h"; the trim does not cut it. Choices,
+   with listening samples of five invented lines (as now; a comma given before each line's
+   phonemes; a comma and the first consonant doubled; speed 1 for reference): a lead-in given to
+   the voice for every line, a fix line by line through the `Say` column (item 30, 2), or a
+   slower speed. Waiting on Squirrel's ear.
 
 ## Settled
 
@@ -2077,4 +2130,7 @@ None.
     name, listed, then renamed; an unlisted still written over and said; a part file written over
     silently; a listed still refused as before (Squirrel, 17 October 2026, 22:25: "Go ahead with
     request 6 as proposed: write it into PLAN.md as item 29 and build it test-first").
-
+55. audio-description-tools' request 7 is item 30 (Squirrel, 18 October 2026: "Go ahead with
+    request 7 as proposed, with the new trim for scripts as well as --lines"). The measurement
+    that came first showed the trim is not what cuts the "s"; part 1 went back to him as an open
+    question, and parts 2 and 3 were built as proposed.

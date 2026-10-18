@@ -89,7 +89,8 @@ def test_existing_clips_are_refused_and_replace_writes_over_them_listing_them_fi
 @pytest.mark.parametrize("args, message", [
     (["--lines", "T", "--out", "F", "--speed", "1", "S"], "SCRIPT goes with a script's narration, not --lines"),
     (["--lines", "T", "--out", "F", "--speed", "1", "--scenes", "A"], "--scenes goes with a script, not --lines"),
-    (["--lines", "T", "--out", "F", "--speed", "1", "--dry-run", "--phonemes"], "--phonemes goes with a script, not --lines"),
+    (["--lines", "T", "--out", "F", "--speed", "1", "--phonemes"],          # with --dry-run allowed since item 30
+     "--phonemes goes with --dry-run (it only shows what the voice would be given)"),
     (["--lines", "T", "--speed", "1"], "--lines needs --out FOLDER for the clips"),
     (["--lines", "T", "--out", "F", "--speed", "2.5"], "--speed should be from 0.5 to 2.0 (the model's range), not 2.5"),
     (["S", "--out", "F"], "--out goes with --lines"),
@@ -134,3 +135,83 @@ def test_a_model_failure_names_the_line_and_leaves_what_was_written(table, speec
     assert (code, stdout) == (4, "")
     assert err == "narrate: the speech model failed on line 1 (stub: the model failed on purpose); nothing written for it\n"
     assert os.listdir(out) == []
+
+
+SAY_TABLE = """| # | Start (s) | Line | Say |
+|---|---|---|---|
+| 1 | 0.10 | Silas smiles. | [[sˈɪləs]] smiles. |
+| 2 | 2.00 | Thea nods. |  |
+| 3 | 4.00 | Hugo sits. | Hugo sits, slowly. |
+"""
+
+
+@pytest.fixture
+def say_table(tmp_path):
+    path = tmp_path / "say.md"
+    path.write_text(SAY_TABLE, encoding="utf-8")
+    return path
+
+
+def test_a_row_with_say_is_spoken_from_it_spans_as_phonemes_and_timing_keeps_the_line(say_table, speech, tmp_path):
+    out = tmp_path / "clips"
+    code, stdout, err = run("narrate", "--lines", say_table, "--out", out, "--speed", "1.5", env=speech)
+    assert (code, err) == (0, "")
+    creates = [c["create"] for c in stub_calls(speech) if "create" in c]
+    assert [(c["text"], c["is_phonemes"], c["lang"]) for c in creates] == [
+        ("sˈɪləs SMILES.", True, "en-us"),          # the stub's phonemizer upper-cases the text part
+        ("Thea nods.", False, "en-us"),             # an empty Say: the Line, as text
+        ("Hugo sits, slowly.", False, "en-us"),     # a Say with no span: as text
+    ]
+    timing = json.loads((out / "timing.json").read_text())
+    assert [(x["n"], x["text"], x["length"]) for x in timing["lines"]] == [
+        (1, "Silas smiles.", stub_length(2)), (2, "Thea nods.", stub_length(2)), (3, "Hugo sits.", stub_length(3))]
+
+
+def test_dry_run_shows_each_say_and_estimates_from_what_is_spoken(say_table, speech, tmp_path):
+    code, stdout, err = run("narrate", "--lines", say_table, "--out", tmp_path / "c", "--speed", "1", "--dry-run", env=speech)
+    assert (code, err) == (0, "")
+    assert stdout.splitlines()[2:] == [
+        "01.wav  at 0.10 s  ~0.8 s  Silas smiles.",
+        "    say: [[sˈɪləs]] smiles.",
+        "02.wav  at 2.00 s  ~0.8 s  Thea nods.",
+        "03.wav  at 4.00 s  ~1.2 s  Hugo sits.",                # 3 words of the Say / 2.6
+        "    say: Hugo sits, slowly.",
+        "3 lines, about 3 s of speech; nothing written (dry run).",
+    ]
+    assert stub_calls(speech) == []
+
+
+def test_dry_run_with_phonemes_prints_each_lines_phonemes_spans_spliced_and_writes_nothing(say_table, speech, tmp_path):
+    code, stdout, err = run("narrate", "--lines", say_table, "--out", tmp_path / "c", "--speed", "1", "--dry-run", "--phonemes",
+                            env=speech)
+    assert (code, err) == (0, "")
+    assert stdout.splitlines()[2:-1] == [
+        "01.wav  at 0.10 s  ~0.8 s  Silas smiles.",
+        "    say: [[sˈɪləs]] smiles.",
+        "    phonemes: sˈɪləs SMILES.",
+        "02.wav  at 2.00 s  ~0.8 s  Thea nods.",
+        "    phonemes: THEA NODS.",
+        "03.wav  at 4.00 s  ~1.2 s  Hugo sits.",
+        "    say: Hugo sits, slowly.",
+        "    phonemes: HUGO SITS, SLOWLY.",
+    ]
+    assert not (tmp_path / "c").exists()
+    assert [c for c in stub_calls(speech) if "create" in c or "init" in c] == []   # the tokenizer only, no model
+
+
+def test_a_say_with_a_wrong_span_is_refused_before_the_model_is_loaded(speech, tmp_path):
+    bad = tmp_path / "bad.md"
+    bad.write_text("| # | Start (s) | Line | Say |\n|---|---|---|---|\n| 1 | 0 | Silas smiles. | [[sˈɪləs smiles. |\n",
+                   encoding="utf-8")
+    code, stdout, err = run("narrate", "--lines", bad, "--out", tmp_path / "c", "--speed", "1", env=speech)
+    assert (code, stdout) == (3, "")
+    assert err == f"narrate: row 1 of the table in {bad}: 'Say': '[[' at character 1 is never closed with ']]'\n"
+    assert not (tmp_path / "c").exists() and stub_calls(speech) == []
+
+
+def test_help_names_the_optional_say_column_and_phonemes_for_a_line(speech):
+    code, stdout, err = run("narrate", "--help", env=speech)
+    text = " ".join(stdout.split())
+    assert code == 0
+    assert "('#', 'Start (s)', 'Line', and optionally 'Say', spoken instead of 'Line', [[…]] spans allowed)" in text
+    assert "--phonemes with --dry-run: also print the phoneme string each cue or line would be given" in text
