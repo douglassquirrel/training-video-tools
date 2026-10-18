@@ -1917,10 +1917,7 @@ README): each command for real on the example video.
 
 ## Open questions
 
-1. **Which first consonants are doubled (item 30, 1).** The samples doubled only "s", "f" and
-   "h", the ones heard faint. Assumed: the voiceless fricatives `s`, `f`, `θ`, `ʃ` and `h` are
-   doubled, and nothing else, since a doubled `b`, `t` or `k` was never heard and may sound
-   like a stammer; every cue still gets the comma. A change is one line.
+None.
 
 ## Settled
 
@@ -2143,3 +2140,10 @@ README): each command for real on the example video.
 56. A line's quiet first consonant (item 30, 1; "Open questions" 1 of 18 October 2026) is kept by a
     lead-in given to the voice, a comma and the consonant doubled, for scripts and `--lines` alike
     (Squirrel, 18 October 2026, after the four samples: "3 is the best").
+57. The lead-in doubles a first `s`, `f`, `θ`, `ʃ` or `h` and nothing else; every cue gets the
+    comma (item 30, 1; "Open questions" 1 of 18 October 2026, the assumption made when building
+    it). Squirrel, 18 October 2026: "Doubling s, f, th, sh and h is right; settle it."
+58. Request 19's five adjustments ("Settled" 40: options written `name=value`, `phase` a fraction
+    of a beat, `rate` at most 3 a second with a default of 1.4, a flash not naming its members for
+    the curtain rule, `end of scene` as a span's end) are confirmed as built. Squirrel, 18 October
+    2026: "Request 19's five adjustments are also fine as built."

@@ -47,14 +47,13 @@ Green: 718 tests, coverage 99%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** PLAN.md "Open questions" 1, the assumption that only s, f, θ, ʃ and h
-are doubled (the samples doubled s, f and h), and request 19's five adjustments ("Settled" 40);
-both put to him on 18 October, not yet answered. Earlier: `-skip_frame noref` stays out
+**Waiting on Squirrel:** nothing. PLAN.md "Open questions" is empty: the lead-in's doubled
+consonants (s, f, θ, ʃ, h) are "Settled" 57, and request 19's five adjustments are confirmed
+("Settled" 58). Earlier: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
-real model folder is in the README). One thing he was told and has not answered either
-way: request 19's five adjustments (PLAN.md "Settled" 40). His other answers are in "Settled" 30
+real model folder is in the README). His other answers are in "Settled" 30
 to 44; one is a rule for every session: when unsure whether an earlier OK covers a new inbox
 item, ask. **video-tools may write into `~/projects/non-code/training-video/inbox/`** ("Settled"
 38) and nowhere else in that project: replies to its requests go there, naming the commit to
@@ -4505,3 +4504,13 @@ asks for a line that still loses its "s" in the device shell, which was not meas
 **State.** Item 30 built and replied to; nothing open in the mailbox. Put to Squirrel and
 unanswered: which first consonants are doubled ("Open questions" 1) and request 19's five
 adjustments.
+
+### 18 October 2026 — Two open questions settled
+
+**Decision.** Squirrel: "Doubling s, f, th, sh and h is right; settle it. Request 19's five
+adjustments are also fine as built." PLAN.md "Open questions" 1 moved to "Settled" 57; the five
+adjustments of 11 October, told to him then and never answered, confirmed as "Settled" 58. No code
+changes.
+
+**State.** Items 1 to 30 built and replied to; 718 tests, 99%, lint clean; nothing open in the
+mailbox; nothing waits on Squirrel.
