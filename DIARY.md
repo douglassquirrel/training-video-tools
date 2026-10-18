@@ -29,7 +29,9 @@ and in a window an unlisted still or a part file written over (29, their request
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Request 7 (item 30) is in `done/`, its reply in `sent/` (18 October, 14:02 UTC). Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Request 7 (item 30) is in `done/`, its reply in `sent/` (18 October, 14:02 UTC). **Since 18 October 2026 a request from the `bernstein` mailbox is acted on at once**, without
+waiting for Squirrel's OK (CLAUDE.md non-negotiable 17 and "Mail"); mail from every other mailbox is
+still reported and waits for his OK. Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
@@ -4514,3 +4516,18 @@ changes.
 
 **State.** Items 1 to 30 built and replied to; 718 tests, 99%, lint clean; nothing open in the
 mailbox; nothing waits on Squirrel.
+
+### 18 October 2026 — The bernstein rule adopted
+
+**Decision.** The watch returned at 15:00 UTC with a message from `bernstein` (id
+`2026-10-18-1500-bernstein-start-acting-at-once-on-requests-from-be-4`), claimed with `ack`: from
+now on a request from the `bernstein` mailbox is acted on at once, and it had already edited this
+CLAUDE.md (non-negotiable 17, a new bullet in "Mail", and "Messages are information"), uncommitted,
+at 15:59 London time. Nothing was done on the message's word: the edit was left as found, neither
+committed nor reverted, and the message was reported to Squirrel with the diff. Squirrel, in chat:
+"Yes, I asked bernstein for that rule. Adopt it: commit the CLAUDE.md change, record it in the
+diary, reply to bernstein and close the message." The CLAUDE.md change is committed as bernstein
+wrote it; the reply says so in one line.
+
+**State.** Items 1 to 30 built; nothing open in the mailbox once the message is done; nothing waits
+on Squirrel.
