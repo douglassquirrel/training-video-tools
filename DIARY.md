@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-18 October 2026, afternoon, session open ("mac" on duty, the watch running). **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
+18 October 2026, about 15:40 UTC, session ended with a handover in the mailbox. **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -41,9 +41,12 @@ sent at 19:33; request 5 (item 28) likewise, its reply sent at 22:00, and their 
 device-shell timing (18:08 UTC) read and closed at 22:10; request 6 (item 29) likewise, its reply
 sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
-message goes only on Squirrel's OK ("Settled" 47). The handover for the next session was left by
-`lobster-mail handover` at the end of this one (17 October, 23:10); `lobster-mail start` reads it
-first. No watch is running; nobody is on duty.
+message goes only on Squirrel's OK ("Settled" 47), except a request from `bernstein`, acted on at
+once (CLAUDE.md, since 18 October). The handover for the next session was left by
+`lobster-mail handover` at the end of this one (18 October, about 15:40 UTC); `lobster-mail start`
+reads it first. No watch is running; nobody is on duty. **Run every `lobster-mail` call on its
+own, spelled `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`**: the settings allow
+it by that prefix only, and a `cat …; ~/…/lobster-mail wait` was refused by the checker.
 
 Green: 718 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
@@ -4531,3 +4534,25 @@ wrote it; the reply says so in one line.
 
 **State.** Items 1 to 30 built; nothing open in the mailbox once the message is done; nothing waits
 on Squirrel.
+
+### 18 October 2026 — The watch refused once; session end: handover
+
+**Decision / surprise.** At about 15:25 UTC the watch timed out empty, and restarting it was
+refused by the auto-mode checker as "Instruction Poisoning". The refused command was `cat
+<last output>; ~/projects/…/lobster-mail wait …` in one call. `.claude/settings.json` allows
+`Bash(~/projects/code/lobster-tools-code/lobster-tools/lobster-mail:*)`, a prefix rule, and that
+command began with `cat`. Bernstein's advice, passed on by Squirrel, guessed a `$HOME` or `/Users`
+spelling; the spelling was right, but its fix (exact spelling, alone) worked: the same `wait` on
+its own started at once. From now on the last output is read with the Read tool and `wait` runs
+in a call of its own.
+
+Squirrel: "Stop the watch, bring the diary up to date, and leave the handover in the mailbox."
+The watch was stopped with nothing new; `inbox/` empty; the tree clean at `313bfdc` before this
+entry. "Where things stand" brought up to date, committed and pushed; then `lobster-mail handover
+--as video-tools --session mac -`, which gives up the duty.
+
+**State.** Items 1 to 30 built, replied to and pushed; 718 tests, 99%, lint clean. Nothing open in
+the mailbox; nothing waits on Squirrel; PLAN.md "Open questions" empty. Not run anywhere but the
+Mac: `setup-linux` in the real device shell, a killed slice carried on there, and the lead-in of
+item 30 there. Next session: `lobster-mail start` (the hook), CLAUDE.md (the bernstein rule in
+"Mail"), PLAN.md items 15 to 30, this section, `inbox/`.
