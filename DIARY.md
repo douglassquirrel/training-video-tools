@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-18 October 2026, about 18:25 UTC, session ended with a handover in the mailbox (a short session
+18 October 2026, 18:23 UTC, session ended with a handover in the mailbox (a short session
 started by bernstein to check the mail watch: it works; see the last log entry). **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
@@ -44,7 +44,7 @@ sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47), except a request from `bernstein`, acted on at
 once (CLAUDE.md, since 18 October). The handover for the next session was left by
-`lobster-mail handover` at the end of this one (18 October, about 18:25 UTC); `lobster-mail start`
+`lobster-mail handover` at the end of this one (18 October, 18:23 UTC, id `2026-10-18-1823-video-tools-handover-2026-10-18-18-23z`); `lobster-mail start`
 reads it first. No watch is running; nobody is on duty. **Run every `lobster-mail` call on its
 own, spelled `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`**: the settings allow
 it by that prefix only, and a `cat …; ~/…/lobster-mail wait` was refused by the checker. Read the
@@ -4592,3 +4592,7 @@ the tree clean at `f535908` before this entry.
 **State.** Unchanged: items 1 to 30 built, 718 tests, 99%, lint clean, pushed. Nothing open in the
 mailbox; nothing waits on Squirrel. Next session: `lobster-mail start` (the hook), CLAUDE.md,
 PLAN.md items 15 to 30, "Where things stand", `inbox/`.
+
+**Handover.** Sent at 18:23 UTC (`Sent 2026-10-18-1823-video-tools-handover-2026-10-18-18-23z`;
+`Duty for video-tools released by mac at 2026-10-18T18:23:48Z`). Its heading says "about 18:25",
+written before the clock was read; 18:23 is right. "Where things stand" gives the id and time.
