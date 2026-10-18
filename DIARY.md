@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-18 October 2026, about 15:40 UTC, session ended with a handover in the mailbox. **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
+18 October 2026, 17:59 UTC, session ended with a handover in the mailbox. **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -43,7 +43,7 @@ sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47), except a request from `bernstein`, acted on at
 once (CLAUDE.md, since 18 October). The handover for the next session was left by
-`lobster-mail handover` at the end of this one (18 October, about 15:40 UTC); `lobster-mail start`
+`lobster-mail handover` at the end of this one (18 October, 17:59 UTC, id `2026-10-18-1759-video-tools-handover-2026-10-18-17-59z`); `lobster-mail start`
 reads it first. No watch is running; nobody is on duty. **Run every `lobster-mail` call on its
 own, spelled `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`**: the settings allow
 it by that prefix only, and a `cat …; ~/…/lobster-mail wait` was refused by the checker.
@@ -4556,3 +4556,11 @@ the mailbox; nothing waits on Squirrel; PLAN.md "Open questions" empty. Not run 
 Mac: `setup-linux` in the real device shell, a killed slice carried on there, and the lead-in of
 item 30 there. Next session: `lobster-mail start` (the hook), CLAUDE.md (the bernstein rule in
 "Mail"), PLAN.md items 15 to 30, this section, `inbox/`.
+
+### 18 October 2026 — The handover's time
+
+**Decision / surprise.** The handover was sent at 17:59 UTC (`Sent
+2026-10-18-1759-video-tools-handover-2026-10-18-17-59z`; `Duty for video-tools released by mac at
+2026-10-18T17:59:01Z`). Its heading, and "Where things stand" until this entry, said "about 15:40
+UTC", a guess made without looking at the clock; the time in the handover's heading is wrong and
+the rest of it stands. "Where things stand" now gives 17:59.
