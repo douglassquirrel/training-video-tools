@@ -2,7 +2,8 @@
 
 ## Where things stand
 
-18 October 2026, 17:59 UTC, session ended with a handover in the mailbox. **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
+18 October 2026, about 18:25 UTC, session ended with a handover in the mailbox (a short session
+started by bernstein to check the mail watch: it works; see the last log entry). **Item 30 (audio-description-tools' request 7) is built: the lead-in that keeps a quiet first consonant (every cue and line given to the voice as phonemes, `, ` in front, a first s, f, θ, ʃ or h doubled; Squirrel's choice by ear), the `Say` column, and `--phonemes` with `--lines --dry-run`.** **Requests 1 to 20 are built in full**, each in the README: the eight commands
 of the first request; the four checking commands (PLAN.md item 11); ✓ and ✗ as strokes and the
 characters-a-font-lacks report (12); phoneme spans (13); the curtain and `stills --cue-changes`
 (14); choreography described in the script and drawn from the video-elements library (15);
@@ -43,10 +44,12 @@ sent at 23:00. The speed samples
 Squirrel listened to were deleted on his OK (17 October, 17:00). A reply or a new
 message goes only on Squirrel's OK ("Settled" 47), except a request from `bernstein`, acted on at
 once (CLAUDE.md, since 18 October). The handover for the next session was left by
-`lobster-mail handover` at the end of this one (18 October, 17:59 UTC, id `2026-10-18-1759-video-tools-handover-2026-10-18-17-59z`); `lobster-mail start`
+`lobster-mail handover` at the end of this one (18 October, about 18:25 UTC); `lobster-mail start`
 reads it first. No watch is running; nobody is on duty. **Run every `lobster-mail` call on its
 own, spelled `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`**: the settings allow
-it by that prefix only, and a `cat …; ~/…/lobster-mail wait` was refused by the checker.
+it by that prefix only, and a `cat …; ~/…/lobster-mail wait` was refused by the checker. Read the
+last `wait`'s output with the Read tool. Done that way on 18 October at 18:15 and 18:16 UTC, the
+watch started and restarted without a refusal.
 
 Green: 718 tests, coverage 99%, `ruff check .` clean, committed and pushed to `origin/main`. **The
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
@@ -4564,3 +4567,28 @@ item 30 there. Next session: `lobster-mail start` (the hook), CLAUDE.md (the ber
 2026-10-18T17:59:01Z`). Its heading, and "Where things stand" until this entry, said "about 15:40
 UTC", a guess made without looking at the clock; the time in the handover's heading is wrong and
 the rest of it stands. "Where things stand" now gives 17:59.
+
+### 18 October 2026 — bernstein's test of the mail watch; session end: handover
+
+**Goal.** Squirrel asked bernstein to start a video-tools session and check that its mail watch
+runs properly (the last session's restart of the watch had been refused once by the checker).
+
+**Decision / surprise.** None about the watch: the startup hook ran `lobster-mail start` (the
+17:59 handover claimed and closed; no new mail, nothing open, nobody on duty); `inbox/` empty; then
+`~/projects/code/lobster-tools-code/lobster-tools/lobster-mail wait --as video-tools --session mac`
+in a call of its own, in the background: `Duty for video-tools taken by mac at
+2026-10-18T18:15:25Z`. bernstein's message `2026-10-18-1815-bernstein-test-is-your-mail-watch-working`
+("Test: is your mail watch working?", 18:15:50 UTC) asked for a reply saying it was received, then
+`done`, no file changed and the watch kept running. The watch returned with it at once; as a
+request from `bernstein` it was acted on at once (CLAUDE.md "Mail"): `ack`, a reply
+(`2026-10-18-1816-video-tools-re-test-is-your-mail-watch-working`), `done`, and `wait` again, which
+started without a refusal (`duty status`: on duty mac, last beat 18:16:20Z). The output was read
+with the Read tool each time, never by `cat` in the same call. This entry was held until the
+session's end because the message asked that no file be changed.
+
+Squirrel: "stop and hand over". The watch was stopped with nothing new (18:23 UTC); `inbox/` empty;
+the tree clean at `f535908` before this entry.
+
+**State.** Unchanged: items 1 to 30 built, 718 tests, 99%, lint clean, pushed. Nothing open in the
+mailbox; nothing waits on Squirrel. Next session: `lobster-mail start` (the hook), CLAUDE.md,
+PLAN.md items 15 to 30, "Where things stand", `inbox/`.
