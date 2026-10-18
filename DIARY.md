@@ -29,7 +29,7 @@ and in a window an unlisted still or a part file written over (29, their request
 session starts with `lobster-mail start` (the hook runs it; CLAUDE.md "Mail"), then CLAUDE.md,
 PLAN.md (items 15 to 29 in full) and this section, then `inbox/`.
 
-**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: request 7 open** (claimed 18 October, 13:31 UTC; its reply drafted in the session's scratchpad, not sent, waiting on Squirrel's OK). Requests
+**Inbox: empty.** Everything that has arrived is in `inbox/done/`. **Mail: nothing open.** Request 7 (item 30) is in `done/`, its reply in `sent/` (18 October, 14:02 UTC). Requests
 from other projects arrive by `lobster-mail` in `~/projects/mail/video-tools/` (CLAUDE.md
 non-negotiable 17 and "Mail", since 17 October 2026; the command is
 `~/projects/code/lobster-tools-code/lobster-tools/lobster-mail`, not on PATH). audio-description-tools'
@@ -47,8 +47,9 @@ Green: 718 tests, coverage 99%, `ruff check .` clean, committed and pushed to `o
 repository moved** to `~/projects/code/videos/video-tools` between 11 and 17 October; CLAUDE.md and the
 README name the new path since 17 October, 17:05, and the venv was rebuilt there the same day.
 
-**Waiting on Squirrel:** the OK to send the reply to request 7; and PLAN.md "Open questions" 1,
-the assumption that only s, f, θ, ʃ and h are doubled (the samples doubled s, f and h). Earlier: `-skip_frame noref` stays out
+**Waiting on Squirrel:** PLAN.md "Open questions" 1, the assumption that only s, f, θ, ʃ and h
+are doubled (the samples doubled s, f and h), and request 19's five adjustments ("Settled" 40);
+both put to him on 18 October, not yet answered. Earlier: `-skip_frame noref` stays out
 ("Settled" 53, on audio-description-tools' device-shell timing of 18:08 UTC: 600 s slices in 15.6
 and 21.4 s where the old whole run took 86 s).
 The Tier 3 check of `setup-linux` in the real device shell is not done (a Mac dry run against the
@@ -4490,3 +4491,17 @@ TOTAL                           4709     44   1878     52    99%
 ```
 **State.** Item 30 built in full; the reply to request 7 drafted, not sent; "Open questions" 1
 (which consonants are doubled) waits on Squirrel.
+
+### 18 October 2026 — The reply to request 7 sent
+
+**Decision.** Squirrel: "Send the reply to audio-description-tools' request 7 and close the
+message." One sentence of the draft was corrected before sending: it said a row without `Say` is
+byte-identical on the real model, true at `724ee87` but not since the lead-in. `lobster-mail reply`:
+`Replied 2026-10-18-1402-video-tools-re-request-7-narrate-keeps-a-quiet-first to
+audio-description-tools`; `lobster-mail done`: `open/ -> done/`. The reply names commits `724ee87`
+and `866cb69`, says the trim was not the cause, describes the lead-in and its measured growth, and
+asks for a line that still loses its "s" in the device shell, which was not measured.
+
+**State.** Item 30 built and replied to; nothing open in the mailbox. Put to Squirrel and
+unanswered: which first consonants are doubled ("Open questions" 1) and request 19's five
+adjustments.
