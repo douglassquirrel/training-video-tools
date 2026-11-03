@@ -19,7 +19,7 @@ def copy_with_fake_venv(tmp_path):
     (tmp_path / ".venv" / "bin").mkdir(parents=True)
     fake = tmp_path / ".venv" / "bin" / "python"
     # The shim marks itself as the venv (a real venv is known by sys.prefix instead).
-    fake.write_text("#!/bin/sh\necho used-the-venv >> '{}'\nVIDEO_TOOLS_VENV='{}' exec '{}' \"$@\"\n".format(tmp_path / "venv.log", fake, sys.executable))
+    fake.write_text("#!/bin/sh\necho used-the-venv >> '{}'\nTRAINING_VIDEO_TOOLS_VENV='{}' exec '{}' \"$@\"\n".format(tmp_path / "venv.log", fake, sys.executable))
     fake.chmod(0o755)
     return tmp_path
 
@@ -56,19 +56,29 @@ def fake_python(tmp_path, name="other-python"):
     return fake
 
 
-def test_video_tools_python_names_the_python_the_wrapper_runs_under_even_beside_a_venv(tmp_path):
+def test_training_video_tools_python_names_the_python_the_wrapper_runs_under_even_beside_a_venv(tmp_path):
     folder = copy_with_fake_venv(tmp_path)
     other = fake_python(tmp_path)
-    env = clean_env(VIDEO_TOOLS_PYTHON=str(other))
+    env = clean_env(TRAINING_VIDEO_TOOLS_PYTHON=str(other))
     p = subprocess.run([sys.executable, str(folder / "check-script"), "--help"], capture_output=True, text=True, env=env)
     assert p.returncode == 0 and p.stdout.startswith("usage: check-script")
     assert (folder / "venv.log").read_text() == "used-other-python\n"      # once: no loop, and not the .venv
 
 
-def test_video_tools_python_that_does_not_exist_is_a_useful_error_exit_3(tmp_path):
+def test_training_video_tools_python_that_does_not_exist_is_a_useful_error_exit_3(tmp_path):
     folder = copy_with_fake_venv(tmp_path)
-    env = clean_env(VIDEO_TOOLS_PYTHON=str(tmp_path / "nowhere" / "python"))
+    env = clean_env(TRAINING_VIDEO_TOOLS_PYTHON=str(tmp_path / "nowhere" / "python"))
     p = subprocess.run([sys.executable, str(folder / "narrate"), "--help"], capture_output=True, text=True, env=env)
     assert (p.returncode, p.stdout) == (3, "")
-    assert p.stderr == f"narrate: VIDEO_TOOLS_PYTHON names no such file: {tmp_path / 'nowhere' / 'python'}\n"
+    assert p.stderr == f"narrate: TRAINING_VIDEO_TOOLS_PYTHON names no such file: {tmp_path / 'nowhere' / 'python'}\n"
     assert not (folder / "venv.log").exists()
+
+
+def test_the_old_video_tools_python_from_before_the_rename_is_not_read(tmp_path):
+    # video-tools is now another project's name: its variable must not choose this project's Python.
+    folder = copy_with_fake_venv(tmp_path)
+    other = fake_python(tmp_path)
+    env = clean_env(VIDEO_TOOLS_PYTHON=str(other))
+    p = subprocess.run([sys.executable, str(folder / "check-script"), "--help"], capture_output=True, text=True, env=env)
+    assert p.returncode == 0 and p.stdout.startswith("usage: check-script")
+    assert (folder / "venv.log").read_text() == "used-the-venv\n"

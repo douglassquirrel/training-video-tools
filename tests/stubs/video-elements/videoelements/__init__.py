@@ -1,1 +1,1 @@
-"""A stub of the video-elements package, for video-tools' tests (see ../README.md)."""
+"""A stub of the video-elements package, for training-video-tools' tests (see ../README.md)."""

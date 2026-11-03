@@ -31,19 +31,19 @@ def report(prog, failure):
 PACKAGES = {"numpy": ("numpy", "numpy"), "soundfile": ("soundfile", "soundfile"), "cairo": ("pycairo", "pycairo"),
             "PIL": ("Pillow", "Pillow"), "fontTools": ("fonttools", "fonttools"),
             "kokoro_onnx": ("kokoro-onnx", '"kokoro-onnx==0.6.1"')}
-DEVICE_SHELL_HINT = ('; from the Linux device shell, set VIDEO_TOOLS_PYTHON to a Python that has it '
+DEVICE_SHELL_HINT = ('; from the Linux device shell, set TRAINING_VIDEO_TOOLS_PYTHON to a Python that has it '
                      '(README, "Running from the Linux device shell")')
 
 
 def need(module):
     """Import a package a command needs and return it; if this Python lacks it, Failure (exit 4)
-    naming the package and its install line, and the device shell when VIDEO_TOOLS_PYTHON is unset."""
+    naming the package and its install line, and the device shell when TRAINING_VIDEO_TOOLS_PYTHON is unset."""
     import importlib
     try:
         return importlib.import_module(module)
     except ImportError as e:
         name, spec = PACKAGES.get(module, (module, module))
-        hint = "" if os.environ.get("VIDEO_TOOLS_PYTHON") else DEVICE_SHELL_HINT
+        hint = "" if os.environ.get("TRAINING_VIDEO_TOOLS_PYTHON") else DEVICE_SHELL_HINT
         raise Failure(f"the Python package '{name}' is not installed in this Python ({sys.executable}); "
                       f"install it with .venv/bin/pip install {spec}{hint}", EXTERNAL) from e
 

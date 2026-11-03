@@ -26,6 +26,7 @@ def test_help_names_every_flag():
     assert code == 0 and err == ""
     for flag in ("--scenes", "--voice", "--speed", "--replace", "--dry-run", "--phonemes"):
         assert flag in out
+    assert "~/.training-video-tools.conf" in " ".join(out.split())
 
 
 def test_dry_run_lists_the_cues_voice_and_estimates_and_writes_nothing(example, speech):
@@ -129,7 +130,7 @@ def test_replace_lists_what_it_replaces_and_keeps_other_scenes_timings(example, 
 def test_a_missing_model_folder_is_refused_naming_the_setting(example, speech, tmp_path):
     conf = tmp_path / "other.conf"
     conf.write_text("SPEECH_MODEL_DIR=%s\n" % (tmp_path / "nowhere"))
-    code, out, err = run("narrate", example, env=dict(speech, VIDEO_TOOLS_CONF=str(conf)))
+    code, out, err = run("narrate", example, env=dict(speech, TRAINING_VIDEO_TOOLS_CONF=str(conf)))
     assert (code, out) == (3, "")
     assert err == ("narrate: no model.onnx and voices.npz in {} (SPEECH_MODEL_DIR in {}); "
                    "see the README's one-time set-up\n".format(tmp_path / "nowhere", conf))
@@ -138,7 +139,7 @@ def test_a_missing_model_folder_is_refused_naming_the_setting(example, speech, t
 def test_a_config_without_the_model_setting_is_refused(example, speech, tmp_path):
     conf = tmp_path / "other.conf"
     conf.write_text("VOICE=af_heart\n")
-    code, out, err = run("narrate", example, env=dict(speech, VIDEO_TOOLS_CONF=str(conf)))
+    code, out, err = run("narrate", example, env=dict(speech, TRAINING_VIDEO_TOOLS_CONF=str(conf)))
     assert (code, out) == (3, "")
     assert err == f"narrate: SPEECH_MODEL_DIR is not set in {conf}; see the README's one-time set-up\n"
 
@@ -176,7 +177,7 @@ def test_a_model_failure_names_the_cue_and_leaves_what_was_written(example, spee
 
 
 def test_the_script_and_the_config_are_never_modified(example, speech):
-    conf = speech["VIDEO_TOOLS_CONF"]
+    conf = speech["TRAINING_VIDEO_TOOLS_CONF"]
     before = (open(example, "rb").read(), open(conf, "rb").read())
     run("narrate", example, "--scenes", "A", env=speech)
     assert (open(example, "rb").read(), open(conf, "rb").read()) == before

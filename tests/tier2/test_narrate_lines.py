@@ -123,7 +123,7 @@ def test_the_voice_flag_wins_and_without_a_config_voice_af_heart_is_the_default(
     conf = tmp_path / "quiet.conf"
     conf.write_text(f"SPEECH_MODEL_DIR={speech['SPEECH_MODEL_DIR_FOR_TESTS']}\n")
     code, stdout, err = run("narrate", "--lines", table, "--out", tmp_path / "b", "--speed", "1",
-                            env={**speech, "VIDEO_TOOLS_CONF": str(conf)})
+                            env={**speech, "TRAINING_VIDEO_TOOLS_CONF": str(conf)})
     assert code == 0 and json.loads((tmp_path / "b" / "timing.json").read_text())["voice"] == "af_heart"
     code, stdout, err = run("narrate", "--lines", table, "--out", tmp_path / "c", "--speed", "1", "--voice", "nobody", env=speech)
     assert (code, err) == (3, "narrate: the model has no voice 'nobody' (it has af_heart, bm_george, zz_test)\n")

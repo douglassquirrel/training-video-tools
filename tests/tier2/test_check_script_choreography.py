@@ -54,9 +54,9 @@ def test_a_described_scene_checks_clean_with_the_library_given_as_a_flag(example
 
 
 def test_the_library_from_the_config_file_when_no_flag_is_given(example, tmp_path):
-    conf = tmp_path / "video-tools.conf"
+    conf = tmp_path / "training-video-tools.conf"
     conf.write_text(f"VIDEO_ELEMENTS_DIR={INVENTED}\n")
-    code, out, err = run("check-script", described(example), env={"VIDEO_TOOLS_CONF": str(conf)})
+    code, out, err = run("check-script", described(example), env={"TRAINING_VIDEO_TOOLS_CONF": str(conf)})
     assert (code, err) == (0, "")
     assert out.endswith("\nNo problems found.\n")
 
@@ -64,7 +64,7 @@ def test_the_library_from_the_config_file_when_no_flag_is_given(example, tmp_pat
 def test_no_library_setting_is_one_problem_and_the_pieces_are_still_checked(example, tmp_path):
     conf = tmp_path / "none.conf"
     script = described(example, "- cue 2: crease.text wrong\n")
-    code, out, err = run("check-script", script, env={"VIDEO_TOOLS_CONF": str(conf)})
+    code, out, err = run("check-script", script, env={"TRAINING_VIDEO_TOOLS_CONF": str(conf)})
     assert (code, err) == (1, "")
     assert out.endswith(
         "\n2 problems:\n"
@@ -81,7 +81,7 @@ def test_an_element_the_library_lacks_is_listed_by_line(example):
     code, out, err = run("check-script", script, "--elements", INVENTED)
     assert (code, err) == (1, "")
     assert out.endswith("\n1 problem:\n  - line 128: scene A, cast: 'sheet': no element 'teapot': not one of "
-                        "video-tools' pieces (pill, callout, text, badge, hand, arrow) and not in the library "
+                        "training-video-tools' pieces (pill, callout, text, badge, hand, arrow) and not in the library "
                         "(pot, table)\n")
 
 
@@ -102,7 +102,7 @@ def test_a_bad_library_folder_is_one_problem_in_words(example, tmp_path):
     code, out, err = run("check-script", described(example), "--elements", tmp_path / "gone")
     assert (code, err) == (1, "")
     assert out.endswith(f"\n1 problem:\n  - {tmp_path / 'gone'}: video-elements folder not found (VIDEO_ELEMENTS_DIR "
-                        "in {conf}, or --elements)\n".replace("{conf}", os.path.expanduser("~/.video-tools.conf")))
+                        "in {conf}, or --elements)\n".replace("{conf}", os.path.expanduser("~/.training-video-tools.conf")))
 
 
 # ---- request 14: the credit lines the end card will show, printed for approval

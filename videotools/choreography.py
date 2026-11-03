@@ -20,7 +20,7 @@ OWN_COLOUR = "colour."                            # colour.<role>=<name>: a memb
 NUM = r"-?\d+(?:\.\d+)?"
 REGIONS = ("left", "right", "centre", "top-left", "top-right", "bottom-left", "bottom-right", "full")
 CAST_COLUMNS = ("Name", "Element", "Where", "Size", "Parameters")
-PIECES = ("pill", "callout", "text", "badge", "hand", "arrow")   # video-tools' own cast members
+PIECES = ("pill", "callout", "text", "badge", "hand", "arrow")   # training-video-tools' own cast members
 DEFAULT_SPAN = 0.6                                               # seconds a move takes when no time is given
 
 _NAME_RE = re.compile(f"^{NAME}$")
@@ -575,7 +575,7 @@ def _check_part(scene, cast, moves, cast_where, moves_where, tl, lib, labels, fo
         at = f"line {m['line']}: {cast_where}: "
         kind = _element_kind(m["element"], lib)
         if kind is None:
-            problems.append(f"{at}'{m['name']}': no element '{m['element']}': not one of video-tools' pieces "
+            problems.append(f"{at}'{m['name']}': no element '{m['element']}': not one of training-video-tools' pieces "
                             f"({', '.join(PIECES)}) and not in the library ({', '.join(lib.names())})")
         if m["where"] and m["where"]["kind"] == "anchor":      # no Where: an arrow, placed by its ends
             problem = _anchor_problem(ctx, m["where"], m["name"])
@@ -680,7 +680,7 @@ def text_file(folder, value):
 
 
 def _data_of(m, lib, folder):
-    """What video-tools read for a library member, by parameter: for a `rows` parameter that names
+    """What training-video-tools reads for a library member, by parameter: for a `rows` parameter that names
     a readable CSV under the video's folder, {"rows": the rows its qualifiers choose}; for a text
     parameter, {"lines": its non-blank lines as chosen} (from the file it names, or the value
     itself). Each also has "label" (the file as written, or 'the text'), "note" (' as chosen' when

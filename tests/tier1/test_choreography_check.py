@@ -102,7 +102,7 @@ def test_an_element_that_is_neither_a_piece_nor_in_the_library_is_a_problem():
 """
     lib = elements.open_library(INVENTED, None)
     assert _check(text, lib=lib) == [
-        "line 25: scene A2, cast: 'a': no element 'pillow': not one of video-tools' pieces (pill, callout, text, "
+        "line 25: scene A2, cast: 'a': no element 'pillow': not one of training-video-tools' pieces (pill, callout, text, "
         "badge, hand, arrow) and not in the library (pot, table)"]
     assert _check(text) == []       # no library: its elements are not checked here (check-script says why)
 

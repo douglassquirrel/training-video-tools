@@ -26,17 +26,17 @@ def fresh_import():
 
 
 def test_no_setting_and_no_flag_is_refused_naming_both(fresh_import, monkeypatch):
-    monkeypatch.setenv("VIDEO_TOOLS_CONF", "/nowhere/video-tools.conf")
+    monkeypatch.setenv("TRAINING_VIDEO_TOOLS_CONF", "/nowhere/training-video-tools.conf")
     with pytest.raises(cli.Failure) as e:
         elements.open_library(None, None)
-    assert str(e.value) == ("VIDEO_ELEMENTS_DIR is not set in /nowhere/video-tools.conf and no --elements was given; "
+    assert str(e.value) == ("VIDEO_ELEMENTS_DIR is not set in /nowhere/training-video-tools.conf and no --elements was given; "
                             "a script that describes a scene's cast needs the video-elements repository "
                             "(README, \"Configuration\")")
     assert e.value.code == cli.REFUSED
 
 
 def test_a_missing_folder_is_refused_by_path(fresh_import, tmp_path, monkeypatch):
-    monkeypatch.setenv("VIDEO_TOOLS_CONF", "/nowhere/video-tools.conf")
+    monkeypatch.setenv("TRAINING_VIDEO_TOOLS_CONF", "/nowhere/training-video-tools.conf")
     with pytest.raises(cli.Failure) as e:
         elements.open_library(str(tmp_path / "gone"), None)
     assert str(e.value) == (f"{tmp_path / 'gone'}: video-elements folder not found "

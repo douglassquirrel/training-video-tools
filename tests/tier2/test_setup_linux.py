@@ -27,7 +27,7 @@ def pystub(tmp_path):
     (model / "voices.npz").write_bytes(b"")
     return {"PATH": f"{bin_dir}:{os.environ['PATH']}", "PYSTUB_LOG": str(tmp_path / "python-calls.jsonl"),
             "python3": str(python3), "venv": str(tmp_path / "work" / "venv"), "model": str(model),
-            "conf": str(tmp_path / "work" / "video-tools.conf")}
+            "conf": str(tmp_path / "work" / "training-video-tools.conf")}
 
 
 def setup(env, *extra, venv=None, model=None, conf=None):
@@ -47,8 +47,8 @@ def calls(env):
 
 
 def lines_for(env):
-    return (f"export VIDEO_TOOLS_PYTHON={env['venv']}/bin/python\n"
-            f"export VIDEO_TOOLS_CONF={env['conf']}\n"
+    return (f"export TRAINING_VIDEO_TOOLS_PYTHON={env['venv']}/bin/python\n"
+            f"export TRAINING_VIDEO_TOOLS_CONF={env['conf']}\n"
             "export PYTHONDONTWRITEBYTECODE=1\n")
 
 
@@ -57,6 +57,7 @@ def test_help_and_usage():
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: setup-linux [-h] --venv DIR --model DIR --conf FILE [--dry-run]")
     assert "venv" in out and "model.onnx" in out
+    assert "for the training-video-tools commands" in " ".join(out.split())
     code, out, err = run("setup-linux")
     assert code == 2 and "usage: setup-linux" in err
     assert "the following arguments are required: --venv, --model, --conf" in err
@@ -116,9 +117,9 @@ def test_a_config_without_the_setting_gains_it_at_the_end(pystub):
 
 
 def test_the_config_folder_is_made_when_it_is_missing(pystub, tmp_path):
-    conf = str(tmp_path / "elsewhere" / "deeper" / "video-tools.conf")
+    conf = str(tmp_path / "elsewhere" / "deeper" / "training-video-tools.conf")
     code, out, err = setup(pystub, conf=conf)
-    assert code == 0 and out.splitlines()[1] == f"export VIDEO_TOOLS_CONF={conf}"
+    assert code == 0 and out.splitlines()[1] == f"export TRAINING_VIDEO_TOOLS_CONF={conf}"
     assert open(conf).read() == f"SPEECH_MODEL_DIR={pystub['model']}\n"
 
 
@@ -249,6 +250,6 @@ def test_paths_with_spaces_and_non_ascii_are_quoted_for_the_shell(pystub, tmp_pa
     conf = str(tmp_path / "wörk space" / "vidéo tools.conf")
     code, out, err = setup(pystub, venv=venv, conf=conf)
     assert (code, err) == (0, f"setup-linux: made the venv at {venv}\nsetup-linux: installed {' '.join(PACKAGES)} into {venv}\nsetup-linux: wrote {conf}\n")
-    assert out == (f"export VIDEO_TOOLS_PYTHON='{venv}/bin/python'\nexport VIDEO_TOOLS_CONF='{conf}'\n"
+    assert out == (f"export TRAINING_VIDEO_TOOLS_PYTHON='{venv}/bin/python'\nexport TRAINING_VIDEO_TOOLS_CONF='{conf}'\n"
                    "export PYTHONDONTWRITEBYTECODE=1\n")
     assert os.path.isfile(os.path.join(venv, "bin", "python")) and open(conf).read() == f"SPEECH_MODEL_DIR={pystub['model']}\n"

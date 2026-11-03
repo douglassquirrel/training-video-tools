@@ -126,8 +126,8 @@ def model_problems(model):
 
 
 def environment_lines(venv, conf):
-    return [f"export VIDEO_TOOLS_PYTHON={shlex.quote(os.path.join(venv, 'bin', 'python'))}",
-            f"export VIDEO_TOOLS_CONF={shlex.quote(conf)}",
+    return [f"export TRAINING_VIDEO_TOOLS_PYTHON={shlex.quote(os.path.join(venv, 'bin', 'python'))}",
+            f"export TRAINING_VIDEO_TOOLS_CONF={shlex.quote(conf)}",
             "export PYTHONDONTWRITEBYTECODE=1"]
 
 
@@ -142,7 +142,7 @@ def refuse_inside_checkout(venv):
 def parse(argv):
     p = argparse.ArgumentParser(
         prog=PROG,
-        description="Prepare the Linux device shell for the video-tools commands: a venv outside the "
+        description="Prepare the Linux device shell for the training-video-tools commands: a venv outside the "
                     "checkout with the packages, a check that the speech model (model.onnx and voices.npz) "
                     "is in place, a config naming it, and the three environment lines to export.")
     p.add_argument("--venv", required=True, metavar="DIR", help="the venv to make or reuse (never inside the checkout)")

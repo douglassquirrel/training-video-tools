@@ -102,12 +102,12 @@ def test_the_library_is_asked_to_draw_with_the_rect_state_params_and_alpha(video
 
 
 def test_a_described_scene_that_needs_the_library_is_refused_without_one(example, monkeypatch):
-    monkeypatch.setenv("VIDEO_TOOLS_CONF", "/nowhere/video-tools.conf")
+    monkeypatch.setenv("TRAINING_VIDEO_TOOLS_CONF", "/nowhere/training-video-tools.conf")
     cropped(example)
     narrated(example)
     with pytest.raises(cli.Failure) as e:
         frame.Video(describe(example))
-    assert str(e.value).startswith("VIDEO_ELEMENTS_DIR is not set in /nowhere/video-tools.conf and no --elements")
+    assert str(e.value).startswith("VIDEO_ELEMENTS_DIR is not set in /nowhere/training-video-tools.conf and no --elements")
 
 
 def test_a_described_scene_with_problems_is_refused_listing_them(example):
@@ -132,7 +132,7 @@ def test_stills_and_render_take_the_library_from_the_flag_and_refuse_without_it(
     assert (code, err) == (0, "")
     code, out, err = run("render", script, "--scenes", "A", "--dry-run", "--elements", INVENTED)
     assert (code, err) == (0, "")
-    code, out, err = run("render", script, "--scenes", "A", "--dry-run", env={"VIDEO_TOOLS_CONF": "/nowhere/c"})
+    code, out, err = run("render", script, "--scenes", "A", "--dry-run", env={"TRAINING_VIDEO_TOOLS_CONF": "/nowhere/c"})
     assert code == 3 and err.startswith("render: VIDEO_ELEMENTS_DIR is not set in /nowhere/c and no --elements")
 
 

@@ -37,7 +37,7 @@ def parser():
     p = argparse.ArgumentParser(prog=PROG, description="Speak every cue of a video's script with the "
                                 "local speech model, one clip per cue, and write the clip lengths "
                                 "to timing.json. Flags win over the script; the script over "
-                                "~/.video-tools.conf.")
+                                "~/.training-video-tools.conf.")
     p.add_argument("SCRIPT", nargs="?", help="the video's script.md (not with --lines)")
     p.add_argument("--lines", metavar="TABLE.md",
                    help="instead of a script: a Markdown table of description lines ('#', 'Start (s)', 'Line', and "

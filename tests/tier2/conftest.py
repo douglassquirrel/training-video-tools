@@ -13,13 +13,15 @@ STUBS = os.path.join(REPO, "tests", "stubs")
 
 
 # Settings the user's shell may export (the README tells device-shell users to export
-# VIDEO_TOOLS_PYTHON) that would change what a command under test does: a test sets them on purpose
-# or not at all. FONTCONFIG_FILE: set in-process by fonts.load on Linux; a child must set its own.
-USER_SETTINGS = ("VIDEO_TOOLS_PYTHON", "VIDEO_TOOLS_CONF", "FONTCONFIG_FILE")
+# TRAINING_VIDEO_TOOLS_PYTHON, and before the rename VIDEO_TOOLS_PYTHON) that would change what a
+# command under test does: a test sets them on purpose or not at all. FONTCONFIG_FILE: set in-process
+# by fonts.load on Linux; a child must set its own.
+USER_SETTINGS = ("TRAINING_VIDEO_TOOLS_PYTHON", "TRAINING_VIDEO_TOOLS_CONF", "VIDEO_TOOLS_PYTHON", "VIDEO_TOOLS_CONF",
+                 "FONTCONFIG_FILE")
 
 
 def clean_env(**overrides):
-    """A copy of the environment without the user's own video-tools settings, plus `overrides`."""
+    """A copy of the environment without the user's own training-video-tools settings, plus `overrides`."""
     env = {k: v for k, v in os.environ.items() if k not in USER_SETTINGS}
     env.update(overrides)
     return env
@@ -46,10 +48,10 @@ def speech(tmp_path):
     model.mkdir(parents=True)
     (model / "model.onnx").write_bytes(b"")
     (model / "voices.npz").write_bytes(b"")
-    conf = tmp_path / "video-tools.conf"
+    conf = tmp_path / "training-video-tools.conf"
     conf.write_text(f"SPEECH_MODEL_DIR={model}\nVOICE=bm_george\nSPEED=1.0\n")
     log = tmp_path / "kokoro-calls.jsonl"
-    return {"PYTHONPATH": STUBS, "VIDEO_TOOLS_CONF": str(conf), "KOKORO_STUB_LOG": str(log),
+    return {"PYTHONPATH": STUBS, "TRAINING_VIDEO_TOOLS_CONF": str(conf), "KOKORO_STUB_LOG": str(log),
             "SPEECH_MODEL_DIR_FOR_TESTS": str(model)}
 
 

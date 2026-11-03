@@ -1,11 +1,11 @@
-# video-tools
+# training-video-tools
 
 Command-line tools for making short narrated, animated training videos from a procedure
 diagram: one scene per step, captions, common mistakes shown beside the right way, in a brand's
 colours and fonts. A video is described by three Markdown files (its script, its brand kit and
 the machine's config); the tools make the narration with a local speech model, time the scenes
 from it, draw the frames, render and assemble the video, and check it. Written for the
-training-video project (`~/projects/non-code/training-video/`) and anyone making the same kind of
+training-video project (`~/projects/non-code/videos/training-video/`) and anyone making the same kind of
 video from Terminal on a Mac. Nothing leaves the machine: no service is called, nothing is
 uploaded, and no command ever writes over an existing file.
 
@@ -23,7 +23,7 @@ and `compare-video` (two finished videos compared).
 - Homebrew's `python@3.12` (the speech packages need Python 3.10–3.13; the Mac's own
   `/usr/bin/python3` is 3.9 and runs only `check-script`), `cairo`, `pkgconf` and `ffmpeg`.
 - The Kokoro-82M speech model, about 327 MB, in `~/models/kokoro/` (one-time set-up below).
-- `~/.video-tools.conf` naming the model's folder.
+- `~/.training-video-tools.conf` naming the model's folder.
 
 ## Installation
 
@@ -31,8 +31,8 @@ Paste into Terminal, from the folder you keep code in:
 
 ```bash
 brew install python@3.12 cairo pkgconf ffmpeg
-git clone git@github.com:douglassquirrel/video-tools.git
-cd video-tools
+git clone git@github.com:douglassquirrel/training-video-tools.git
+cd training-video-tools
 /opt/homebrew/bin/python3.12 -m venv .venv
 .venv/bin/pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools
 ```
@@ -48,7 +48,7 @@ repository, with the packages, a config naming the model and three environment l
 every session there needs; `setup-linux` does all of it in one command and prints the lines:
 
 ```bash
-eval "$(./setup-linux --venv /tmp/work-$(id -u)/venv --model $HOME/mnt/kokoro --conf /tmp/work-$(id -u)/video-tools.conf)"
+eval "$(./setup-linux --venv /tmp/work-$(id -u)/venv --model $HOME/mnt/kokoro --conf /tmp/work-$(id -u)/training-video-tools.conf)"
 ./check-script videos/make-bed/script.md
 ```
 
@@ -56,13 +56,13 @@ It runs on the system `python3` (nothing installed), makes the venv when it is m
 (`python3 -m venv --system-site-packages DIR`), installs the packages when the venv cannot import
 them (`pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools`, the one step that
 uses the network), checks that the model folder holds `model.onnx` and `voices.npz`, writes
-`SPEECH_MODEL_DIR` into the config and prints `export VIDEO_TOOLS_PYTHON=…`, `export
-VIDEO_TOOLS_CONF=…` and `export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in
+`SPEECH_MODEL_DIR` into the config and prints `export TRAINING_VIDEO_TOOLS_PYTHON=…`, `export
+TRAINING_VIDEO_TOOLS_CONF=…` and `export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in
 place and prints the lines alone. By hand, it is the same four steps. Every command restarts
-itself under the Python `VIDEO_TOOLS_PYTHON` names.
+itself under the Python `TRAINING_VIDEO_TOOLS_PYTHON` names.
 
 Never build that venv inside the repository from Linux (it would shadow the Mac's);
-`setup-linux` refuses to. With `VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a
+`setup-linux` refuses to. With `TRAINING_VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a
 path that does not exist is refused with exit 3.
 
 ### One-time set-up of the speech model
@@ -85,12 +85,12 @@ These are the only steps that use the network. Run once per machine.
    `~/models/kokoro` with the venv's Python):
 
    ```bash
-   ~/projects/code/videos/video-tools/.venv/bin/python -c "import numpy as np, glob, os
+   ~/projects/code/videos/training-video-tools-code/training-video-tools/.venv/bin/python -c "import numpy as np, glob, os
    v={os.path.basename(f)[:-4]: np.fromfile(f, dtype=np.float32).reshape(-1,1,256) for f in glob.glob('*.bin')}
    np.savez(open('voices.npz','wb'), **v); print(sorted(v))"
    ```
 
-3. Tell the tools where it is, in `~/.video-tools.conf` (copy `video-tools.conf.example`):
+3. Tell the tools where it is, in `~/.training-video-tools.conf` (copy `training-video-tools.conf.example`):
 
    ```
    SPEECH_MODEL_DIR=~/models/kokoro
@@ -240,7 +240,7 @@ one clip per cue, trimmed to 30 ms before the first and 80 ms after the last sou
   clip lengths in seconds, which time everything that follows.
 
 The voice, speed and language come from the script's Settings; `--voice` and `--speed` win over
-the script; `~/.video-tools.conf`'s `VOICE` and `SPEED` are defaults for a script that does not
+the script; `~/.training-video-tools.conf`'s `VOICE` and `SPEED` are defaults for a script that does not
 set them (the format requires both, so they rarely apply). `--scenes A,B` does only those scenes
 and keeps the other scenes' entries in an existing `timing.json` (with `--replace`). Nothing is
 written over an existing clip or timing file: the command refuses, listing them; `--replace`
@@ -301,7 +301,7 @@ ignored. Each line goes to its own trimmed clip in `FOLDER` (made if missing), `
 … (more digits when the numbers need them), and `timing.json` there holds the voice, speed,
 model and sample rate and, per line, its number, start, text and real length in seconds,
 rewritten after each clip. `--speed` defaults to 1.5 (the model accepts 0.5 to 2.0; see below) and
-`--voice` to `VOICE` in `~/.video-tools.conf`, else `af_heart`: both chosen by ear on 17 October 2026. Each clip's real length
+`--voice` to `VOICE` in `~/.training-video-tools.conf`, else `af_heart`: both chosen by ear on 17 October 2026. Each clip's real length
 is printed, and where a line's start plus its length passes the next line's start, a warning on
 stderr names both (exit 0 still: the writer decides). Nothing is written over an existing clip or
 `timing.json` without `--replace`, which lists them first. `--dry-run` lists each line with its
@@ -888,7 +888,7 @@ No problems found.
 
 ### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N] [--elements DIR] [--renderer PATH]`
 
-Proof that a change (to scene code, a brand kit, or video-tools itself) changes no pixel of a
+Proof that a change (to scene code, a brand kit, or training-video-tools itself) changes no pixel of a
 video, or exactly which frames it changes, without rendering: every N-th frame of each scene
 (default every one) is drawn as `render` draws it and the MD5 of its pixels recorded by scene
 and frame number. `--out` writes the record (`{"<scene>": {"<frame>": "<md5>"}}`) and refuses an
@@ -1020,12 +1020,12 @@ under, so it cannot use it.
 - Paths with spaces or other characters a shell would split are quoted in the lines.
 
 ```
-$ ./setup-linux --venv /tmp/work/venv --model ~/models/kokoro --conf /tmp/work/video-tools.conf --dry-run
+$ ./setup-linux --venv /tmp/work/venv --model ~/models/kokoro --conf /tmp/work/training-video-tools.conf --dry-run
 Would make the venv at /tmp/work/venv
 Would install pycairo numpy soundfile kokoro-onnx==0.6.1 Pillow fonttools into /tmp/work/venv
-Would write /tmp/work/video-tools.conf with SPEECH_MODEL_DIR=/Users/me/models/kokoro
-export VIDEO_TOOLS_PYTHON=/tmp/work/venv/bin/python
-export VIDEO_TOOLS_CONF=/tmp/work/video-tools.conf
+Would write /tmp/work/training-video-tools.conf with SPEECH_MODEL_DIR=/Users/me/models/kokoro
+export TRAINING_VIDEO_TOOLS_PYTHON=/tmp/work/venv/bin/python
+export TRAINING_VIDEO_TOOLS_CONF=/tmp/work/training-video-tools.conf
 export PYTHONDONTWRITEBYTECODE=1
 ```
 
@@ -1035,10 +1035,10 @@ download the model into it as the README's "One-time set-up of the speech model"
 3. A `venv` or `pip` run that fails is reported with its last lines and exit 3; the venv is kept
 after a failed install, so the next run installs again.
 
-### Configuration: `~/.video-tools.conf`
+### Configuration: `~/.training-video-tools.conf`
 
 `KEY=value` lines, `#` comments, optional quotes, `~` for your home folder; read, never run.
-`VIDEO_TOOLS_CONF` in the environment names another file. The settings:
+`TRAINING_VIDEO_TOOLS_CONF` in the environment names another file. The settings:
 
 | Key | Meaning |
 |---|---|
@@ -1064,7 +1064,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
 | 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
 | 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
-| 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
+| 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
 
 ## Testing
 
@@ -1077,8 +1077,9 @@ give pytest a fresh temporary folder that has no `brands/` folder above it:
 `pytest --basetemp=/tmp/work-$(id -u)/pytest-$(date +%s)`.
 ```
 
-The tests hand every command a clean environment: `VIDEO_TOOLS_PYTHON`, `VIDEO_TOOLS_CONF` and
-`FONTCONFIG_FILE` are dropped unless a test sets them on purpose, so the suite passes with the
+The tests hand every command a clean environment: `TRAINING_VIDEO_TOOLS_PYTHON`, `TRAINING_VIDEO_TOOLS_CONF`,
+the old `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF`, and `FONTCONFIG_FILE` are dropped unless a test sets
+them on purpose, so the suite passes with the
 device-shell settings exported.
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
@@ -1155,6 +1156,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **3 November 2026.** The project is renamed **training-video-tools** (it was video-tools; that name now belongs to a new, general tools project for any video). The repository is `github.com/douglassquirrel/training-video-tools`. The settings file is now `~/.training-video-tools.conf` (the example is `training-video-tools.conf.example`), and the environment variables are `TRAINING_VIDEO_TOOLS_CONF` and `TRAINING_VIDEO_TOOLS_PYTHON`. The old names are no longer read: move your settings file with `mv ~/.video-tools.conf ~/.training-video-tools.conf`, and in the Linux device shell run `setup-linux` again (or rename the two `export` lines) so they name the new variables. Error messages call the built-in pieces "training-video-tools' pieces". Nothing else changes.
 - **18 October 2026, later.** `narrate` gives every cue and every `--lines` line to the voice with a lead-in: a comma in front, and a quiet first consonant (s, f, th, sh, h) doubled, so a line opening "Silas" keeps its "s" at speed 1.5. Every clip changes a little when it is made again: the first word comes up to 40 ms later at speed 1.5 (80 ms at 0.98) and a clip is up to 0.06 s longer (0.14 s). `--dry-run --phonemes` shows the lead-in. A finished video is unchanged until its narration is made again.
 - **18 October 2026.** `narrate --lines` reads an optional `Say` column: a row's `Say`, when filled in, is what is spoken, with `[[…]]` phoneme spans as in a script's `say:`; `Line` stays the text in `timing.json`. `--dry-run --phonemes` now works with `--lines` and prints each line's phoneme string. Tables without the column are spoken as before. For the audio-description project.
 - **17 October 2026, later that night.** `stills` on a video file writes each still to a part name, lists it, then renames it, so a still with its name is always in `stills.txt`. In a window, a still that is there but unlisted (a killed run's leftover) is written over and said; a `.part` file silently. For the audio-description project's slices.

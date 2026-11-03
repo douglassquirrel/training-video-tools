@@ -249,6 +249,6 @@ def test_a_video_with_no_library_elements_gets_no_credits_file(ready, ffstub):
 
 
 def test_a_video_with_library_elements_needs_the_library_for_its_credits_file(ready, ffstub):
-    code, out, err = run("assemble", _described(ready), env=dict(ffstub, VIDEO_TOOLS_CONF="/nowhere/c"))
+    code, out, err = run("assemble", _described(ready), env=dict(ffstub, TRAINING_VIDEO_TOOLS_CONF="/nowhere/c"))
     assert (code, out) == (3, "")
     assert err.startswith("assemble: VIDEO_ELEMENTS_DIR is not set in /nowhere/c and no --elements was given")

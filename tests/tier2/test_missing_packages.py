@@ -7,7 +7,7 @@ import pytest
 
 from tests.tier2.conftest import cropped, fake_media, narrated, rendered, run
 
-HINT = ('; from the Linux device shell, set VIDEO_TOOLS_PYTHON to a Python that has it '
+HINT = ('; from the Linux device shell, set TRAINING_VIDEO_TOOLS_PYTHON to a Python that has it '
         '(README, "Running from the Linux device shell")')
 
 
@@ -16,7 +16,7 @@ def hidden(tmp_path, module):
     folder = tmp_path / "hidden"
     folder.mkdir(exist_ok=True)
     (folder / f"{module}.py").write_text(f"raise ImportError(\"No module named '{module}'\")\n")
-    return {"PYTHONPATH": str(folder), "VIDEO_TOOLS_PYTHON": None}
+    return {"PYTHONPATH": str(folder), "TRAINING_VIDEO_TOOLS_PYTHON": None}
 
 
 def message(prog, pip):
@@ -73,7 +73,7 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
 
 def test_with_video_tools_python_set_the_device_shell_hint_is_left_out(prepared, ffstub, tmp_path):
     env = dict(ffstub, **hidden(tmp_path, "soundfile"))
-    env["VIDEO_TOOLS_PYTHON"] = sys.executable
+    env["TRAINING_VIDEO_TOOLS_PYTHON"] = sys.executable
     code, out, err = run("assemble", prepared, "--out", tmp_path / "new.mp4", env=env)
     assert (code, out) == (4, "")
     assert err == message("assemble", "soundfile") + "\n"

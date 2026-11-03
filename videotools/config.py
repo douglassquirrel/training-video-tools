@@ -1,4 +1,4 @@
-"""Read ~/.video-tools.conf: KEY=value, # comments, optional quotes, ~ for home. Read, never run.
+"""Read ~/.training-video-tools.conf: KEY=value, # comments, optional quotes, ~ for home. Read, never run.
 
 Standard library only; runs on Python 3.9.
 """
@@ -13,8 +13,9 @@ class ConfigError(Exception):
 
 
 def path():
-    """The config file: $VIDEO_TOOLS_CONF if set, else ~/.video-tools.conf."""
-    return os.environ.get("VIDEO_TOOLS_CONF") or os.path.join(os.path.expanduser("~"), ".video-tools.conf")
+    """The config file: $TRAINING_VIDEO_TOOLS_CONF if set, else ~/.training-video-tools.conf."""
+    return (os.environ.get("TRAINING_VIDEO_TOOLS_CONF")
+            or os.path.join(os.path.expanduser("~"), ".training-video-tools.conf"))
 
 
 def read(conf_path=None):

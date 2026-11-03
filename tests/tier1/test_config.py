@@ -1,4 +1,6 @@
-"""videotools.config: ~/.video-tools.conf, read and never run."""
+"""videotools.config: ~/.training-video-tools.conf, read and never run."""
+
+import re
 
 import pytest
 
@@ -30,12 +32,23 @@ def test_an_unknown_key_or_a_line_without_equals_is_refused_naming_its_line(tmp_
 
 def test_the_default_path_is_in_home_unless_the_environment_names_another(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("VIDEO_TOOLS_CONF", raising=False)
-    assert config.path() == str(tmp_path / ".video-tools.conf")
-    monkeypatch.setenv("VIDEO_TOOLS_CONF", str(tmp_path / "other.conf"))
+    monkeypatch.delenv("TRAINING_VIDEO_TOOLS_CONF", raising=False)
+    assert config.path() == str(tmp_path / ".training-video-tools.conf")
+    monkeypatch.setenv("TRAINING_VIDEO_TOOLS_CONF", str(tmp_path / "other.conf"))
     assert config.path() == str(tmp_path / "other.conf")
     (tmp_path / "other.conf").write_text("SPEED=1.1\n")
     assert config.read() == {"SPEED": "1.1"}
+
+
+def test_the_old_names_from_before_the_rename_are_not_read(tmp_path, monkeypatch):
+    # video-tools is now another project's name: its settings file and variable are not this one's.
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("TRAINING_VIDEO_TOOLS_CONF", raising=False)
+    monkeypatch.setenv("VIDEO_TOOLS_CONF", str(tmp_path / "old.conf"))
+    (tmp_path / "old.conf").write_text("SPEED=1.1\n")
+    (tmp_path / ".video-tools.conf").write_text("SPEED=1.2\n")
+    assert config.path() == str(tmp_path / ".training-video-tools.conf")
+    assert config.read() == {}
 
 
 def test_the_elements_folder_and_the_renderer_are_read_the_folder_expanding_tilde(tmp_path, monkeypatch):
@@ -44,3 +57,15 @@ def test_the_elements_folder_and_the_renderer_are_read_the_folder_expanding_tild
     conf.write_text("VIDEO_ELEMENTS_DIR=~/projects/code/video-elements\nRSVG_CONVERT=/opt/rsvg/bin/rsvg-convert\n")
     assert config.read(str(conf)) == {"VIDEO_ELEMENTS_DIR": str(tmp_path / "projects" / "code" / "video-elements"),
                                       "RSVG_CONVERT": "/opt/rsvg/bin/rsvg-convert"}
+
+
+def test_the_example_settings_file_is_named_for_the_project_and_sets_every_setting_once_uncommented(tmp_path, monkeypatch):
+    import os
+    monkeypatch.setenv("HOME", str(tmp_path))
+    repo = os.path.join(os.path.dirname(__file__), "..", "..")
+    with open(os.path.join(repo, "training-video-tools.conf.example"), encoding="utf-8") as f:
+        text = f.read()
+    assert text.startswith("# Copy to ~/.training-video-tools.conf and edit.")
+    conf = tmp_path / "c.conf"
+    conf.write_text(re.sub(r"(?m)^#(?=[A-Z_]+=)", "", text))
+    assert sorted(config.read(str(conf))) == sorted(config.KEYS)
