@@ -7,3 +7,4 @@
 #SPEED=0.98
 #VIDEO_ELEMENTS_DIR=~/projects/code/video-elements   # the library of drawn elements (PLAN.md item 15)
 #RSVG_CONVERT=/usr/bin/rsvg-convert                   # only when rsvg-convert is not on PATH
+#TIME_ZONE=Europe/London                             # record-output's times; unset, the machine's own zone

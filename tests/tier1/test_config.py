@@ -26,7 +26,7 @@ def test_an_unknown_key_or_a_line_without_equals_is_refused_naming_its_line(tmp_
     with pytest.raises(config.ConfigError) as e:
         config.read(str(conf))
     assert str(e.value) == (f"{conf}: line 2: unknown setting 'VOICES' (the settings are SPEECH_MODEL_DIR, VOICE, SPEED, "
-                            f"VIDEO_ELEMENTS_DIR, RSVG_CONVERT)\n"
+                            f"VIDEO_ELEMENTS_DIR, RSVG_CONVERT, TIME_ZONE)\n"
                             f"{conf}: line 3: not KEY=value: just words")
 
 
@@ -69,3 +69,9 @@ def test_the_example_settings_file_is_named_for_the_project_and_sets_every_setti
     conf = tmp_path / "c.conf"
     conf.write_text(re.sub(r"(?m)^#(?=[A-Z_]+=)", "", text))
     assert sorted(config.read(str(conf))) == sorted(config.KEYS)
+
+
+def test_time_zone_is_a_setting_read_as_written(tmp_path):
+    conf = tmp_path / "c.conf"
+    conf.write_text("TIME_ZONE=Europe/London\n")
+    assert config.read(str(conf)) == {"TIME_ZONE": "Europe/London"}

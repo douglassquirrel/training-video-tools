@@ -87,6 +87,28 @@ def ff_calls(env):
         return [json.loads(line) for line in f]
 
 
+
+@pytest.fixture
+def gitstub(tmp_path):
+    """A stub git first on PATH (tests/stubs/gitstub.py), logging every call. Returns the environment;
+    set GITSTUB_HEADS, GITSTUB_DIRTY or GITSTUB_FAIL in it to choose its answers."""
+    bin_dir = tmp_path / "gitbin"
+    bin_dir.mkdir()
+    path = bin_dir / "git"
+    path.write_text(f"#!/bin/sh\nexec '{sys.executable}' '{os.path.join(STUBS, 'gitstub.py')}' \"$@\"\n")
+    path.chmod(0o755)
+    return {"PATH": f"{bin_dir}:{os.environ['PATH']}", "GITSTUB_LOG": str(tmp_path / "git-calls.jsonl")}
+
+
+def git_calls(env):
+    """The stub git's recorded argument lists, in order."""
+    import json
+    path = env["GITSTUB_LOG"]
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return [json.loads(line)["args"] for line in f]
+
 def fake_media(path, **fields):
     """A fake media file the stub understands: key=value lines."""
     os.makedirs(os.path.dirname(path), exist_ok=True)

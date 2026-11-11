@@ -7,14 +7,17 @@ the machine's config); the tools make the narration with a local speech model, t
 from it, draw the frames, render and assemble the video, and check it. Written for the
 training-video project (`~/projects/non-code/videos/training-video/`) and anyone making the same kind of
 video from Terminal on a Mac. Nothing leaves the machine: no service is called, nothing is
-uploaded, and no command ever writes over an existing file.
+uploaded, and no command writes over an existing file, with one deliberate exception:
+`record-output` rewrites the `OUT.md` record of a video's finished files, adding a row or adding
+to one, and nothing else in it.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
 `narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Four checking commands sit
 beside them: `brand-preview` (a picture of a brand kit, for approving it), `frame-hashes` (proof
 that a change changed no pixel), `compare-frames` (the frame drawn now beside an earlier video's)
-and `compare-video` (two finished videos compared).
+and `compare-video` (two finished videos compared). `record-output` adds each finished version's
+row to the `OUT.md` beside it.
 
 ## Requirements
 
@@ -24,6 +27,8 @@ and `compare-video` (two finished videos compared).
   `/usr/bin/python3` is 3.9 and runs only `check-script`), `cairo`, `pkgconf` and `ffmpeg`.
 - The Kokoro-82M speech model, about 327 MB, in `~/models/kokoro/` (one-time set-up below).
 - `~/.training-video-tools.conf` naming the model's folder.
+- `git` (Xcode's command-line tools: `xcode-select --install`), only for `record-output` when the
+  commits are not given on its command line.
 
 ## Installation
 
@@ -886,6 +891,49 @@ narration in every cue's window: OK
 No problems found.
 ```
 
+### `record-output SCRIPT.md [VIDEO] [--state TEXT] [--tools-commit C] [--elements-commit C] [--elements DIR] [--dry-run]`
+### `record-output SCRIPT.md [VIDEO] --add-state TEXT [--dry-run]`
+
+Keeps the `OUT.md` beside a finished video: one row for each version, newest last, and a State
+that grows as the version is watched, accepted or superseded. VIDEO is the script's `output` by
+default; `OUT.md` is the one in VIDEO's folder.
+
+The first form appends VIDEO's row after the table's last row (never after the paragraphs below
+it): the file name, its modification time as `D Month YYYY, HH:MM` in `TIME_ZONE` (else the
+machine's zone), the commits it was made with, its size with comma separators, its full
+SHA-256, and `--state TEXT` (or nothing). The commits are `--tools-commit` and, for a script that
+draws from the video-elements library, `--elements-commit`, written `` `4e39323` (video-elements
+`d32067b`) ``; a commit not given is read with `git` from this checkout or from the library's
+folder (`--elements`, else `VIDEO_ELEMENTS_DIR`), which must then be a git checkout with no
+uncommitted changes. Run from a `git archive` export, give both flags. With no `OUT.md`, it is
+created: a heading from the script's `title`, an italic line, the header `File | Made | Made with
+| Size (bytes) | SHA-256 | State` and the row.
+
+`--add-state TEXT` adds TEXT, after a space, to the State of VIDEO's row, and changes nothing
+else. In either form a `|` in TEXT is written `\|`, and a line break is refused.
+
+An existing `OUT.md` is read as it is: one table of six columns, its header named however it is
+(the training-video project's say `video-tools`). The video is only read. `OUT.md` is written
+whole through a temporary file and a rename, keeping its permissions, so a failure leaves it as
+it was; it is the one file a command here writes over. `--dry-run` prints the row and writes
+nothing. A row is found by its file name, NFC and NFD spellings alike.
+
+From a scratch copy of the example's folder, with an invented 4-byte video, `TIME_ZONE=Europe/London`
+and this checkout not yet committed (paths shortened):
+
+```
+$ ./record-output script.md --dry-run
+record-output: …/training-video-tools has 13 uncommitted changes, so its commit would not say what made the video; commit them, or give --tools-commit COMMIT
+$ ./record-output script.md --tools-commit 79e2278 --state "First cut."
+| `Folding a Paper Boat.mp4` | 11 November 2026, 14:52 | `79e2278` | 4 | `25cdb46d8d2115a24eb15c3c58f34f3330cfca4fec249ff70b7cad2bb560a0dd` | First cut. |
+Created: …/paper-boat/out/OUT.md
+$ ./record-output script.md --tools-commit 79e2278
+record-output: …/paper-boat/out/OUT.md already has a row for Folding a Paper Boat.mp4; to add to its state, use --add-state
+$ ./record-output script.md --add-state "**Accepted** (11 November 2026)."
+| `Folding a Paper Boat.mp4` | 11 November 2026, 14:52 | `79e2278` | 4 | `25cdb46d8d2115a24eb15c3c58f34f3330cfca4fec249ff70b7cad2bb560a0dd` | First cut. **Accepted** (11 November 2026). |
+Written: …/paper-boat/out/OUT.md
+```
+
 ### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N] [--elements DIR] [--renderer PATH]`
 
 Proof that a change (to scene code, a brand kit, or training-video-tools itself) changes no pixel of a
@@ -1046,6 +1094,7 @@ after a failed install, so the next run installs again.
 | `VOICE`, `SPEED` | Defaults for a script that does not set its own. |
 | `VIDEO_ELEMENTS_DIR` | The video-elements repository: the folder holding `videoelements/` and `elements/`. Needed only by a script that describes a scene's cast ("Describing a scene in the script"). |
 | `RSVG_CONVERT` | The SVG renderer the library uses, when it is not `rsvg-convert` on PATH (the Linux device shell runs one extracted from a package). Optional. |
+| `TIME_ZONE` | The time zone for `record-output`'s "Made" times, as an IANA name such as `Europe/London`. Unset, the machine's own zone (the Linux device shell's is UTC). |
 
 The last two can also be given as flags, `--elements DIR` and `--renderer PATH`, on
 `check-script`, `stills`, `render`, `frame-hashes` and `compare-frames`; a flag wins over the
@@ -1062,9 +1111,9 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept). Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
-| 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named). What was written before stays. | Install as above; re-run for the scene that failed. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named); for `record-output`, `git` is not installed or failed while reading a commit (its message shown). What was written before stays. | Install as above; re-run for the scene that failed; for `record-output`, give `--tools-commit` or `--elements-commit` instead. |
 
 ## Testing
 
@@ -1084,11 +1133,12 @@ device-shell settings exported.
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
 primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
-as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, and `ffstub.py`
-standing in for `ffmpeg` and `ffprobe` with fake media files) and a copy of the example, and
+as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, `ffstub.py`
+standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
+`record-output`) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 99% on 18 October 2026
-(718 tests, lint clean).
+192×108 with a tolerance). Coverage is reported by the test command; 99% on 11 November 2026
+(813 tests, lint clean).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -1156,6 +1206,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **11 November 2026.** New command, `record-output SCRIPT.md [VIDEO]`: adds a finished video's row (file, made, made with, size, SHA-256, state) to the `OUT.md` beside it, creating the file when there is none, and with `--add-state TEXT` adds to a row's State ("**Accepted** …", "Superseded by …"). The commits come from `--tools-commit` and `--elements-commit`, or are read with `git` from clean checkouts. A new setting, `TIME_ZONE` (e.g. `Europe/London`), sets the zone of its times. Existing `OUT.md` files are read as they are. For the training-video project.
 - **3 November 2026.** The project is renamed **training-video-tools** (it was video-tools; that name now belongs to a new, general tools project for any video). The repository is `github.com/douglassquirrel/training-video-tools`. The settings file is now `~/.training-video-tools.conf` (the example is `training-video-tools.conf.example`), and the environment variables are `TRAINING_VIDEO_TOOLS_CONF` and `TRAINING_VIDEO_TOOLS_PYTHON`. The old names are no longer read: move your settings file with `mv ~/.video-tools.conf ~/.training-video-tools.conf`, and in the Linux device shell run `setup-linux` again (or rename the two `export` lines) so they name the new variables. Error messages call the built-in pieces "training-video-tools' pieces". Nothing else changes.
 - **18 October 2026, later.** `narrate` gives every cue and every `--lines` line to the voice with a lead-in: a comma in front, and a quiet first consonant (s, f, th, sh, h) doubled, so a line opening "Silas" keeps its "s" at speed 1.5. Every clip changes a little when it is made again: the first word comes up to 40 ms later at speed 1.5 (80 ms at 0.98) and a clip is up to 0.06 s longer (0.14 s). `--dry-run --phonemes` shows the lead-in. A finished video is unchanged until its narration is made again.
 - **18 October 2026.** `narrate --lines` reads an optional `Say` column: a row's `Say`, when filled in, is what is spoken, with `[[…]]` phoneme spans as in a script's `say:`; `Line` stays the text in `timing.json`. `--dry-run --phonemes` now works with `--lines` and prints each line's phoneme string. Tables without the column are spoken as before. For the audio-description project.
