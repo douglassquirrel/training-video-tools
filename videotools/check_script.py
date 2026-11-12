@@ -56,7 +56,7 @@ def brand_problems(data, script_path, script_problems):
 # Which role the chrome draws each text in (PLAN.md item 12): On screen labels in the display
 # font, the frame methods' default for pills and callouts (Squirrel, 10 October 2026).
 SETTING_ROLES = {"title": "display", "subtitle": "italic", "eyebrow": "display", "source-label": "display",
-                 "title-image-caption": "italic", "credit": "body"}
+                 "title-image-caption": "italic", "credit": "body", "thumbnail-title": "display"}
 SCENE_ROLES = {"title": "display", "eyebrow": "display", "tracker-label": "display", "side-panel-heading": "display"}
 KIT_ROLES = {"website": "italic", "illustration-credit": "body"}
 DRAWN_ANYWAY = "✓✗"          # drawn as strokes where a font lacks them (draw.text)

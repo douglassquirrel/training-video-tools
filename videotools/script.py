@@ -17,7 +17,7 @@ SETTINGS = {"title": True, "subtitle": False, "eyebrow": False, "brand": True, "
             "quality": False, "lead": False, "cue-gap": False, "tail": False, "fade": False,
             "source": True, "source-image": False, "source-label": False,
             "title-image-caption": False, "credit": False, "output": True, "scene-code": True,
-            "element-credits": False}
+            "element-credits": False, "thumbnail-title": False, "thumbnail-at": False}
 NUMBER_SETTINGS = ("speed", "fps", "quality", "lead", "cue-gap", "tail")
 FILE_SETTINGS = ("source", "source-image")
 SCENE_KEYS = {"kind", "letter", "tracker-label", "eyebrow", "title", "inset", "source",
@@ -28,6 +28,7 @@ SIDE_PANEL = re.compile(r"^(key-points|steps|none)$|^checklist (\d+)$|^custom ([
 COLOUR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 INSET = re.compile(r"^\d+ \d+ \d+ \d+$")
 NUMBER = re.compile(r"^\d+(\.\d+)?$")
+MOMENT = re.compile(r"^\s*([^:\s]+):(-?\d+(?:\.\d+)?)\s*$")   # SCENE:SECONDS, as stills and thumbnail take it
 SIZE = re.compile(r"^\d+x\d+$")
 
 CHOREOGRAPHY_SECTIONS = ("cast", "moves", "mistake", "right way")   # read by videotools.choreography
@@ -193,6 +194,16 @@ def check(data, script_path):
         if not INSET.match(value):
             problems.append(f"{_at(data, 'insets', key)}Insets: '{key}' should be four whole numbers "
                             f"x0 y0 x1 y1: {value}")
+    at = st.get("thumbnail-at")
+    if at:
+        where = _at(data, "settings", "thumbnail-at")
+        m = MOMENT.match(at)
+        keys = [sc["key"] for sc in data["scenes"]]
+        if not m:
+            problems.append(f"{where}Settings: 'thumbnail-at' should be SCENE:SECONDS, like A:2.5, not '{at}'")
+        elif m.group(1) not in keys:
+            problems.append(f"{where}Settings: 'thumbnail-at' names no scene '{m.group(1)}' "
+                            f"(scenes: {', '.join(keys)})")
     seen = {}
     for scene in data["scenes"]:
         problems += _check_scene(data, scene, seen)
@@ -305,7 +316,7 @@ DEFAULTS = {"quality": "18", "lead": "0.7", "cue-gap": "0.55", "tail": "1.0", "f
             "element-credits": "auto"}
 TEXT_SETTINGS = ("title", "subtitle", "eyebrow", "brand", "voice", "language", "speech-model",
                  "source", "source-image", "source-label", "title-image-caption", "credit",
-                 "output", "scene-code", "element-credits")
+                 "output", "scene-code", "element-credits", "thumbnail-title", "thumbnail-at")
 
 
 def settings(data):

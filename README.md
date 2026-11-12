@@ -17,7 +17,7 @@ example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script
 beside them: `brand-preview` (a picture of a brand kit, for approving it), `frame-hashes` (proof
 that a change changed no pixel), `compare-frames` (the frame drawn now beside an earlier video's)
 and `compare-video` (two finished videos compared). `record-output` adds each finished version's
-row to the `OUT.md` beside it.
+row to the `OUT.md` beside it, and `thumbnail` draws its branded 1280×720 thumbnail.
 
 ## Requirements
 
@@ -934,6 +934,61 @@ $ ./record-output script.md --add-state "**Accepted** (11 November 2026)."
 Written: …/paper-boat/out/OUT.md
 ```
 
+### `thumbnail SCRIPT.md [--at SCENE:SECONDS] [--out FILE.png] [--replace] [--dry-run] [--elements DIR] [--renderer PATH]`
+
+Draws a video's thumbnail, the still a video site or a page shows before play: a 1280×720 8-bit
+RGB PNG, at most 2,000,000 bytes, in the brand kit's style, a sibling of the title card. On the
+left, on the kit's `background` (no dot grid): the mark (roundel and wordmark) top left, then, centred
+up and down, the eyebrow (display font, 20 px, letter-spaced, `accent-dark` since it is under the
+kit's small-text size), the title in the display font and `ink`, and the short rule (the kit's
+`title-rule` colour at twice its height, 160 px). The subtitle is left off. On the right, a card
+(the kit's `surface`, a 2 px `rule` border, rounded corners) holding one frame of the video at
+560×322: drawn exactly as `stills` and `render` draw it, then the animation area cut out (for a title
+or end card, the whole frame), scaled to cover the card and centred, never squashed.
+
+- **The moment**: `--at SCENE:SECONDS`, else the script's Settings key `thumbnail-at` (same form,
+  e.g. `B:4.0`); `--at` wins. A negative time counts back from the scene's end. A moment in the
+  scene's fade-in or fade-out is drawn, with a warning; without narration the times are estimated,
+  with `stills`' warning.
+- **The title**: the Settings key `thumbnail-title` if there is one (for a title too long for a
+  thumbnail), else `title`. Drawn as large as fits, from 96 px down, wrapped to at most three lines;
+  never smaller than a size whose capitals are 40 px tall, which keeps them 10 px tall at 320×180.
+  Longer than that allows: refused, asking for a shorter `thumbnail-title`.
+- **Where**: `--out FILE.png`, else beside the script's `output`, named after it with
+  ` thumbnail.png` (`out/Folding a Paper Boat thumbnail.png`). The folder must exist. An existing
+  file is refused; `--replace` replaces it. The PNG is made in memory and written through a
+  temporary file in the same folder and a rename, so a failure leaves nothing with the final name.
+- **Prints** the title's lines and size, the eyebrow, the moment, and the path with its size in
+  bytes and SHA-256. `--dry-run` checks everything, prints the same and `Would write: …`, and
+  writes nothing.
+
+`check-script` accepts `thumbnail-title` and `thumbnail-at`, checks that `thumbnail-at` is
+`SCENE:SECONDS` naming one of the script's scenes, and checks `thumbnail-title`'s characters
+against the display font.
+
+On a scratch copy of the example, after `crop-insets` (no narration, so the times are estimated;
+paths shortened):
+
+```
+$ mkdir COPY/out
+$ ./thumbnail COPY/script.md --at R:4 --dry-run
+thumbnail: scene R has no narration clips (cues 1, 2); times are estimated at 2.6 words a second
+Title: 2 lines at 96 px (capitals 63 px): Folding a / Paper Boat
+Eyebrow: THE PAPERBOAT METHOD
+Picture: scene R at 4.000 s (of 9.633 s)
+Would write: …/out/Folding a Paper Boat thumbnail.png (--dry-run: nothing written)
+$ ./thumbnail COPY/script.md --at R:4
+thumbnail: scene R has no narration clips (cues 1, 2); times are estimated at 2.6 words a second
+Title: 2 lines at 96 px (capitals 63 px): Folding a / Paper Boat
+Eyebrow: THE PAPERBOAT METHOD
+Picture: scene R at 4.000 s (of 9.633 s)
+Wrote …/out/Folding a Paper Boat thumbnail.png: 54497 bytes, SHA-256 4625f9bae136f941f6e9bd2714956c7a918ac46f65179145861a884689eed2ca
+$ ./thumbnail COPY/script.md --at R:4
+thumbnail: …/out/Folding a Paper Boat thumbnail.png already exists; give --replace to replace it, or another --out
+```
+
+![The example's thumbnail: the Paperboat Press mark, the eyebrow and the title "Folding a Paper Boat" on the left, the finished boat in a card on the right](docs/thumbnail-example.png)
+
 ### `frame-hashes SCRIPT.md (--out HASHES.json [--merge] | --compare HASHES.json) [--scenes KEY,…] [--step N] [--elements DIR] [--renderer PATH]`
 
 Proof that a change (to scene code, a brand kit, or training-video-tools itself) changes no pixel of a
@@ -1111,8 +1166,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`; for `thumbnail`: no `--at` and no `thumbnail-at`, or a moment that is not `SCENE:SECONDS`, names a scene the script lacks, or is past either end of the scene. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there; for `thumbnail`: the output's folder does not exist, the output exists without `--replace`, the title (or `thumbnail-title`) does not fit three lines with capitals 40 px tall, the PNG would be over 2,000,000 bytes, or the file cannot be written (the reason given). A malformed `thumbnail-at` in the script is a problem with the script. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named); for `record-output`, `git` is not installed or failed while reading a commit (its message shown). What was written before stays. | Install as above; re-run for the scene that failed; for `record-output`, give `--tools-commit` or `--elements-commit` instead. |
 
 ## Testing
@@ -1137,8 +1192,10 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
 `record-output`) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 99% on 11 November 2026
-(813 tests, lint clean).
+192×108 with a tolerance). Coverage is reported by the test command; 99% on 12 November 2026
+(853 tests, lint clean). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
+Tier 1 (`size_problem`).
 
 Tier 3, manual, with the real programs, on a *copy* of the example (never the one in the
 repository): the whole chain in the Quick start above, plus a second `narrate` run (it must
@@ -1206,6 +1263,7 @@ sheet). Nothing from that video is in the repository.
 
 ## Notes for users
 
+- **12 November 2026.** New command, `thumbnail SCRIPT.md [--at SCENE:SECONDS]`: a branded 1280×720 PNG thumbnail for a video (the title, eyebrow, rule and mark in the brand kit's style beside one frame drawn as `stills` draws it), written beside the script's `output` as `… thumbnail.png`. Two new optional Settings keys, which `check-script` now accepts: `thumbnail-at` (the frame, `SCENE:SECONDS`) and `thumbnail-title` (a shorter title for the thumbnail). For the training-video project.
 - **11 November 2026.** New command, `record-output SCRIPT.md [VIDEO]`: adds a finished video's row (file, made, made with, size, SHA-256, state) to the `OUT.md` beside it, creating the file when there is none, and with `--add-state TEXT` adds to a row's State ("**Accepted** …", "Superseded by …"). The commits come from `--tools-commit` and `--elements-commit`, or are read with `git` from clean checkouts. A new setting, `TIME_ZONE` (e.g. `Europe/London`), sets the zone of its times. Existing `OUT.md` files are read as they are. For the training-video project.
 - **3 November 2026.** The project is renamed **training-video-tools** (it was video-tools; that name now belongs to a new, general tools project for any video). The repository is `github.com/douglassquirrel/training-video-tools`. The settings file is now `~/.training-video-tools.conf` (the example is `training-video-tools.conf.example`), and the environment variables are `TRAINING_VIDEO_TOOLS_CONF` and `TRAINING_VIDEO_TOOLS_PYTHON`. The old names are no longer read: move your settings file with `mv ~/.video-tools.conf ~/.training-video-tools.conf`, and in the Linux device shell run `setup-linux` again (or rename the two `export` lines) so they name the new variables. Error messages call the built-in pieces "training-video-tools' pieces". Nothing else changes.
 - **18 October 2026, later.** `narrate` gives every cue and every `--lines` line to the voice with a lead-in: a comma in front, and a quiet first consonant (s, f, th, sh, h) doubled, so a line opening "Silas" keeps its "s" at speed 1.5. Every clip changes a little when it is made again: the first word comes up to 40 ms later at speed 1.5 (80 ms at 0.98) and a clip is up to 0.06 s longer (0.14 s). `--dry-run --phonemes` shows the lead-in. A finished video is unchanged until its narration is made again.
