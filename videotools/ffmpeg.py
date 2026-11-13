@@ -37,12 +37,6 @@ def run(name, args, doing, partial=None, stdin=None, binary=False, want_stderr=F
     return p.stderr if want_stderr else p.stdout
 
 
-def audio_samples(path, rate=48000):
-    """The file's audio decoded to mono 16-bit at `rate`, as bytes (little-endian)."""
-    return run("ffmpeg", QUIET + ["-i", path, "-map", "0:a", "-f", "s16le", "-ac", "1", "-ar", str(rate), "-"],
-               f"decoding the audio of {path}", binary=True)
-
-
 def frame_at(path, seconds, width, height):
     """One frame of the file at `seconds`, as raw RGB bytes of width x height."""
     data = run("ffmpeg", QUIET + ["-ss", f"{seconds:.3f}", "-i", path, "-frames:v", "1", "-f", "rawvideo",
@@ -52,18 +46,6 @@ def frame_at(path, seconds, width, height):
         raise cli.Failure(f"ffmpeg gave {len(data)} bytes for the frame of {path} at {seconds:.3f} s, not the "
                           f"{width * height * 3} of a {width}x{height} frame; is the file that long?", cli.EXTERNAL)
     return data
-
-
-def scene_report(path, threshold, rate=10, window=None):
-    """ffmpeg's report of the frames whose scene-change score is above `threshold` (0 to 1): the
-    stderr of `fps=RATE,select='gt(scene,T)',metadata=print` over the whole file, the audio not
-    decoded (PLAN.md item 24, 5; item 28, 1: the scoring at `rate` frames a second, a cut reported
-    at the first sampled frame after it). With `window` (start, end) in seconds, a seek before the
-    input, `-to` the end and `-copyts` so the times stay on the file's clock (item 28, 4)."""
-    select = f"fps={rate:g},select='gt(scene,{threshold:g})',metadata=print"
-    seek = ["-ss", f"{window[0]:.3f}", "-to", f"{window[1]:.3f}", "-copyts"] if window else []
-    return run("ffmpeg", ["-nostdin", "-hide_banner"] + seek + ["-i", path, "-an", "-vf", select, "-f", "null", "-"],
-               f"looking for the cuts in {path}", want_stderr=True)
 
 
 def count_frames(path):

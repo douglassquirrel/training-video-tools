@@ -243,3 +243,13 @@ def test_dry_run_with_phonemes_needs_the_speech_package_and_says_so(example, spe
     code, out, err = run("narrate", example, "--dry-run", "--phonemes", env=dict(speech, PYTHONPATH=str(broken)))
     assert (code, out) == (4, "")
     assert err.startswith("narrate: the Python package 'kokoro-onnx' is not installed in this Python")
+
+
+def test_lines_is_refused_in_words_saying_it_moved_to_video_tools(tmp_path):
+    table = tmp_path / "lines.md"
+    table.write_text("| # | Start (s) | Line |\n|---|---|---|\n| 1 | 0 | Hello. |\n")
+    for extra in ([], ["--speed", "1.5"], ["--dry-run"]):
+        code, out, err = run("narrate", "--lines", table, "--out", tmp_path / "clips", *extra)
+        assert (code, out, err) == (2, "", "narrate: narrate --lines has moved to video-tools; "
+                                           "here narrate takes a video's script.md\n")
+    assert sorted(os.listdir(tmp_path)) == ["lines.md"]

@@ -13,10 +13,11 @@ to one, and nothing else in it.
 
 **Status (9 October 2026):** all eight commands are built and the whole chain has made the
 example video for real (`DIARY.md`, "Tier 3"). The order of a run: `check-script`, `crop-insets`,
-`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Four checking commands sit
+`narrate`, `stills` (to look), `render`, `assemble`, `check-video`. Three checking commands sit
 beside them: `brand-preview` (a picture of a brand kit, for approving it), `frame-hashes` (proof
-that a change changed no pixel), `compare-frames` (the frame drawn now beside an earlier video's)
-and `compare-video` (two finished videos compared). `record-output` adds each finished version's
+that a change changed no pixel) and `compare-frames` (the frame drawn now beside an earlier
+video's). The general commands for any video (`narrate --lines`, `stills` on a video file and
+`compare-video`) moved to video-tools on 13 November 2026. `record-output` adds each finished version's
 row to the `OUT.md` beside it, and `thumbnail` draws its branded 1280×720 thumbnail.
 
 ## Requirements
@@ -276,7 +277,7 @@ title_02.wav  ~3.8 s  This film follows [[fˈɪɡjɚ]] seven, one fold at a time
 
 **The lead-in: a quiet first consonant kept.** Spoken fast, the voice says the first sound of a
 cue too faintly: a line-opening "s" lasts about 30 ms at speed 1.5, an eighth of the same "s"
-mid-line. So every cue, and every line of `--lines`, is given to the voice with `, ` in front,
+mid-line. So every cue is given to the voice with `, ` in front,
 and when its first sound is one of the quiet consonants `s`, `f`, `θ` ("th" in "thin"), `ʃ`
 ("sh") or `h`, that sound doubled: "Silas smiles." is given as `, ssˈaɪləs smˈaɪlz.` (chosen by
 ear, 18 October 2026). The phoneme listing above shows it, since it is what the voice is given.
@@ -288,79 +289,10 @@ a little. Measured on the real model with thirteen invented lines:
 | 1.5 | 40 ms | 0.06 s |
 | 0.98 | 80 ms | 0.14 s |
 
-A `--lines` clip still begins at its `Start (s)`, so its first word may come up to that much later.
-
 The symbols a span may use are the model's own (IPA with `ˈ` and `ˌ` for stress and `ː` for
 length, plus punctuation and the space; 114 in all, listed in `videotools/phonemes.py` from
 kokoro-onnx 0.6.1's vocabulary). Anything else the model would drop silently, so
 `check-script` reports it, along with an unclosed `[[`, an empty span, and a span in a caption.
-
-### `narrate --lines TABLE.md --out FOLDER [--speed S] [--voice V] [--replace] [--dry-run [--phonemes]]`
-
-The same voice on a **description table** instead of a script, for the audio-description
-project, whose timed lines are spoken fast and mixed into a video's sound. `TABLE.md` is any
-Markdown file holding a table with the columns `#` (a whole number from 1, each once), `Start (s)`
-(seconds) and `Line` (the text, spoken as written: quotes, colons, non-ASCII and all; `\|` for
-a pipe), found by header in any order; other columns and everything outside the table are
-ignored. Each line goes to its own trimmed clip in `FOLDER` (made if missing), `01.wav`, `02.wav`,
-… (more digits when the numbers need them), and `timing.json` there holds the voice, speed,
-model and sample rate and, per line, its number, start, text and real length in seconds,
-rewritten after each clip. `--speed` defaults to 1.5 (the model accepts 0.5 to 2.0; see below) and
-`--voice` to `VOICE` in `~/.training-video-tools.conf`, else `af_heart`: both chosen by ear on 17 October 2026. Each clip's real length
-is printed, and where a line's start plus its length passes the next line's start, a warning on
-stderr names both (exit 0 still: the writer decides). Nothing is written over an existing clip or
-`timing.json` without `--replace`, which lists them first. `--dry-run` lists each line with its
-start and an estimate at 2.6 words a second times the speed, and writes nothing.
-
-```
-$ ./narrate --lines table.md --out clips --dry-run
-narrate (dry run): table.md
-voice af_heart, speed 1.5, model kokoro-82m from /Users/you/models/kokoro
-01.wav  at 0.10 s  ~1.8 s  A kite climbs over the harbour wall.
-02.wav  at 4.00 s  ~1.3 s  On screen: “Harbour”; it's dusk.
-03.wav  at 5.00 s  ~1.0 s  Gulls wheel and dip.
-3 lines, about 4 s of speech; nothing written (dry run).
-$ ./narrate --lines table.md --out clips
-01.wav  1.244 s
-02.wav  1.283 s
-narrate: line 2 (at 4.00 s, 1.28 s long) runs 0.28 s into line 3 (at 5.00 s)
-03.wav  0.748 s
-Wrote 3 clips and clips/timing.json
-```
-
-(That run, 17 October 2026, the real model on an invented three-line table; `timing.json` then
-holds the three lines with those lengths. The estimate runs long here: the model speaks these short
-lines faster than 2.6 words a second times 1.5.)
-
-**A `Say` column, where the written line is said wrongly.** A table may also have a `Say`
-column, anywhere among the others. A row whose `Say` is filled in is spoken from it instead of
-from `Line`, and `Say` may hold `[[…]]` phoneme spans exactly as a script's `say:` line does
-(above). A row whose `Say` is empty, and every row of a table without the column, is spoken from
-`Line` as before, with the lead-in above. `timing.json` keeps the `Line` as each line's `text`, and the dry run's
-estimate counts the words of what is spoken. A `Say` whose spans are wrong (an unclosed `[[`, a
-stray `]]`, an empty span, a symbol the voice does not know) is refused before the model is
-loaded, naming the row. To write a span, see what the voice is given: `--dry-run --phonemes`
-prints each line's `Say` and its phoneme string, spans spliced in; without `--dry-run`,
-`--phonemes` is refused.
-
-```
-$ ./narrate --lines table.md --out clips --dry-run --phonemes
-narrate (dry run): table.md
-voice af_heart, speed 1.5, model kokoro-82m from /Users/claude-test/models/kokoro
-01.wav  at 0.10 s  ~0.5 s  Silas smiles.
-    say: [[sˈaɪləs]] smiles.
-    phonemes: , ssˈaɪləs smˈaɪlz.
-02.wav  at 2.00 s  ~0.5 s  Thea nods.
-    phonemes: , θθˈiə nˈɑːdz.
-2 lines, about 1 s of speech; nothing written (dry run).
-```
-
-(Run 18 October 2026 on an invented two-row table whose `Say` column follows `Line`.)
-
-**How fast.** kokoro-onnx 0.6.1 accepts `speed` from 0.5 to 2.0 and refuses more, so 2.0 is the
-fastest. On an invented 15-word line in `af_heart`, 1.0 took 4.69 s (3.4 words a second), 1.5
-took 2.98 s (5.4) and 2.0 took 2.62 s (6.1); the four voices at 2.0 lie between 5.8 and 6.4
-words a second. A script that assumes five words a second is close to speed 1.5.
 
 ### `crop-insets SCRIPT.md [--dry-run]`
 
@@ -427,92 +359,6 @@ stills: scene A: something drawn under the panel at cue 2 vanishes as it lifts f
 start.) The fix is the curtain helper under "Writing a video's scene code". The check sees only that
 one moment: a change that happens later than the lift, or a picture that fades under the
 panels and comes back, is not reported. The sheets are written either way (exit 0).
-
-### `stills VIDEO (--at T[,T…] | --every SECONDS [--from T] [--until T] | --changes [--threshold N] [--detect-fps N] [--from T] [--until T]) --out FOLDER [--sheet SHEET.png] [--grid CxR]`
-### `stills VIDEO --sheet SHEET.png --out FOLDER [--grid CxR]`
-
-The same command on **any video file** (a first argument whose name does not end in `.md`; the
-script form above is unchanged), for seeing what is on screen when: one PNG per frame at the
-video's own size, written into `--out FOLDER` (made if missing) and named by its time so the
-names sort in order (`t0012.40.png`), plus `stills.txt` listing each time and file name, one to
-a line. Choose the frames one way: `--at 0,1.5,3` for the times given, in seconds; `--every 2`
-for every two seconds from 0 while less than the video's length; `--changes` for the first frame
-and every frame where the picture changes, by ffmpeg's scene detection (`--threshold`, 0 to 1,
-default 0.3, is the score a change must beat; lower finds more). With `--sheet`, also a contact
-sheet: each frame in a cell 360 px wide and as tall as the video's proportions need, so a
-vertical Short and a landscape video each keep their shape, with its time in a grey strip under
-the frame, never over it; `--grid CxR` sets the cells per sheet (default: the smallest square
-that holds them, at most five across), and more frames than a grid holds go on numbered sheets,
-`SHEET-1.png`, `SHEET-2.png`, …. Refuses, before anything is read, an existing still, listing
-or sheet, no choice or two, a bad `--grid`, `--threshold` without `--changes`, `--every` of 0
-or less, and a time at or past the end (saying the length). Needs ffmpeg, ffprobe and Pillow.
-`stills.txt` is written a line at a time, as each still is written, so a run that is killed
-part-way leaves a listing of exactly the stills there. Each still is written to a part name
-(`.t0012.40.png.part`), listed, and only then renamed, so a still with its name is always
-listed; a kill leaves at worst a part file.
-
-**A long video in slices** (for a shell that cuts a call off, such as the Linux device shell's
-three minutes): `--from T` and `--until T`, in seconds, with `--every` or `--changes`, take only
-the window from `--from` (default 0) up to but not including `--until` (default the end; past
-the end is the end, so slices at round numbers need not know the length). The scan seeks to the
-window, so a slice costs its own length. Slices go into the same `--out` folder: with a window an
-existing `stills.txt` is added to, not refused, and a still the listing names is refused as
-always; a still that is there but not listed, or a part file, is a killed run's leftover and is
-written over (the unlisted still is said on stderr, `t0807.80.png was there but not listed;
-written again`; the part file silently). Without a window, any existing still is refused.
-`--changes` lists the video's first frame only when the window starts at 0, and `--every` steps
-from `--from`, so slices joined give exactly what one whole run gives. With no `--at`, `--every`
-or `--changes`, `--sheet SHEET.png --out FOLDER` draws the sheet of every still `FOLDER/stills.txt`
-lists, in that order, reading nothing from the video (the file must still exist): the last call
-after the slices. `--from` at or past the end, `--until` not after `--from`, a window with `--at`,
-or a window with `--sheet` alone are refused (exit 2); a missing or empty listing, a missing still, or a
-listing line that is not `TIME NAME`, exit 3.
-
-**How `--changes` scores** (17 October 2026): ffmpeg scores the picture 10 times a second, not
-every frame (`fps=10` before the `select` filter), so a cut is reported at the first scored
-moment after it, within a tenth of a second, and the still is read there; `--detect-fps N`
-changes the rate (above 0; fewer is a little faster, more is finer). The audio track is not
-decoded. This saves about a quarter of the scan on an h264 file and nothing on VP9, since the
-frames are still decoded and the decode is most of the cost; the slices are what make a long
-video fit a short call.
-
-```
-$ ./stills cuts.mp4 --changes --out cuts-stills --sheet cuts.png
-t0000.00.png at 0.000 s
-t0002.00.png at 2.000 s
-t0004.00.png at 4.000 s
-Wrote 3 stills to cuts-stills and the sheet cuts.png
-$ cat cuts-stills/stills.txt
-0.00 t0000.00.png
-2.00 t0002.00.png
-4.00 t0004.00.png
-$ ./stills cuts.mp4 --at 1,9 --out late
-stills: 9 s is past the end of cuts.mp4 (5.520 s)
-```
-
-(That run, 17 October 2026, real ffmpeg 9.0.2: `cuts.mp4` is an invented 160×90 file of three
-flat colours cut at 2 s and 4 s; the sheet is 720×478, two cells across. Since the scoring at 10
-a second, later that day, a cut at 4.04 s is reported at 4.10.) `--changes` runs ffmpeg once over
-the file or the window (`fps=10,select='gt(scene,N)',metadata=print`) and then reads each chosen
-frame; a frame ffmpeg cannot read is an error (exit 4) and the stills written before it stay,
-listed. Built for the audio-description project, whose Claude sees a video only as stills.
-
-```
-$ ./stills nokey.mp4 --changes --until 3 --out sliced
-t0000.00.png at 0.000 s
-t0002.00.png at 2.000 s
-Wrote 2 stills to sliced
-$ ./stills nokey.mp4 --changes --from 3 --out sliced
-t0004.10.png at 4.100 s
-Wrote 1 still to sliced
-$ ./stills nokey.mp4 --sheet sliced/sheet.png --out sliced
-Drew 3 stills from sliced/stills.txt on the sheet sliced/sheet.png
-$ ./stills nokey.mp4 --changes --from 0 --until 3 --out sliced
-stills: sliced/t0000.00.png already exists; give a new name
-```
-
-(17 October 2026, real ffmpeg 9.0.2, paths shortened: `nokey.mp4` is an invented 160×90 60 fps
-file cut at 2 s and 4.04 s; the whole run gives the same three stills, byte for byte.)
 
 ### `render SCRIPT.md [--scenes KEY,…] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH]`
 
@@ -1017,34 +863,6 @@ end         18 frames in   0.2 s: all match
 26 frames differ.
 ```
 
-### `compare-video NEW.mp4 OLD.mp4 [--every SECONDS] [--sheet OUT.png]`
-
-The acceptance of a re-made or revised video: two finished files compared and reported, never
-judged (exit 0 whenever it runs; a remake that is meant to differ still compares). For each
-file, the length, frame count, peak and mean level; then the narration envelopes (each file's
-audio decoded to 48 kHz mono, the RMS of every 0.1 s window), their correlation over the shorter
-file (`undefined` when one is flat), and the windows that are speech (above −40 dBFS) in one and
-silence in the other; then one frame from each file every `--every` seconds (default 5) and the
-mean absolute difference of the pair over RGB, 0 to 255: the mean, the median and the five largest
-with their times. With `--sheet`, those five pairs side by side, new left, old right, each
-labelled under the frame (refuses an existing file). Needs ffmpeg, ffprobe and numpy, and Pillow
-for the sheet.
-
-```
-$ ./compare-video videos/x/out/X-v2.mp4 videos/x/out/X.mp4 --every 2 --sheet compare.png
-NEW videos/x/out/X-v2.mp4
-  length 60.067 s, 1802 frames; peak -1.0 dBFS, mean -21.9 dBFS
-OLD videos/x/out/X.mp4
-  length 60.067 s, 1802 frames; peak -1.0 dBFS, mean -21.9 dBFS
-narration envelopes (0.1 s windows, 600 compared): correlation 1.0000; speech in one and silence in the other: 0 windows
-frames every 2 s (31 pairs): mean difference 3.0, median 0.0 (0-255)
-  largest: 18.9 at 46.0 s, 18.9 at 48.0 s, 18.9 at 50.0 s, 18.9 at 52.0 s, 18.4 at 54.0 s
-sheet of 5 pairs written to compare.png
-```
-
-(That run: the example re-made with one colour changed in its last step scene; the five largest
-differences are all in that scene, and the sheet shows the colour.)
-
 ### `compare-frames SCRIPT.md OLD.mp4 SCENE:SECONDS[,…] --out SHEET.png [--offset SCENE=SECONDS …] [--elements DIR] [--renderer PATH]`
 
 For a remake or a revision: the frame the scene code draws now beside an earlier video's frame
@@ -1166,8 +984,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills` on a video file: no choice of `--at`, `--every` or `--changes`, or two, `--threshold` without `--changes` or outside 0 to 1, `--every` of 0 or less, a time at or past the video's end (the length is given), or a script flag with a video and the other way round; `--detect-fps` of 0 or less or without `--changes`, `--from` or `--until` with `--at`, with `--sheet` alone or not a time, `--from` at or past the end, `--until` not after `--from`; in either form a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`); for `narrate --lines`: no `--out`, a speed outside 0.5 to 2.0, `--phonemes` without `--dry-run`, or a script flag with `--lines` and the other way round; for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`; for `thumbnail`: no `--at` and no `thumbnail-at`, or a moment that is not `SCENE:SECONDS`, names a scene the script lacks, or is past either end of the scene. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, a description table for `narrate --lines` is missing, has no `#`, `Start (s)` and `Line` columns or a row that cannot be spoken (named), or a `Say` whose phoneme spans are wrong (the row and the problem named), or an output already exists (for `stills` on a video file: any still, `stills.txt` or sheet it would write; with `--from` or `--until`, `stills.txt` is added to instead, and a still not in it is written over); for `stills --sheet` alone: `stills.txt` or a still it names is missing, it lists no stills, or a line of it is not `TIME NAME`; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there; for `thumbnail`: the output's folder does not exist, the output exists without `--replace`, the title (or `thumbnail-title`) does not fit three lines with capitals 40 px tall, the PNG would be over 2,000,000 bytes, or the file cannot be written (the reason given). A malformed `thumbnail-at` in the script is a problem with the script. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills`: a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`), or a video file instead of a script (that form moved to video-tools); for `narrate`: `--lines` (moved to video-tools); for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`; for `thumbnail`: no `--at` and no `thumbnail-at`, or a moment that is not `SCENE:SECONDS`, names a scene the script lacks, or is past either end of the scene. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there; for `thumbnail`: the output's folder does not exist, the output exists without `--replace`, the title (or `thumbnail-title`) does not fit three lines with capitals 40 px tall, the PNG would be over 2,000,000 bytes, or the file cannot be written (the reason given). A malformed `thumbnail-at` in the script is a problem with the script. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named); for `record-output`, `git` is not installed or failed while reading a commit (its message shown). What was written before stays. | Install as above; re-run for the scene that failed; for `record-output`, give `--tools-commit` or `--elements-commit` instead. |
 
 ## Testing
@@ -1192,8 +1010,8 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
 `record-output`) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 99% on 12 November 2026
-(853 tests, lint clean). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+192×108 with a tolerance). Coverage is reported by the test command; 99% on 13 November 2026
+(726 tests, lint clean; the whole suite takes about four minutes). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
 bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
 Tier 1 (`size_problem`).
 
@@ -1231,14 +1049,6 @@ real spreadsheet (a header and three rows of two columns): `highlight.4`, `redac
 anchor `header.3` refused, each saying what the file has; `redact.2`, `box.3.2`, `tab-box.2` and
 the anchor `cell.3.2` accepted.
 
-**Tier 3 for `stills` on a video file** (17 October 2026, on the Mac, ffmpeg 9.0.2): the invented
-three-colour file of the Usage section (cuts at 2 s and 4 s found, 160×90 stills, a 720×478 sheet),
-and a real 51 s vertical Short (480×854) fetched by the audio-description project's own tool into a
-scratch folder, out of git: `--every 5 --sheet` gave 11 stills of 480×854 and a 1440×2031 sheet
-(4×3 cells of 360×677) with every frame at its own proportions and its time under it, checked by
-eye; `--changes --sheet` at the default threshold found 13 cuts in it (14 stills, a 1440×2708
-sheet). Nothing from that video is in the repository.
-
 ## Known limitations and non-goals
 
 - Only one frame size, 1920×1080 (every region is named in one place, `chrome.Layout`, so a
@@ -1262,6 +1072,8 @@ sheet). Nothing from that video is in the repository.
   nominal from the note beside it in the element's `ELEMENT.md`.
 
 ## Notes for users
+
+- **13 November 2026.** Three general commands moved to **video-tools**, the tools project for any video: `narrate --lines TABLE.md --out FOLDER`, `stills VIDEO …` (`--at`, `--every`, `--changes`, `--sheet`) and `compare-video NEW.mp4 OLD.mp4`. Run them from there, with the same arguments. Here, `narrate --lines` and `stills` on a video file now stop with a message saying where they went (exit 2), and `compare-video` is gone. `narrate SCRIPT.md` and `stills SCRIPT.md` are unchanged, apart from `--help` showing only the script form; `setup-linux` stays here (video-tools has its own copy).
 
 - **12 November 2026.** New command, `thumbnail SCRIPT.md [--at SCENE:SECONDS]`: a branded 1280×720 PNG thumbnail for a video (the title, eyebrow, rule and mark in the brand kit's style beside one frame drawn as `stills` draws it), written beside the script's `output` as `… thumbnail.png`. Two new optional Settings keys, which `check-script` now accepts: `thumbnail-at` (the frame, `SCENE:SECONDS`) and `thumbnail-title` (a shorter title for the thumbnail). For the training-video project.
 - **11 November 2026.** New command, `record-output SCRIPT.md [VIDEO]`: adds a finished video's row (file, made, made with, size, SHA-256, state) to the `OUT.md` beside it, creating the file when there is none, and with `--add-state TEXT` adds to a row's State ("**Accepted** …", "Superseded by …"). The commits come from `--tools-commit` and `--elements-commit`, or are read with `git` from clean checkouts. A new setting, `TIME_ZONE` (e.g. `Europe/London`), sets the zone of its times. Existing `OUT.md` files are read as they are. For the training-video project.

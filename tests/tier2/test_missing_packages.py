@@ -39,15 +39,12 @@ def prepared(example, ffstub):
     ("narrate", ["--scenes", "A", "--replace"], "soundfile", "soundfile"),
     ("render", ["--scenes", "A"], "cairo", "pycairo"),
     ("frame-hashes", ["--scenes", "A", "--out", "h.json"], "cairo", "pycairo"),
-    ("compare-video", ["SELF"], "numpy", "numpy"),                 # SELF: the first file again
-    ("compare-video", ["SELF", "--sheet", "sheet.png"], "PIL", "Pillow"),
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "numpy", "numpy"),
     ("compare-frames", ["SELF", "A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
     ("brand-preview", ["--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "cairo", "pycairo"),
     ("stills", ["A:1.5", "--out", "sheet.png"], "PIL", "Pillow"),
-    ("stills", ["VIDEO", "--at", "1", "--out", "stills-folder"], "PIL", "Pillow"),   # VIDEO: the finished video
     ("crop-insets", [], "PIL", "Pillow"),
     ("check-video", ["--sheet", "sheet.png"], "PIL", "Pillow"),
     ("font-weights", ["--weights", "400", "--family-prefix", "X", "--out", "weights"], "fontTools", "fonttools"),
@@ -59,8 +56,6 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
     env.update(hidden(tmp_path, module))
     env["PYTHONPATH"] = env["PYTHONPATH"] + os.pathsep + speech["PYTHONPATH"]   # the fake speech model stays
     target = tmp_path / "font.ttf" if command == "font-weights" else prepared
-    if args[:1] == ["VIDEO"]:
-        target, args = os.path.join(os.path.dirname(prepared), "out", "Folding a Paper Boat.mp4"), args[1:]
     if command == "font-weights":
         target.write_bytes(b"\0")
     args = [target if a == "SELF" else a for a in args]
@@ -68,7 +63,7 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
     assert (code, out) == (4, ""), err
     assert "Traceback" not in err
     assert err == message(command, pip) + HINT + "\n"
-    assert not any(os.path.exists(tmp_path / f) for f in ("sheet.png", "weights", "new.mp4", "stills-folder"))
+    assert not any(os.path.exists(tmp_path / f) for f in ("sheet.png", "weights", "new.mp4"))
 
 
 def test_with_video_tools_python_set_the_device_shell_hint_is_left_out(prepared, ffstub, tmp_path):

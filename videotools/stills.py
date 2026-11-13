@@ -31,32 +31,15 @@ def parser():
     p = argparse.ArgumentParser(prog=PROG, description="Draw frames of a video's scenes at the given times "
                                 "onto one sheet, each labelled, so the layout can be checked before rendering; "
                                 "or, with --cue-changes, the frames around every cue start.")
-    p.add_argument("SCRIPT", metavar="SCRIPT|VIDEO",
-                   help="the video's script.md, or a video file (any name not ending .md): then --at, --every or "
-                        "--changes choose the frames, --out is the folder for the stills and --sheet the sheet")
+    p.add_argument("SCRIPT", help="the video's script.md")
     p.add_argument("FRAMES", nargs="?", help="SCENE:SECONDS, comma-separated; a negative time counts back from the "
                    "scene's end (not with --cue-changes)")
     p.add_argument("--cue-changes", action="store_true",
                    help="the frames at -0.3, 0 and +0.3 s around every cue start (+0.6 s after a mistake), "
                         "on numbered sheets, with a warning for a picture that vanishes as the mistake panels lift")
     p.add_argument("--scenes", metavar="KEY,...", help="with --cue-changes: only these scenes (default: all)")
-    p.add_argument("--out", metavar="SHEET.png|FOLDER", required=True,
-                   help="the sheet to write, or for a video file the folder for the stills (never over a file)")
-    p.add_argument("--grid", metavar="CxR", default=None,
-                   help="columns x rows of a sheet (default 2x2; for a video file, chosen to fit)")
-    p.add_argument("--at", metavar="T,T,...", help="video file: frames at these times, in seconds")
-    p.add_argument("--every", metavar="SECONDS", type=float, help="video file: a frame every so many seconds from 0")
-    p.add_argument("--changes", action="store_true",
-                   help="video file: the first frame and every frame where the picture changes (ffmpeg's scene "
-                        "detection)")
-    p.add_argument("--threshold", metavar="N",
-                   help="with --changes: how big a change counts, 0 to 1 (default 0.3)")
-    p.add_argument("--detect-fps", metavar="N",
-                   help="with --changes: score the picture N times a second (default 10; less is faster)")
-    p.add_argument("--from", dest="start", metavar="T", help="with --every or --changes: only from this time (seconds)")
-    p.add_argument("--until", dest="until", metavar="T",
-                   help="with --every or --changes: only before this time (seconds); past the end is the end")
-    p.add_argument("--sheet", metavar="SHEET.png", help="video file: also a contact sheet of the stills, labelled")
+    p.add_argument("--out", metavar="SHEET.png", required=True, help="the sheet to write (never over a file)")
+    p.add_argument("--grid", metavar="CxR", default="2x2", help="columns x rows of a sheet (default 2x2)")
     elements.add_arguments(p)
     return p
 
@@ -75,7 +58,24 @@ def parse_frames(text):
     return out
 
 
+MOVED = "stills on a video file has moved to video-tools; here stills takes a video's script.md"
+
+
+def parse_grid(text):
+    """(columns, rows) of `--grid CxR`."""
+    try:
+        columns, rows = (int(v) for v in text.lower().split("x"))
+    except ValueError:
+        raise cli.Failure(f"--grid should be COLUMNSxROWS, not '{text}'", cli.USAGE) from None
+    if columns < 1 or rows < 1:
+        raise cli.Failure(f"--grid needs at least one column and one row, not '{text}'", cli.USAGE)
+    return columns, rows
+
+
 def main(argv=None):
+    known, _ = parser().parse_known_args(argv)
+    if not known.SCRIPT.lower().endswith(".md"):     # the video-file form, gone to video-tools
+        return cli.report(PROG, cli.Failure(MOVED, cli.USAGE))
     args = parser().parse_args(argv)
     try:
         return _run(args)
@@ -124,26 +124,12 @@ def vanished_as_the_curtain_lifts(video, scene, tl):
 
 
 def _run(args):
-    if not args.SCRIPT.lower().endswith(".md"):
-        for given, flag in ((args.FRAMES, "SCENE:SECONDS"), (args.cue_changes, "--cue-changes"),
-                            (args.scenes, "--scenes"), (args.elements, "--elements"), (args.renderer, "--renderer")):
-            if given:
-                raise cli.Failure(f"{flag} goes with a script, not a video file", cli.USAGE)
-        from videotools import video_stills
-        return video_stills.run(args)
-    for given, flag in ((args.at, "--at"), (args.every, "--every"), (args.changes, "--changes"),
-                        (args.threshold, "--threshold"), (args.detect_fps, "--detect-fps"), (args.start, "--from"),
-                        (args.until, "--until"), (args.sheet, "--sheet")):
-        if given is not None and given is not False:
-            raise cli.Failure(f"{flag} goes with a video file, not a script", cli.USAGE)
-    args.grid = args.grid or "2x2"
     if args.cue_changes and args.FRAMES:
         raise cli.Failure("--cue-changes takes no SCENE:SECONDS (it chooses the times itself)", cli.USAGE)
     if not args.cue_changes and not args.FRAMES:
         raise cli.Failure("give SCENE:SECONDS, or --cue-changes", cli.USAGE)
     wanted = parse_frames(args.FRAMES) if args.FRAMES else []
-    from videotools import video_stills
-    columns, rows = video_stills.parse_grid(args.grid)
+    columns, rows = parse_grid(args.grid)
     if wanted and len(wanted) > columns * rows:
         raise cli.Failure(f"{len(wanted)} frames do not fit a {columns}x{rows} grid; give a bigger --grid", cli.USAGE)
     cli.refuse_existing(args.out)

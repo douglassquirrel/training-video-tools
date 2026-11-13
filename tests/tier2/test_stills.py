@@ -19,9 +19,10 @@ def prepared(example):
 def test_help_and_usage():
     code, out, err = run("stills", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
-        "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png|FOLDER [--grid CxR] [--at T,T,...] "
-        "[--every SECONDS] [--changes] [--threshold N] [--detect-fps N] [--from T] [--until T] [--sheet SHEET.png] [--elements DIR] [--renderer PATH] "
-        "SCRIPT|VIDEO [FRAMES]")
+        "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png [--grid CxR] [--elements DIR] "
+        "[--renderer PATH] SCRIPT [FRAMES]")
+    for gone in ("--at", "--every", "--changes", "--threshold", "--detect-fps", "--from", "--until", "--sheet", "SCRIPT|VIDEO", "FOLDER"):
+        assert gone not in out
     code, out, err = run("stills", "x.md")
     assert code == 2 and "usage: stills" in err
 
@@ -258,3 +259,13 @@ def test_a_grid_with_no_columns_or_rows_is_refused_in_words_in_the_script_form_t
         code, out, err = run("stills", prepared, *flags, "--out", tmp_path / "sheet.png", "--grid", "0x3")
         assert (code, out, err) == (2, "", "stills: --grid needs at least one column and one row, not '0x3'\n")
         assert not (tmp_path / "sheet.png").exists() and not (tmp_path / "sheet-1.png").exists()
+
+
+def test_a_video_file_is_refused_in_words_saying_stills_on_a_video_moved_to_video_tools(tmp_path):
+    video = tmp_path / "clip.mp4"
+    video.write_bytes(b"not really a video")
+    for flags in (["--at", "1"], ["--every", "2"], ["--changes"], ["--sheet", str(tmp_path / "s.png")]):
+        code, out, err = run("stills", video, *flags, "--out", tmp_path / "stills")
+        assert (code, out, err) == (2, "", "stills: stills on a video file has moved to video-tools; "
+                                           "here stills takes a video's script.md\n")
+    assert sorted(os.listdir(tmp_path)) == ["clip.mp4"]

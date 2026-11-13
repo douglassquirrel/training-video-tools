@@ -1,12 +1,11 @@
 """A stand-in for ffmpeg and ffprobe (tests/tier2/conftest.py puts both names on PATH).
 
 Media files are fake: text files of `key=value` lines (`frames=90`, `duration=3.0`,
-`max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`, `tone=0-1.0,2.0-3.0` the spans
-where the decoded audio is loud, `colours=0:200.40.40,10:0.0.255` the colour of every frame
-from each time, `width=480`, `height=854` the frame size, default 1920x1080, `scenes=2,4.04`
-the times the scene scan reports). Every call is appended as a
+`max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`, `colours=0:200.40.40,10:0.0.255` the colour of every frame
+from each time, `width=480`, `height=854` the frame size, default 1920x1080).
+Every call is appended as a
 JSON line to FFSTUB_LOG. FFSTUB_FAIL names a job (`concat`, `mux`, `render`, `probe`, `volume`,
-`silence`, `frame`, `frame@T` (the frame read at -ss T only), `scenes`) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
+`silence`, `frame`, `frame@T` (the frame read at -ss T only)) that exits 1 after writing a partial output; FFSTUB_DIE=render makes the
 render stop reading stdin part-way. An existing output is refused unless `-y` is given, as
 ffmpeg does. Nothing here is real ffmpeg output beyond its format.
 """
@@ -140,19 +139,6 @@ def ffmpeg(args):
             sys.stderr.write(f"[Parsed_silencedetect_0 @ 0x1] silence_start: {a}\n")
             sys.stderr.write(f"[Parsed_silencedetect_0 @ 0x1] silence_end: {b} | silence_duration: {float(b) - float(a):.6f}\n")
         return 0
-    if "metadata=print" in arg_after(args, "-vf", ""):   # the scene scan: the shape ffmpeg 9.0.2 printed
-        fail_if("scenes")
-        fake = read_fake(arg_after(args, "-i"))
-        # A seek before -i (item 28): only the cuts in [-ss, -to) are seen; times stay on the file's
-        # clock only with -copyts, as real ffmpeg does ("Things checked").
-        before = args[:args.index("-i")]
-        start, end = float(arg_after(before, "-ss", "0")), float(arg_after(before, "-to", "1e9"))
-        cuts = [float(v) for v in fake.get("scenes", "").split(",") if v]
-        cuts = [t if "-copyts" in before else t - start for t in cuts if start <= t < end]
-        for i, t in enumerate(f"{t:g}" for t in cuts):
-            sys.stderr.write(f"[Parsed_metadata_1 @ 0x7a0c62280] frame:{i}    pts:{int(float(t) * 12800)}   pts_time:{t}\n"
-                             f"[Parsed_metadata_1 @ 0x7a0c62280] lavfi.scene_score=0.400000\n")
-        return 0
     if "-frames:v" in args:
         fail_if("frame", output if output != "-" else None)
         if os.environ.get("FFSTUB_FAIL") == "frame@" + arg_after(args, "-ss", "0"):   # one chosen frame fails
@@ -169,18 +155,6 @@ def ffmpeg(args):
             return 0
         with open(output, "wb") as f:
             f.write(tiny_png())
-        return 0
-    if "-f" in args and arg_after(args, "-f") == "s16le":   # the audio decoded: loud in the tone spans
-        fail_if("audio")
-        fake = read_fake(arg_after(args, "-i"))
-        rate = int(arg_after(args, "-ar", "48000"))
-        total = int(round(float(fake.get("duration", "0")) * rate))
-        loud = struct.pack("<h", 3277)          # about -20 dBFS
-        out = bytearray(total * 2)
-        for span in [v for v in fake.get("tone", "").split(",") if v]:
-            a, b = (int(round(float(v) * rate)) for v in span.split("-"))
-            out[a * 2:b * 2] = loud * (b - a)
-        sys.stdout.buffer.write(out)
         return 0
     if "-c:v" in args and arg_after(args, "-c:v") == "copy":
         fail_if("mux", output)
