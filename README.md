@@ -992,6 +992,7 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 
 ```bash
 .venv/bin/pytest          # the whole suite: no external programs, no network, no real data
+.venv/bin/pytest -m "not slow"   # everything but the tests marked slow (below)
 .venv/bin/ruff check .    # lint
 
 In the Linux device shell, where deleting is off and old `pytest-of-…` folders cannot be cleared,
@@ -1004,14 +1005,18 @@ the old `VIDEO_TOOLS_PYTHON` and `VIDEO_TOOLS_CONF`, and `FONTCONFIG_FILE` are d
 them on purpose, so the suite passes with the
 device-shell settings exported.
 
+One test is marked `slow`: `tests/tier2/test_render.py::test_every_scene_by_default_in_script_order`
+(about 20 s), because it renders every scene of the example frame by frame.
+
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
 primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
 as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
-`record-output`) and a copy of the example, and
+`record-output`; each is reached through `stub.sh`, one file linked into each test's folder under the
+program's name, which no test writes) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 99% on 15 November 2026
-(729 tests, lint clean; the whole suite takes about three and a quarter minutes). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+(733 tests, lint clean; the whole suite takes three and a half to four minutes, about half a minute less with `-m "not slow"`). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
 bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
 Tier 1 (`size_problem`).
 

@@ -2,11 +2,10 @@
 
 import json
 import os
-import sys
 
 import pytest
 
-from tests.tier2.conftest import REPO, STUBS, run
+from tests.tier2.conftest import REPO, STUB, STUBS, run
 
 PACKAGES = ["pycairo", "numpy", "soundfile", "kokoro-onnx==0.6.1", "Pillow", "fonttools"]
 IMPORTS = "import cairo, numpy, soundfile, kokoro_onnx, PIL, fontTools"
@@ -19,8 +18,7 @@ def pystub(tmp_path):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     python3 = bin_dir / "python3"
-    python3.write_text(f"#!/bin/sh\nPYSTUB_SELF='{python3}' exec '{sys.executable}' '{os.path.join(STUBS, 'pystub.py')}' \"$@\"\n")
-    python3.chmod(0o755)
+    os.symlink(STUB, python3)
     model = tmp_path / "kokoro"
     model.mkdir()
     (model / "model.onnx").write_bytes(b"")
@@ -28,6 +26,11 @@ def pystub(tmp_path):
     return {"PATH": f"{bin_dir}:{os.environ['PATH']}", "PYSTUB_LOG": str(tmp_path / "python-calls.jsonl"),
             "python3": str(python3), "venv": str(tmp_path / "work" / "venv"), "model": str(model),
             "conf": str(tmp_path / "work" / "training-video-tools.conf")}
+
+
+def test_python3_is_a_link_to_the_one_stand_in_file(pystub):
+    assert os.path.islink(pystub["python3"])
+    assert os.path.realpath(pystub["python3"]) == os.path.realpath(os.path.join(STUBS, "stub.sh"))
 
 
 def setup(env, *extra, venv=None, model=None, conf=None):

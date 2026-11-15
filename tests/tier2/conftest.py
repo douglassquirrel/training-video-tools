@@ -10,6 +10,7 @@ import pytest
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 EXAMPLES = os.path.join(REPO, "examples")
 STUBS = os.path.join(REPO, "tests", "stubs")
+STUB = os.path.join(STUBS, "stub.sh")      # the one stand-in launcher, linked in under each program's name
 
 
 # Settings the user's shell may export (the README tells device-shell users to export
@@ -18,6 +19,17 @@ STUBS = os.path.join(REPO, "tests", "stubs")
 # by fonts.load on Linux; a child must set its own.
 USER_SETTINGS = ("TRAINING_VIDEO_TOOLS_PYTHON", "TRAINING_VIDEO_TOOLS_CONF", "VIDEO_TOOLS_PYTHON", "VIDEO_TOOLS_CONF",
                  "FONTCONFIG_FILE")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _stand_in_unchanged():
+    """At the end of the run, check that no test wrote over the shared stand-in launcher."""
+    with open(STUB, "rb") as f:
+        before = f.read()
+    yield
+    with open(STUB, "rb") as f:
+        assert f.read() == before, f"a test wrote over {STUB}: restore it with git checkout"
+    assert os.access(STUB, os.X_OK), f"{STUB} is no longer executable"
 
 
 def clean_env(**overrides):
@@ -33,6 +45,7 @@ def run(command, *args, cwd=None, env=None):
     full_env["PYTHONDONTWRITEBYTECODE"] = "1"
     # Let coverage.py measure the subprocess too (pyproject.toml: parallel = true).
     full_env.setdefault("COVERAGE_PROCESS_START", os.path.join(REPO, "pyproject.toml"))
+    full_env.update(TVT_STUBS=STUBS, TVT_STUB_PYTHON=sys.executable)    # what tests/stubs/stub.sh runs
     full_env.update(env or {})
     full_env = {k: v for k, v in full_env.items() if v is not None}   # None in `env` unsets a variable
     p = subprocess.run([sys.executable, os.path.join(REPO, command)] + [str(a) for a in args],
@@ -71,9 +84,7 @@ def ffstub(tmp_path):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     for name in ("ffmpeg", "ffprobe"):
-        path = bin_dir / name
-        path.write_text(f"#!/bin/sh\nFFSTUB_NAME={name} exec '{sys.executable}' '{os.path.join(STUBS, 'ffstub.py')}' \"$@\"\n")
-        path.chmod(0o755)
+        os.symlink(STUB, bin_dir / name)
     return {"PATH": f"{bin_dir}:{os.environ['PATH']}", "FFSTUB_LOG": str(tmp_path / "ff-calls.jsonl")}
 
 
@@ -94,9 +105,7 @@ def gitstub(tmp_path):
     set GITSTUB_HEADS, GITSTUB_DIRTY or GITSTUB_FAIL in it to choose its answers."""
     bin_dir = tmp_path / "gitbin"
     bin_dir.mkdir()
-    path = bin_dir / "git"
-    path.write_text(f"#!/bin/sh\nexec '{sys.executable}' '{os.path.join(STUBS, 'gitstub.py')}' \"$@\"\n")
-    path.chmod(0o755)
+    os.symlink(STUB, bin_dir / "git")
     return {"PATH": f"{bin_dir}:{os.environ['PATH']}", "GITSTUB_LOG": str(tmp_path / "git-calls.jsonl")}
 
 

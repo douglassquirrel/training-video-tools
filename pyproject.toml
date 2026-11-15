@@ -3,6 +3,7 @@
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "--cov=videotools --cov-report=term-missing"
+markers = ["slow: takes well over a second for a reason (a whole render); skip with -m \"not slow\""]
 
 [tool.coverage.run]
 branch = true

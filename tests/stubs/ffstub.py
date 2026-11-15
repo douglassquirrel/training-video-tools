@@ -1,4 +1,5 @@
-"""A stand-in for ffmpeg and ffprobe (tests/tier2/conftest.py puts both names on PATH).
+"""A stand-in for ffmpeg and ffprobe (tests/tier2/conftest.py links tests/stubs/stub.sh onto PATH
+under both names, and stub.sh runs this with FFSTUB_NAME set).
 
 Media files are fake: text files of `key=value` lines (`frames=90`, `duration=3.0`,
 `max_volume=-1.2`, `mean_volume=-20.0`, `silences=0-1.0,2.0-3.0`, `colours=0:200.40.40,10:0.0.255` the colour of every frame

@@ -1,5 +1,5 @@
 """A stand-in for the python3 on PATH and for the venv's python it makes (tests/tier2/test_setup_linux.py
-puts `python3` on PATH as a script that runs this with PYSTUB_SELF naming itself).
+links tests/stubs/stub.sh onto PATH as `python3`, which runs this with PYSTUB_SELF naming the link).
 
 Every call is appended as a JSON line {"python": PYSTUB_SELF, "args": [...]} to PYSTUB_LOG.
 `-m venv [--system-site-packages] DIR` makes DIR/bin/python, another such script; `-c "import …"`

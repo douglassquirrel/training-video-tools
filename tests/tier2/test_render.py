@@ -76,6 +76,7 @@ def test_a_frame_range_renders_part_of_one_scene_named_by_its_first_frame(prepar
     assert code == 2 and err == "render: --frames 100-300 is outside scene A's 261 frames\n"
 
 
+@pytest.mark.slow          # about 20 s: renders every scene of the example, frame by frame
 def test_every_scene_by_default_in_script_order(prepared, ffstub):
     code, out, err = run("render", prepared, env=ffstub)
     assert (code, err) == (0, "")
