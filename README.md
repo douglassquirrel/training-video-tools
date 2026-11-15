@@ -1010,8 +1010,8 @@ as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an 
 standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
 `record-output`) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
-192×108 with a tolerance). Coverage is reported by the test command; 99% on 13 November 2026
-(726 tests, lint clean; the whole suite takes about four minutes). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+192×108 with a tolerance). Coverage is reported by the test command; 99% on 15 November 2026
+(729 tests, lint clean; the whole suite takes about three and a quarter minutes). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
 bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
 Tier 1 (`size_problem`).
 

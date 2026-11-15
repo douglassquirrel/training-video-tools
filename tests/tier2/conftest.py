@@ -125,10 +125,53 @@ def example(tmp_path):
     return str(tmp_path / "examples" / "videos" / "paper-boat" / "script.md")
 
 
+_PRISTINE = {}       # "video": the pristine example's video folder, cropped once a run (cropped())
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _pristine_folder(tmp_path_factory):
+    """Where cropped() keeps its one cropped copy of the example, under pytest's own temporary folders."""
+    _PRISTINE["base"] = tmp_path_factory.mktemp("pristine-cropped")
+    yield
+    _PRISTINE.clear()
+
+
+def _same_tree(a, b):
+    """True when folders a and b hold the same files with the same bytes, leaving out work/."""
+    import filecmp
+    names_a = sorted(n for n in os.listdir(a) if n != "work")
+    names_b = sorted(n for n in os.listdir(b) if n != "work")
+    if names_a != names_b:
+        return False
+    for name in names_a:
+        pa, pb = os.path.join(a, name), os.path.join(b, name)
+        if os.path.isdir(pa) != os.path.isdir(pb):
+            return False
+        if os.path.isdir(pa):
+            if not _same_tree(pa, pb):
+                return False
+        elif not filecmp.cmp(pa, pb, shallow=False):
+            return False
+    return True
+
+
 def cropped(example):
-    """The example copy with its insets cut (crop-insets run through the clean environment)."""
-    code, out, err = run("crop-insets", example)
-    assert code == 0, err
+    """The example copy with its insets cut (crop-insets run through the clean environment). crop-insets runs
+    once a test run, on a pristine copy, and its work/insets/ is copied into each example after that;
+    an example that differs from the pristine one, or has a work/ already, is cropped for real."""
+    video = os.path.dirname(example)
+    if "video" not in _PRISTINE:
+        pristine = os.path.join(str(_PRISTINE["base"]), "examples")
+        shutil.copytree(EXAMPLES, pristine)
+        script = os.path.join(pristine, "videos", "paper-boat", "script.md")
+        code, out, err = run("crop-insets", script)
+        assert code == 0, err
+        _PRISTINE["video"] = os.path.dirname(script)
+    if os.path.exists(os.path.join(video, "work")) or not _same_tree(video, _PRISTINE["video"]):
+        code, out, err = run("crop-insets", example)
+        assert code == 0, err
+        return example
+    shutil.copytree(os.path.join(_PRISTINE["video"], "work"), os.path.join(video, "work"))
     return example
 
 
