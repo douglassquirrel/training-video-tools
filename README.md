@@ -65,6 +65,8 @@ It runs on the system `python3` (nothing installed), makes the venv when it is m
 writes `SPEECH_MODEL_DIR` into the config, checks that the model folder holds `model.onnx` and
 `voices.npz`, and prints `export TRAINING_VIDEO_TOOLS_PYTHON=…`, `export TRAINING_VIDEO_TOOLS_CONF=…` and
 `export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in place and prints the lines alone.
+With the model folder not connected it names what is missing and exits 3, but still prints the lines
+(lobster-tools `8cb5103`), so every command but `narrate` runs; `narrate` refuses until the model is there.
 Its own README ("`prepare-venv`") has every flag, refusal and exit code. Every command here restarts
 itself under the Python `TRAINING_VIDEO_TOOLS_PYTHON` names.
 
@@ -1051,6 +1053,10 @@ the anchor `cell.3.2` accepted.
   nominal from the note beside it in the element's `ELEMENT.md`.
 
 ## Notes for users
+
+- **15 November 2026, later.** In the Linux device shell, `prepare-venv` now prints the three lines even when
+  the model folder is not connected (it still names what is missing and exits 3), so every command but
+  `narrate` can run without the model. Nothing to change here: it is lobster-tools' change (`8cb5103`).
 
 - **15 November 2026.** `setup-linux` is retired: prepare the Linux device shell with lobster-tools'
   `prepare-venv`, which reads this checkout's new `prepare-venv.conf` and `requirements.txt`:
