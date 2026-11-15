@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from tests.tier2.conftest import REPO, clean_env, git_calls, run
+from tests.tier2.conftest import REPO, clean_env, git_calls, run, run_program
 
 SHA_BOAT = "25cdb46d8d2115a24eb15c3c58f34f3330cfca4fec249ff70b7cad2bb560a0dd"   # sha256 of b"boat"
 MTIME = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc).timestamp()           # 13:00 in London
@@ -73,7 +73,7 @@ def untouched(s):
 # --- the command line ---
 
 def test_help_and_usage():
-    code, out, err = run("record-output", "--help")
+    code, out, err = run_program("record-output", "--help")
     assert code == 0
     assert " ".join(out.split()).startswith(
         "usage: record-output [-h] [--state TEXT | --add-state TEXT] [--tools-commit C] [--elements-commit C] "
@@ -98,7 +98,7 @@ def test_add_state_with_a_commit_flag_is_a_usage_error(setup, flag):
 # --- adding a row ---
 
 def test_a_row_is_appended_after_the_tables_last_row_and_nothing_else_changes(setup):
-    code, out, err = run("record-output", setup.script, setup.video, "--tools-commit", "4e39323",
+    code, out, err = run_program("record-output", setup.script, setup.video, "--tools-commit", "4e39323",
                          "--state", "First of the new | cut", env=setup.env)
     assert (code, err) == (0, "")
     new_row = row(state="First of the new \\| cut")

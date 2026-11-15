@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from tests.tier2.conftest import EXAMPLE_FRAMES, cropped, ff_calls, narrated, run
+from tests.tier2.conftest import EXAMPLE_FRAMES, cropped, ff_calls, narrated, run, run_program
 
 FRAME_BYTES = 1920 * 1080 * 4
 
@@ -25,9 +25,9 @@ def fake(path):
 
 
 def test_help_and_usage():
-    code, out, err = run("render", "--help")
+    code, out, err = run_program("render", "--help")
     assert code == 0 and " ".join(out.split()).startswith("usage: render [-h] [--scenes KEY,...] [--frames A-B] [--replace] [--dry-run] [--elements DIR] [--renderer PATH] SCRIPT")
-    code, out, err = run("render")
+    code, out, err = run_program("render")
     assert code == 2 and "usage: render" in err
 
 
@@ -42,7 +42,7 @@ def test_dry_run_lists_scenes_lengths_frames_and_segments_and_writes_nothing(pre
 
 
 def test_a_scene_is_piped_frame_by_frame_to_ffmpeg_with_the_scripts_settings(prepared, ffstub):
-    code, out, err = run("render", prepared, "--scenes", "B2", env=ffstub)
+    code, out, err = run_program("render", prepared, "--scenes", "B2", env=ffstub)
     assert (code, err) == (0, "")
     path = os.path.join(segments(prepared), "B2_00000.mp4")
     assert fake(path)["frames"] == "159" and fake(path)["bytes"] == str(159 * FRAME_BYTES)

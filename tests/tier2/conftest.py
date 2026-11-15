@@ -1,4 +1,5 @@
-"""Tier 2: whole commands run as subprocesses, against stubs and copies of the example."""
+"""Tier 2: whole commands, called in the test's own process by run() (a few started as programs by
+run_program()), against stubs and copies of the example."""
 
 import os
 import shutil
@@ -39,18 +40,130 @@ def clean_env(**overrides):
     return env
 
 
-def run(command, *args, cwd=None, env=None):
-    """Run a top-level command script with the venv's Python; (exit code, stdout, stderr)."""
+def command_env(env=None, program=False):
+    """The environment a command runs with: the clean one, the stand-ins' settings, then `env` (None in it
+    unsets a variable). A program also gets coverage's hook (pyproject.toml: parallel = true)."""
     full_env = clean_env()
     full_env["PYTHONDONTWRITEBYTECODE"] = "1"
-    # Let coverage.py measure the subprocess too (pyproject.toml: parallel = true).
-    full_env.setdefault("COVERAGE_PROCESS_START", os.path.join(REPO, "pyproject.toml"))
+    if program:
+        full_env.setdefault("COVERAGE_PROCESS_START", os.path.join(REPO, "pyproject.toml"))
     full_env.update(TVT_STUBS=STUBS, TVT_STUB_PYTHON=sys.executable)    # what tests/stubs/stub.sh runs
     full_env.update(env or {})
-    full_env = {k: v for k, v in full_env.items() if v is not None}   # None in `env` unsets a variable
+    return {k: v for k, v in full_env.items() if v is not None}
+
+
+def run_program(command, *args, cwd=None, env=None):
+    """Start a top-level command script as a program, with the venv's Python, as a user runs it; (exit code,
+    stdout, stderr). For the few tests of each command that prove the file runs; most use run()."""
     p = subprocess.run([sys.executable, os.path.join(REPO, command)] + [str(a) for a in args],
-                       capture_output=True, text=True, cwd=cwd or REPO, env=full_env)
+                       capture_output=True, text=True, cwd=cwd or REPO, env=command_env(env, program=True))
     return p.returncode, p.stdout, p.stderr
+
+
+def catch_output(call):
+    """Call `call()` with stdout and stderr caught at the file level, so that what child programs (the
+    stand-ins) print is caught with what Python prints, in order; (stdout, stderr) as text."""
+    import io
+    import tempfile
+    sys.stdout.flush()
+    sys.stderr.flush()
+    streams, fds = (sys.stdout, sys.stderr), (os.dup(1), os.dup(2))
+    files = (tempfile.TemporaryFile(), tempfile.TemporaryFile())
+    try:
+        os.dup2(files[0].fileno(), 1)
+        os.dup2(files[1].fileno(), 2)
+        sys.stdout, sys.stderr = (io.TextIOWrapper(io.FileIO(fd, "w", closefd=False), encoding="utf-8",
+                                                   write_through=True) for fd in (1, 2))
+        call()
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        sys.stdout, sys.stderr = streams
+        for fd, saved in zip((1, 2), fds):
+            os.dup2(saved, fd)
+            os.close(saved)
+    texts = []
+    for f in files:
+        f.seek(0)
+        with io.TextIOWrapper(f, encoding="utf-8", newline=None) as text:   # as text=True reads a program's
+            texts.append(text.read())
+    return tuple(texts)
+
+
+def _exit_code(value):
+    """The exit code sys.exit(value) gives a program: None 0, a number itself, anything else printed, 1."""
+    if value is None:
+        return 0
+    if isinstance(value, int):
+        return value
+    sys.stderr.write(f"{value}\n")
+    return 1
+
+
+def _set_aside(folders):
+    """Take out of sys.modules every module a folder on PYTHONPATH would shadow (the stand-in speech model
+    over the installed one); returns them, to put back after the call."""
+    names = set()
+    for folder in folders:
+        if os.path.isdir(folder):
+            names.update(n[:-3] if n.endswith(".py") else n for n in os.listdir(folder))
+    aside = {m: mod for m, mod in sys.modules.items() if m.split(".")[0] in names}
+    for m in aside:
+        del sys.modules[m]
+    return aside
+
+
+def _forget_new(before):
+    """Drop the modules a call imported from outside this Python and the commands' package (a stand-in, a
+    video-elements library, a scene module), so the next call imports them afresh, as a new program would."""
+    kept = [os.path.realpath(p) + os.sep for p in (sys.prefix, sys.base_prefix, os.path.join(REPO, "videotools"))]
+    for name in set(sys.modules) - before:
+        path = getattr(sys.modules[name], "__file__", None)
+        if path and not any(os.path.realpath(path).startswith(k) for k in kept):
+            del sys.modules[name]
+
+
+def run(command, *args, cwd=None, env=None):
+    """Call a command's main inside this process, as its program would run (bernstein's rule, Settled 66):
+    argv, the environment run_program would give it, the working folder, PYTHONPATH's folders first on the
+    import path, stdout and stderr caught at the file level; all put back after. An uncaught exception is a
+    traceback on stderr and exit 1, as a program's. (exit code, stdout, stderr)."""
+    import importlib
+    import traceback
+    full_env = command_env(env)
+    argv = [str(a) for a in args]
+    module = importlib.import_module("videotools." + command.replace("-", "_"))
+    saved = dict(os.environ), os.getcwd(), list(sys.argv), list(sys.path), sys.dont_write_bytecode
+    extra = [p for p in full_env.get("PYTHONPATH", "").split(os.pathsep) if p]
+    code = []
+
+    def call():
+        try:
+            code.append(_exit_code(module.main(argv)))
+        except SystemExit as e:
+            code.append(_exit_code(e.code))
+        except Exception:
+            traceback.print_exc()
+            code.append(1)
+
+    aside = _set_aside(extra)
+    before = set(sys.modules)
+    try:
+        os.environ.clear()
+        os.environ.update(full_env)
+        os.chdir(cwd or REPO)
+        sys.argv = [os.path.join(REPO, command)] + argv
+        sys.path[:0] = extra
+        sys.dont_write_bytecode = True
+        out, err = catch_output(call)
+    finally:
+        os.environ.clear()
+        os.environ.update(saved[0])
+        os.chdir(saved[1])
+        sys.argv, sys.path[:], sys.dont_write_bytecode = saved[2], saved[3], saved[4]
+        _forget_new(before)
+        sys.modules.update(aside)
+    return code[0], out, err
 
 
 @pytest.fixture

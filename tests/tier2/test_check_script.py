@@ -3,7 +3,7 @@
 import json
 import os
 
-from tests.tier2.conftest import run
+from tests.tier2.conftest import run, run_program
 
 SUMMARY = """Folding a Paper Boat: 7 scenes, 11 cues, 125 words (about 48 s of speech at 2.6 words a second)
 Tracker: A B C
@@ -22,7 +22,7 @@ Beyond the source (added:), 4, for approval and checking:
 
 
 def test_help_describes_the_command_and_exits_0():
-    code, out, err = run("check-script", "--help")
+    code, out, err = run_program("check-script", "--help")
     assert code == 0
     assert " ".join(out.split()).startswith("usage: check-script [-h] [--json OUT] [--elements DIR] [--renderer PATH] SCRIPT")
     assert "--json" in out and err == ""
@@ -35,7 +35,7 @@ def test_no_arguments_is_usage_exit_2():
 
 
 def test_a_well_formed_script_prints_the_summary_and_exits_0(example):
-    code, out, err = run("check-script", example)
+    code, out, err = run_program("check-script", example)
     assert (code, err) == (0, "")
     assert out == SUMMARY + "\nNo problems found.\n"
 

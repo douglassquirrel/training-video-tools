@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from tests.tier2.conftest import run, stub_calls
+from tests.tier2.conftest import run, run_program, stub_calls
 
 CLIPS = ["title_01.wav", "title_02.wav", "A_01.wav", "A_02.wav", "B_01.wav", "B_02.wav", "B2_01.wav",
          "C_01.wav", "C_02.wav", "R_01.wav", "R_02.wav"]
@@ -22,7 +22,7 @@ def work(example):
 
 
 def test_help_names_every_flag():
-    code, out, err = run("narrate", "--help")
+    code, out, err = run_program("narrate", "--help")
     assert code == 0 and err == ""
     for flag in ("--scenes", "--voice", "--speed", "--replace", "--dry-run", "--phonemes"):
         assert flag in out
@@ -41,7 +41,7 @@ def test_dry_run_lists_the_cues_voice_and_estimates_and_writes_nothing(example, 
 
 
 def test_one_clip_per_cue_and_timing_json_from_the_stub_model(example, speech):
-    code, out, err = run("narrate", example, env=speech)
+    code, out, err = run_program("narrate", example, env=speech)
     assert (code, err) == (0, "")
     assert sorted(os.listdir(work(example))) == sorted(CLIPS + ["timing.json"])
     timing = json.load(open(os.path.join(work(example), "timing.json")))

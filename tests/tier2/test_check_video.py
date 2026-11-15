@@ -5,7 +5,7 @@ import os
 import pytest
 from PIL import Image
 
-from tests.tier2.conftest import EXAMPLE_FRAMES, fake_media, ff_calls, narrated, run
+from tests.tier2.conftest import EXAMPLE_FRAMES, fake_media, ff_calls, narrated, run, run_program
 
 TOTAL = sum(EXAMPLE_FRAMES.values()) / 30          # 52.9 s
 END_SCENE_START = TOTAL - EXAMPLE_FRAMES["end"] / 30  # 47.2 s: the silent end card
@@ -30,14 +30,14 @@ def ready(example, ffstub):
 
 
 def test_help_and_usage():
-    code, out, err = run("check-video", "--help")
+    code, out, err = run_program("check-video", "--help")
     assert code == 0 and out.startswith("usage: check-video [-h] [--sheet OUT.png] SCRIPT [VIDEO]")
-    code, out, err = run("check-video")
+    code, out, err = run_program("check-video")
     assert code == 2 and "usage: check-video" in err
 
 
 def test_a_clean_file_passes_with_a_report(ready, ffstub):
-    code, out, err = run("check-video", ready, env=ffstub)
+    code, out, err = run_program("check-video", ready, env=ffstub)
     assert (code, err) == (0, "")
     assert out == (f"{os.path.join(video(ready), 'out', 'Folding a Paper Boat.mp4')}\n"
                    "length 52.900 s; the script's scenes give 52.900 s: OK\n"

@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from tests.tier2.conftest import cropped, narrated, run
+from tests.tier2.conftest import cropped, narrated, run, run_program
 
 HEX32 = re.compile(r"^[0-9a-f]{32}$")
 
@@ -33,18 +33,18 @@ def change_water(script_path):
 
 
 def test_help_and_usage():
-    code, out, err = run("frame-hashes", "--help")
+    code, out, err = run_program("frame-hashes", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: frame-hashes [-h] (--out HASHES.json | --compare HASHES.json) [--merge] [--scenes KEY,...] [--step N] [--elements DIR] [--renderer PATH] SCRIPT")
-    code, out, err = run("frame-hashes")
+    code, out, err = run_program("frame-hashes")
     assert code == 2 and "usage: frame-hashes" in err
-    code, out, err = run("frame-hashes", "x.md")
+    code, out, err = run_program("frame-hashes", "x.md")
     assert code == 2 and "one of the arguments --out --compare is required" in err
 
 
 def test_out_writes_the_md5_of_every_frame_by_scene_and_frame_number_and_the_same_twice(prepared, tmp_path):
     first, second = str(tmp_path / "one.json"), str(tmp_path / "two.json")
-    code, out, err = run("frame-hashes", prepared, "--scenes", "B2", "--out", first)
+    code, out, err = run_program("frame-hashes", prepared, "--scenes", "B2", "--out", first)
     assert (code, err) == (0, "")
     lines = out.splitlines()
     assert re.match(r"^B2 +159 frames in +\d+\.\d s$", lines[0]), lines[0]
@@ -54,7 +54,7 @@ def test_out_writes_the_md5_of_every_frame_by_scene_and_frame_number_and_the_sam
     assert list(hashes["B2"])[:3] == ["0", "1", "2"] and list(hashes["B2"])[-1] == "158"
     assert all(HEX32.match(h) for h in hashes["B2"].values())
     assert hashes["B2"]["0"] != hashes["B2"]["100"]
-    code, out, err = run("frame-hashes", prepared, "--scenes", "B2", "--out", second)
+    code, out, err = run_program("frame-hashes", prepared, "--scenes", "B2", "--out", second)
     assert code == 0 and load(second) == hashes
 
 

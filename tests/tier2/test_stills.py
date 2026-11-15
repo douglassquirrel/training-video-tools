@@ -7,7 +7,7 @@ import sys
 import pytest
 from PIL import Image
 
-from tests.tier2.conftest import REPO, clean_env, cropped, narrated, run
+from tests.tier2.conftest import REPO, clean_env, cropped, narrated, run, run_program
 
 
 @pytest.fixture
@@ -17,20 +17,20 @@ def prepared(example):
 
 
 def test_help_and_usage():
-    code, out, err = run("stills", "--help")
+    code, out, err = run_program("stills", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: stills [-h] [--cue-changes] [--scenes KEY,...] --out SHEET.png [--grid CxR] [--elements DIR] "
         "[--renderer PATH] SCRIPT [FRAMES]")
     for gone in ("--at", "--every", "--changes", "--threshold", "--detect-fps", "--from", "--until", "--sheet", "SCRIPT|VIDEO", "FOLDER"):
         assert gone not in out
-    code, out, err = run("stills", "x.md")
+    code, out, err = run_program("stills", "x.md")
     assert code == 2 and "usage: stills" in err
 
 
 def test_four_frames_make_a_2x2_sheet_each_labelled(prepared, tmp_path):
     narrated(prepared)
     sheet = tmp_path / "sheet.png"
-    code, out, err = run("stills", prepared, "A:1.5,A:5.0,B:3.5,end:1.5", "--out", sheet)
+    code, out, err = run_program("stills", prepared, "A:1.5,A:5.0,B:3.5,end:1.5", "--out", sheet)
     assert (code, err) == (0, "")
     im = Image.open(sheet)
     assert im.size == (1920, 1080)

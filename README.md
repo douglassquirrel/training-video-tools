@@ -1010,13 +1010,16 @@ One test is marked `slow`: `tests/tier2/test_render.py::test_every_scene_by_defa
 
 `tests/tier1/` tests pure functions (the readers, the timeline, trimming, the drawing
 primitives, the camera, the chrome's rules, the scene loader); `tests/tier2/` runs each command
-as a subprocess against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, `ffstub.py`
+inside the test's own process (`run()` in `tests/tier2/conftest.py` calls its `main` with the arguments,
+environment and working folder it would have as a program, and catches what it prints; for each command its
+help and one ordinary run start the file itself as a program, through `run_program()`, as do the tests of
+the wrappers and of missing packages) against stubs (`tests/stubs/`: a fake `kokoro_onnx` package, an invented video-elements library under `video-elements/` with a stub `videoelements` package and two tiny elements, `ffstub.py`
 standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` standing in for `git` for
 `record-output`; each is reached through `stub.sh`, one file linked into each test's folder under the
 program's name, which no test writes) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 99% on 15 November 2026
-(733 tests, lint clean; the whole suite takes three and a half to four minutes, about half a minute less with `-m "not slow"`). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+(739 tests, lint clean; the whole suite takes about a minute and a half, about 70 s with `-m "not slow"`). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
 bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
 Tier 1 (`size_problem`).
 

@@ -4,7 +4,7 @@ import os
 
 from fontTools.ttLib import TTFont
 
-from tests.tier2.conftest import run
+from tests.tier2.conftest import run, run_program
 from tests.tier2.fontfixture import variable_font
 
 
@@ -14,16 +14,16 @@ def names(path):
 
 
 def test_help_and_usage():
-    code, out, err = run("font-weights", "--help")
+    code, out, err = run_program("font-weights", "--help")
     assert code == 0 and out.startswith("usage: font-weights [-h] --weights")
-    code, out, err = run("font-weights", "x.ttf")
+    code, out, err = run_program("font-weights", "x.ttf")
     assert code == 2 and "usage: font-weights" in err
 
 
 def test_one_static_instance_per_weight_each_under_its_own_family_name(tmp_path):
     src = variable_font(str(tmp_path / "TinyVar[wght].ttf"))
     out_dir = tmp_path / "out"
-    code, out, err = run("font-weights", src, "--weights", "300,400,600", "--family-prefix", "TV", "--out", out_dir)
+    code, out, err = run_program("font-weights", src, "--weights", "300,400,600", "--family-prefix", "TV", "--out", out_dir)
     assert (code, err) == (0, "")
     assert sorted(os.listdir(out_dir)) == ["TV-Light.ttf", "TV-Regular.ttf", "TV-SemiBold.ttf"]
     assert names(out_dir / "TV-SemiBold.ttf") == {1: "TV SemiBold", 2: "Regular", 4: "TV SemiBold", 6: "TVSemiBold",

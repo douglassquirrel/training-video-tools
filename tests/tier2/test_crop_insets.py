@@ -4,7 +4,7 @@ import os
 
 from PIL import Image
 
-from tests.tier2.conftest import run
+from tests.tier2.conftest import run, run_program
 
 
 def insets(example):
@@ -12,14 +12,14 @@ def insets(example):
 
 
 def test_help_and_usage():
-    code, out, err = run("crop-insets", "--help")
+    code, out, err = run_program("crop-insets", "--help")
     assert code == 0 and out.startswith("usage: crop-insets [-h] [--dry-run] SCRIPT")
-    code, out, err = run("crop-insets")
+    code, out, err = run_program("crop-insets")
     assert code == 2 and "usage: crop-insets" in err
 
 
 def test_each_inset_is_cut_and_sized_for_the_column_and_the_page_for_the_title(example):
-    code, out, err = run("crop-insets", example)
+    code, out, err = run_program("crop-insets", example)
     assert (code, err) == (0, "")
     assert sorted(os.listdir(insets(example))) == ["A.png", "B.png", "C.png", "full.png", "title-page.png"]
     # A: box 80 150 1120 600 is 1040 x 450, wider than tall: fits 388 x 330 -> scale 388/1040

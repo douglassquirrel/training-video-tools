@@ -7,7 +7,7 @@ import re
 import pytest
 from PIL import Image
 
-from tests.tier2.conftest import cropped, fake_media, ff_calls, narrated, run
+from tests.tier2.conftest import cropped, fake_media, ff_calls, narrated, run, run_program
 
 # The example with every clip 1 s: title 8.3 s, A 8.7, B 7.9, B2 5.3, C 8.9, R 8.1, end 5.7 (52.9 s).
 A_START, B2_START, B2_TOTAL = 8.3, 24.9, 5.3
@@ -27,15 +27,15 @@ def old_video(tmp_path, **fields):
 
 
 def test_help_and_usage():
-    code, out, err = run("compare-frames", "--help")
+    code, out, err = run_program("compare-frames", "--help")
     assert code == 0 and " ".join(out.split()).startswith("usage: compare-frames [-h] --out SHEET.png [--offset SCENE=SECONDS] [--elements DIR] [--renderer PATH] SCRIPT OLD FRAMES")
-    code, out, err = run("compare-frames")
+    code, out, err = run_program("compare-frames")
     assert code == 2 and "usage: compare-frames" in err
 
 
 def test_each_pair_is_drawn_now_and_read_from_the_old_video_at_the_scenes_start_plus_the_time(prepared, tmp_path, ffstub):
     old, sheet = old_video(tmp_path), str(tmp_path / "sheet.png")
-    code, out, err = run("compare-frames", prepared, old, "A:1.5,B2:-1", "--out", sheet, env=ffstub)
+    code, out, err = run_program("compare-frames", prepared, old, "A:1.5,B2:-1", "--out", sheet, env=ffstub)
     assert (code, err) == (0, "")
     lines = out.splitlines()
     assert re.match(r"^A +1\.50 s  old +9\.80 s  mean difference +\d+\.\d$", lines[0]), lines[0]

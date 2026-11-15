@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from tests.tier2.conftest import REPO, STUB, STUBS, run
+from tests.tier2.conftest import REPO, STUB, STUBS, run, run_program
 
 PACKAGES = ["pycairo", "numpy", "soundfile", "kokoro-onnx==0.6.1", "Pillow", "fonttools"]
 IMPORTS = "import cairo, numpy, soundfile, kokoro_onnx, PIL, fontTools"
@@ -33,10 +33,11 @@ def test_python3_is_a_link_to_the_one_stand_in_file(pystub):
     assert os.path.realpath(pystub["python3"]) == os.path.realpath(os.path.join(STUBS, "stub.sh"))
 
 
-def setup(env, *extra, venv=None, model=None, conf=None):
-    """Run setup-linux with the stub's venv, model and conf unless given otherwise."""
+def setup(env, *extra, venv=None, model=None, conf=None, runner=run):
+    """Run setup-linux with the stub's venv, model and conf unless given otherwise (in-process; give
+    runner=run_program to start it as a program)."""
     run_env = {k: v for k, v in env.items() if k in ("PATH", "PYSTUB_LOG", "PYSTUB_FAIL")}
-    return run("setup-linux", "--venv", venv or env["venv"], "--model", model or env["model"],
+    return runner("setup-linux", "--venv", venv or env["venv"], "--model", model or env["model"],
                "--conf", conf or env["conf"], *extra, env=run_env)
 
 
@@ -56,12 +57,12 @@ def lines_for(env):
 
 
 def test_help_and_usage():
-    code, out, err = run("setup-linux", "--help")
+    code, out, err = run_program("setup-linux", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: setup-linux [-h] --venv DIR --model DIR --conf FILE [--dry-run]")
     assert "venv" in out and "model.onnx" in out
     assert "for the training-video-tools commands" in " ".join(out.split())
-    code, out, err = run("setup-linux")
+    code, out, err = run_program("setup-linux")
     assert code == 2 and "usage: setup-linux" in err
     assert "the following arguments are required: --venv, --model, --conf" in err
 
@@ -76,7 +77,7 @@ def test_a_venv_inside_the_checkout_is_refused_in_words_before_anything_runs(tmp
 
 
 def test_makes_the_venv_installs_the_packages_and_prints_the_three_lines(pystub):
-    code, out, err = setup(pystub)
+    code, out, err = setup(pystub, runner=run_program)
     venv_python = f"{pystub['venv']}/bin/python"
     assert calls(pystub) == [
         [pystub["python3"], "-m", "venv", "--system-site-packages", pystub["venv"]],

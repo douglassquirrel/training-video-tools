@@ -6,7 +6,7 @@ import shutil
 import pytest
 from PIL import Image
 
-from tests.tier2.conftest import EXAMPLES, run
+from tests.tier2.conftest import EXAMPLES, run, run_program
 
 PAIRS = [  # the text-on-fill pairs the chrome uses, with the example kit's ratios worked by hand
     ("ink on background", 12.79), ("muted on background", 5.19), ("accent on background", 5.12),
@@ -31,15 +31,15 @@ def edit(kit, old, new):
 
 
 def test_help_and_usage():
-    code, out, err = run("brand-preview", "--help")
+    code, out, err = run_program("brand-preview", "--help")
     assert code == 0 and out.startswith("usage: brand-preview [-h] --out PREVIEW.png BRAND_DIR")
-    code, out, err = run("brand-preview")
+    code, out, err = run_program("brand-preview")
     assert code == 2 and "usage: brand-preview" in err
 
 
 def test_the_sheet_shows_every_colour_as_a_swatch_the_mark_and_the_caption_band(kit, tmp_path):
     out_png = str(tmp_path / "preview.png")
-    code, out, err = run("brand-preview", kit, "--out", out_png)
+    code, out, err = run_program("brand-preview", kit, "--out", out_png)
     assert (code, err) == (0, "")
     im = Image.open(out_png).convert("RGB")
     assert im.size == (1920, 1080)

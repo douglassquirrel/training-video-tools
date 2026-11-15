@@ -9,7 +9,7 @@ import sys
 import pytest
 from PIL import Image, ImageChops
 
-from tests.tier2.conftest import REPO, clean_env, cropped, narrated, run
+from tests.tier2.conftest import REPO, clean_env, cropped, narrated, run, run_program
 
 TITLE = "Title: 2 lines at 96 px (capitals {cap} px): Folding a / Paper Boat"
 PICTURE = (646, 199, 646 + 560, 199 + 322)       # the picture inside the card: 10 px in from (636, 189)
@@ -47,14 +47,14 @@ def capitals(out):
 
 
 def test_help_shows_every_flag():
-    code, out, err = run("thumbnail", "--help")
+    code, out, err = run_program("thumbnail", "--help")
     assert code == 0 and " ".join(out.split()).startswith(
         "usage: thumbnail [-h] [--at SCENE:SECONDS] [--out FILE.png] [--replace] [--dry-run] [--elements DIR] "
         "[--renderer PATH] SCRIPT")
 
 
 def test_it_writes_a_1280x720_rgb_png_beside_the_output_and_prints_what_it_drew(prepared):
-    code, out, err = run("thumbnail", prepared, "--at", "A:1.5")
+    code, out, err = run_program("thumbnail", prepared, "--at", "A:1.5")
     assert (code, err) == (0, "")
     path = default_path(prepared)
     data = open(path, "rb").read()

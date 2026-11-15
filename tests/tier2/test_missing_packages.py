@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from tests.tier2.conftest import cropped, fake_media, narrated, rendered, run
+from tests.tier2.conftest import cropped, fake_media, narrated, rendered, run_program
 
 HINT = ('; from the Linux device shell, set TRAINING_VIDEO_TOOLS_PYTHON to a Python that has it '
         '(README, "Running from the Linux device shell")')
@@ -59,7 +59,7 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
     if command == "font-weights":
         target.write_bytes(b"\0")
     args = [target if a == "SELF" else a for a in args]
-    code, out, err = run(command, target, *args, env=env, cwd=tmp_path)
+    code, out, err = run_program(command, target, *args, env=env, cwd=tmp_path)
     assert (code, out) == (4, ""), err
     assert "Traceback" not in err
     assert err == message(command, pip) + HINT + "\n"
@@ -69,6 +69,6 @@ def test_a_missing_package_is_named_with_its_install_line_exit_4(prepared, ffstu
 def test_with_video_tools_python_set_the_device_shell_hint_is_left_out(prepared, ffstub, tmp_path):
     env = dict(ffstub, **hidden(tmp_path, "soundfile"))
     env["TRAINING_VIDEO_TOOLS_PYTHON"] = sys.executable
-    code, out, err = run("assemble", prepared, "--out", tmp_path / "new.mp4", env=env)
+    code, out, err = run_program("assemble", prepared, "--out", tmp_path / "new.mp4", env=env)
     assert (code, out) == (4, "")
     assert err == message("assemble", "soundfile") + "\n"

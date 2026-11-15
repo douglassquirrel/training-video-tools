@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import soundfile
 
-from tests.tier2.conftest import EXAMPLE_FRAMES, fake_media, ff_calls, narrated, rendered, run
+from tests.tier2.conftest import EXAMPLE_FRAMES, fake_media, ff_calls, narrated, rendered, run, run_program
 
 TOTAL_FRAMES = sum(EXAMPLE_FRAMES.values())     # 1587 frames, 52.9 s
 
@@ -24,14 +24,14 @@ def ready(example, ffstub):
 
 
 def test_help_and_usage():
-    code, out, err = run("assemble", "--help")
+    code, out, err = run_program("assemble", "--help")
     assert code == 0 and " ".join(out.split()).startswith("usage: assemble [-h] [--out FILE] [--replace] [--elements DIR] [--renderer PATH] SCRIPT")
-    code, out, err = run("assemble")
+    code, out, err = run_program("assemble")
     assert code == 2 and "usage: assemble" in err
 
 
 def test_the_segments_are_joined_in_script_order_and_muxed_with_the_narration(ready, ffstub):
-    code, out, err = run("assemble", ready, env=ffstub)
+    code, out, err = run_program("assemble", ready, env=ffstub)
     assert (code, err) == (0, "")
     work = os.path.join(video(ready), "work", "assemble")
     out_file = os.path.join(video(ready), "out", "Folding a Paper Boat.mp4")
