@@ -40,7 +40,7 @@ brew install python@3.12 cairo pkgconf ffmpeg
 git clone git@github.com:douglassquirrel/training-video-tools.git
 cd training-video-tools
 /opt/homebrew/bin/python3.12 -m venv .venv
-.venv/bin/pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools
+.venv/bin/pip install -r requirements.txt
 ```
 
 The commands (`./check-script`, `./narrate`, …) find that `.venv` themselves, whichever
@@ -51,25 +51,27 @@ The commands (`./check-script`, `./narrate`, …) find that `.venv` themselves, 
 Where the checkout is shared with a Linux machine (Claude's device shell sees this folder over a
 mount), the repository's `.venv` is the Mac's and cannot run there. A venv *outside* the
 repository, with the packages, a config naming the model and three environment lines are what
-every session there needs; `setup-linux` does all of it in one command and prints the lines:
+every session there needs. lobster-tools' `prepare-venv` does all of it in one command, from this
+checkout's `prepare-venv.conf` (this project's variable names, `requirements.txt`, the packages' import
+names, the model's two files and the setting that names its folder), and prints the lines:
 
 ```bash
-eval "$(./setup-linux --venv /tmp/work-$(id -u)/venv --model $HOME/mnt/kokoro --conf /tmp/work-$(id -u)/training-video-tools.conf)"
+eval "$(python3 ~/mnt/lobster-tools/prepare-venv --project ~/mnt/training-video-tools --venv /tmp/work-$(id -u)/venv --model $HOME/mnt/kokoro --conf /tmp/work-$(id -u)/training-video-tools.conf)"
 ./check-script videos/make-bed/script.md
 ```
 
-It runs on the system `python3` (nothing installed), makes the venv when it is missing
-(`python3 -m venv --system-site-packages DIR`), installs the packages when the venv cannot import
-them (`pip install pycairo numpy soundfile "kokoro-onnx==0.6.1" Pillow fonttools`, the one step that
-uses the network), checks that the model folder holds `model.onnx` and `voices.npz`, writes
-`SPEECH_MODEL_DIR` into the config and prints `export TRAINING_VIDEO_TOOLS_PYTHON=…`, `export
-TRAINING_VIDEO_TOOLS_CONF=…` and `export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in
-place and prints the lines alone. By hand, it is the same four steps. Every command restarts
+It runs on the system `python3` (nothing installed), makes the venv when it is missing, installs
+`requirements.txt` when the venv cannot import the packages (the one step that uses the network),
+writes `SPEECH_MODEL_DIR` into the config, checks that the model folder holds `model.onnx` and
+`voices.npz`, and prints `export TRAINING_VIDEO_TOOLS_PYTHON=…`, `export TRAINING_VIDEO_TOOLS_CONF=…` and
+`export PYTHONDONTWRITEBYTECODE=1`; a second run finds everything in place and prints the lines alone.
+Its own README ("`prepare-venv`") has every flag, refusal and exit code. Every command here restarts
 itself under the Python `TRAINING_VIDEO_TOOLS_PYTHON` names.
 
-Never build that venv inside the repository from Linux (it would shadow the Mac's);
-`setup-linux` refuses to. With `TRAINING_VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a
-path that does not exist is refused with exit 3.
+Never build that venv inside the repository from Linux (it would shadow the Mac's); `prepare-venv`
+refuses to. With `TRAINING_VIDEO_TOOLS_PYTHON` unset the commands use `.venv` as above; a path that does
+not exist is refused with exit 3. This command was `setup-linux` until 15 November 2026; `setup-linux`
+now says to run `prepare-venv` and exits 2.
 
 ### One-time set-up of the speech model
 
@@ -914,47 +916,16 @@ Wrote preview.png
 A ratio under 4.5 is marked `large text only (3-4.5)` (fine for text of about 24 px and up) and
 one under 3 `fails (under 3)`.
 
-### `setup-linux --venv DIR --model DIR --conf FILE [--dry-run]`
+### `setup-linux` (retired)
 
-The Linux device shell's preparation in one command ("Running from the Linux device shell"
-above): the venv made or reused, the packages installed when missing, the model folder checked,
-the config written, the three environment lines printed on stdout and nothing else there, so
-`eval "$(./setup-linux …)"` or a script that pastes the lines into an `env.sh` can take them as
-they are. Progress (the venv made, the packages installed, the config written) goes to stderr,
-and nothing at all is said when everything was already in place. Standard library only, on the
-`python3` that runs it (3.9 or later): this is the command that makes the venv the others run
-under, so it cannot use it.
-
-- `--venv DIR`: the venv, outside this checkout (inside it is refused, exit 2). Missing, it is
-  made with the `python3` on PATH; present, it is reused. Then `DIR/bin/python` is asked to
-  import the six packages, and only when that fails are they installed.
-- `--model DIR`: must hold `model.onnx` and `voices.npz` ("One-time set-up of the speech model").
-  Each missing file is named, exit 3; the venv and the config are still done first, so one run
-  reports everything it can.
-- `--conf FILE`: written with `SPEECH_MODEL_DIR=<the model folder>` when the file is missing or
-  its `SPEECH_MODEL_DIR` is absent or different; every other line is kept, and a file that already
-  says it is not touched. The folder is made if needed. A file that cannot be read as a config
-  (a line that is not `KEY=value`, an unknown setting) is refused in words, exit 3, and left alone.
-- `--dry-run`: the same checks, then a `Would make the venv at …`, `Would install … into …`, `Would
-  write … with SPEECH_MODEL_DIR=…` line for each thing a real run would do, and the three lines;
-  nothing is run, made or written but the import check (when the venv exists).
-- Paths with spaces or other characters a shell would split are quoted in the lines.
+Retired on 15 November 2026: lobster-tools' `prepare-venv` does the device shell's preparation for
+every project that needs it ("Running from the Linux device shell" above). Every form of `setup-linux`
+now prints, on stderr, the line to run instead and exits 2, doing nothing:
 
 ```
-$ ./setup-linux --venv /tmp/work/venv --model ~/models/kokoro --conf /tmp/work/training-video-tools.conf --dry-run
-Would make the venv at /tmp/work/venv
-Would install pycairo numpy soundfile kokoro-onnx==0.6.1 Pillow fonttools into /tmp/work/venv
-Would write /tmp/work/training-video-tools.conf with SPEECH_MODEL_DIR=/Users/me/models/kokoro
-export TRAINING_VIDEO_TOOLS_PYTHON=/tmp/work/venv/bin/python
-export TRAINING_VIDEO_TOOLS_CONF=/tmp/work/training-video-tools.conf
-export PYTHONDONTWRITEBYTECODE=1
+$ ./setup-linux --venv /tmp/work/venv --model ~/models/kokoro --conf /tmp/work/training-video-tools.conf
+setup-linux: setup-linux is retired; prepare the device shell with lobster-tools' prepare-venv, which reads this checkout's prepare-venv.conf: eval "$(python3 ~/mnt/lobster-tools/prepare-venv --project ~/mnt/training-video-tools --venv DIR --model DIR --conf FILE)" (README, "Running from the Linux device shell")
 ```
-
-(The paths above are shortened; a real run prints them as given, made absolute.) With the model
-folder missing the same run prints, on stderr, `setup-linux: the model folder … does not exist;
-download the model into it as the README's "One-time set-up of the speech model" says` and exits
-3. A `venv` or `pip` run that fails is reported with its last lines and exit 3; the venv is kept
-after a failed install, so the next run installs again.
 
 ### Configuration: `~/.training-video-tools.conf`
 
@@ -984,8 +955,8 @@ Every command prints errors in words on stderr (never a traceback) and exits:
 |---|---|---|
 | 0 | Success; with `--dry-run`, everything checked and nothing written. For `check-script`, no problems. | |
 | 1 | `check-script` / `check-video`: problems found, listed on stdout; `frame-hashes --compare`: frames differ, listed on stdout. | Fix the script, or the video; or look at the frames that changed. |
-| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills`: a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`), or a video file instead of a script (that form moved to video-tools); for `narrate`: `--lines` (moved to video-tools); for `setup-linux`: a `--venv` inside this checkout; for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`; for `thumbnail`: no `--at` and no `thumbnail-at`, or a moment that is not `SCENE:SECONDS`, names a scene the script lacks, or is past either end of the scene. | See `--help`. |
-| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists; for `setup-linux`: the model folder or one of its two files is missing (named), the config cannot be read as one, no `python3` is on PATH to make the venv, or the `venv` or `pip install` step failed (its last lines shown; the venv is kept); for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there; for `thumbnail`: the output's folder does not exist, the output exists without `--replace`, the title (or `thumbnail-title`) does not fit three lines with capitals 40 px tall, the PNG would be over 2,000,000 bytes, or the file cannot be written (the reason given). A malformed `thumbnail-at` in the script is a problem with the script. Nothing is written, except what `setup-linux` had already done before the step that failed. | Fix the input, delete the output, or use `--replace` where there is one. |
+| 2 | Bad arguments, a `--scenes` key that is not in the script, a weight that is not 100–900, a `SCENE:SECONDS` past the scene's end; for `stills`: a `--grid` that is not two whole numbers of at least 1 (`0x3`, `2x`), or a video file instead of a script (that form moved to video-tools); for `narrate`: `--lines` (moved to video-tools); for `setup-linux`: any form (retired; the message names `prepare-venv`); for `record-output`: `--state` with `--add-state`, or `--add-state` with `--tools-commit`, `--elements-commit` or `--elements`; for `thumbnail`: no `--at` and no `thumbnail-at`, or a moment that is not `SCENE:SECONDS`, names a scene the script lacks, or is past either end of the scene. | See `--help`. |
+| 3 | An input refuses: the script or brand kit is malformed or missing (every problem is listed), a file it names is missing, `SPEECH_MODEL_DIR` is not set or has no model, the voice is not in the voices file, the video-elements library is needed and `VIDEO_ELEMENTS_DIR` is not set, its folder is missing or has no `videoelements/` package, its package cannot be imported, the library itself refuses to open (its problems listed) or is older than these tools need (update the video-elements repository), timings or segments or clips are missing or do not add up, a crop box is outside the image, a weight is outside the font's axis, or an output already exists; for `record-output`: the video is missing, empty or unreadable, `OUT.md` is not a UTF-8 file with exactly one table of six columns, it already has a row for the video (or, with `--add-state`, has none, or there is no `OUT.md`), a `--state` or `--add-state` text has a line break, a commit given is not 4 to 40 hexadecimal digits, `TIME_ZONE` is not a zone the machine knows, or a checkout the commit would be read from is not a git checkout or has uncommitted changes (the flag to give is named), or the library's folder is needed and not set or not there; for `thumbnail`: the output's folder does not exist, the output exists without `--replace`, the title (or `thumbnail-title`) does not fit three lines with capitals 40 px tall, the PNG would be over 2,000,000 bytes, or the file cannot be written (the reason given). A malformed `thumbnail-at` in the script is a problem with the script. Nothing is written. | Fix the input, delete the output, or use `--replace` where there is one. |
 | 4 | A package (pycairo, numpy, soundfile, Pillow, fontTools, kokoro-onnx) is not installed in the Python running the command: one line names the package, its `pip install` line and, when `TRAINING_VIDEO_TOOLS_PYTHON` is unset, the device-shell set-up; ffmpeg or ffprobe is not on PATH; the speech model failed on a cue (named); ffmpeg failed (its output is shown and the partial file named); for `record-output`, `git` is not installed or failed while reading a commit (its message shown). What was written before stays. | Install as above; re-run for the scene that failed; for `record-output`, give `--tools-commit` or `--elements-commit` instead. |
 
 ## Testing
@@ -1019,7 +990,7 @@ standing in for `ffmpeg` and `ffprobe` with fake media files, and `gitstub.py` s
 program's name, which no test writes) and a copy of the example, and
 draws whole frames of the example to compare with stored images (`tests/tier2/frames/`, at
 192×108 with a tolerance). Coverage is reported by the test command; 99% on 15 November 2026
-(739 tests, lint clean; the whole suite takes about a minute and a half, about 70 s with `-m "not slow"`). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
+(725 tests, lint clean; the whole suite takes about a minute and a half to two minutes, a little over a minute with `-m "not slow"`). One line of `thumbnail` is not reached: the refusal of a PNG over 2,000,000
 bytes, which a 1280×720 drawing of the example (about 50 KB) cannot provoke; its words are tested in
 Tier 1 (`size_problem`).
 
@@ -1080,6 +1051,12 @@ the anchor `cell.3.2` accepted.
   nominal from the note beside it in the element's `ELEMENT.md`.
 
 ## Notes for users
+
+- **15 November 2026.** `setup-linux` is retired: prepare the Linux device shell with lobster-tools'
+  `prepare-venv`, which reads this checkout's new `prepare-venv.conf` and `requirements.txt`:
+  `eval "$(python3 ~/mnt/lobster-tools/prepare-venv --project ~/mnt/training-video-tools --venv DIR --model
+  DIR --conf FILE)"`, with the same three folders as before and the same three lines printed. `setup-linux`
+  now says so and exits 2. On the Mac, the packages install with `.venv/bin/pip install -r requirements.txt`.
 
 - **13 November 2026.** Three general commands moved to **video-tools**, the tools project for any video: `narrate --lines TABLE.md --out FOLDER`, `stills VIDEO …` (`--at`, `--every`, `--changes`, `--sheet`) and `compare-video NEW.mp4 OLD.mp4`. Run them from there, with the same arguments. Here, `narrate --lines` and `stills` on a video file now stop with a message saying where they went (exit 2), and `compare-video` is gone. `narrate SCRIPT.md` and `stills SCRIPT.md` are unchanged, apart from `--help` showing only the script form; `setup-linux` stays here (video-tools has its own copy).
 

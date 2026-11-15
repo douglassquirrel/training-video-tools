@@ -1,0 +1,7 @@
+# The packages the commands use (README, "Requirements"); prepare-venv installs these in the device shell.
+pycairo
+numpy
+soundfile
+kokoro-onnx==0.6.1
+Pillow
+fonttools
